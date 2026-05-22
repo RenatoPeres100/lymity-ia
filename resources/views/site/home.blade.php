@@ -1,118 +1,199 @@
-<x-layouts.guest title="Lymity AI Agency — Agência Digital Inteligente">
+<x-layouts.public title="Lymity AI Agency" meta-description="Sua operação de crescimento digital com inteligência artificial. Tráfego pago, SEO, automação, conteúdo e funcionários IA em uma plataforma.">
 
-<div class="home-bg">
-
-    {{-- Nav --}}
-    <nav class="home-nav">
-        <a href="/" class="flex items-center gap-2.5 no-underline">
-            <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-800 rounded-lg flex items-center justify-center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5">
-                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
-                    <path d="M2 17l10 5 10-5"/>
-                    <path d="M2 12l10 5 10-5"/>
-                </svg>
+{{-- Hero --}}
+<section style="background:linear-gradient(160deg,#0f1117 0%,#0d1c54 60%,#0f1117 100%);min-height:92vh;display:flex;align-items:center;">
+    <div class="container" style="padding:80px 32px;">
+        <div style="max-width:760px;">
+            <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(74,108,247,0.12);border:1px solid rgba(74,108,247,0.25);color:#6b8fff;font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:6px 16px;border-radius:20px;margin-bottom:28px;">
+                ✦ Plataforma SaaS de Crescimento com IA
             </div>
-            <span class="text-white font-semibold text-base">Lymity AI Agency</span>
-        </a>
-
-        <a href="{{ route('login') }}" class="btn btn-primary text-sm">
-            Acessar plataforma →
-        </a>
-    </nav>
-
-    {{-- Hero --}}
-    <section class="text-center px-6 pt-20 pb-16 max-w-3xl mx-auto">
-        <div class="hero-eyebrow">
-            ✦ Plataforma SaaS para Agências Digitais
+            <h1 style="font-size:clamp(2.4rem,5vw,4.2rem);font-weight:800;color:#fff;line-height:1.1;letter-spacing:-0.03em;margin-bottom:22px;">
+                Sua operação de crescimento,<br>
+                <span style="background:linear-gradient(90deg,#6b8fff,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">agora com IA trabalhando todos os dias.</span>
+            </h1>
+            <p style="font-size:1.15rem;color:#94a3b8;line-height:1.75;margin-bottom:40px;max-width:600px;">
+                Unimos tráfego, automação, SEO, conteúdo, dados e desenvolvimento em uma única operação — com funcionários IA especializados, aprovação humana e rastreabilidade total.
+            </p>
+            <div style="display:flex;gap:14px;flex-wrap:wrap;">
+                <a href="{{ route('contato') }}" class="pub-btn-primary" style="padding:14px 32px;font-size:1rem;">
+                    Solicitar diagnóstico gratuito →
+                </a>
+                <a href="{{ route('plataforma') }}" class="pub-btn-outline-light" style="padding:14px 28px;font-size:1rem;">
+                    Ver a plataforma
+                </a>
+            </div>
         </div>
 
-        <h1 class="hero-title">
-            Sua agência digital<br>
-            operada por <span>Inteligência Artificial</span>
-        </h1>
-
-        <p class="text-lg text-slate-400 leading-relaxed mb-10 max-w-2xl mx-auto">
-            Funcionários IA especializados, criação de conteúdo automatizada, gestão de clientes, campanhas de tráfego e SEO — tudo em uma plataforma.
-        </p>
-
-        <div class="flex items-center justify-center gap-4 flex-wrap">
-            <a href="{{ route('login') }}" class="btn btn-primary px-8 py-3.5 text-base font-semibold rounded-xl">
-                Acessar plataforma
-            </a>
-            <a href="#recursos" class="btn btn-secondary bg-white/5 text-slate-300 border-white/10 hover:bg-white/10 px-8 py-3.5 text-base rounded-xl">
-                Ver recursos
-            </a>
+        {{-- floating cards --}}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:56px;max-width:800px;">
+            @foreach([
+                ['🤖','8 Funcionários IA','Social Media, Copywriter, SEO, Tráfego e mais'],
+                ['✅','Aprovação obrigatória','Toda ação sensível exige aprovação humana'],
+                ['📊','Dados centralizados','Um painel com tudo que importa'],
+                ['🔄','Operação contínua','Seus processos rodando 24h/dia'],
+            ] as [$icon,$title,$desc])
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:18px;backdrop-filter:blur(10px);">
+                <div style="font-size:1.3rem;margin-bottom:8px;">{{ $icon }}</div>
+                <div style="font-size:.85rem;font-weight:600;color:#e2e8f0;margin-bottom:4px;">{{ $title }}</div>
+                <div style="font-size:.78rem;color:#64748b;line-height:1.5;">{{ $desc }}</div>
+            </div>
+            @endforeach
         </div>
-    </section>
-
-    {{-- Stats bar --}}
-    <div class="flex items-center justify-center gap-10 flex-wrap px-6 pb-16 text-center">
-        @foreach([['8', 'Funcionários IA'], ['∞', 'Conteúdos gerados'], ['100%', 'Aprovação humana'], ['24/7', 'Operação contínua']] as [$num, $label])
-        <div>
-            <div class="text-3xl font-bold text-white mb-1">{{ $num }}</div>
-            <div class="text-sm text-slate-500">{{ $label }}</div>
-        </div>
-        @endforeach
     </div>
+</section>
 
-    {{-- Features --}}
-    <section id="recursos" class="max-w-5xl mx-auto px-6 pb-20">
-        <h2 class="text-center text-2xl font-bold text-white mb-3">Recursos da plataforma</h2>
-        <p class="text-center text-slate-400 mb-10 text-sm">Uma operação completa de agência digital, automatizada.</p>
-
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-
-            <div class="feature-card">
-                <div class="w-10 h-10 rounded-xl bg-blue-500/15 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
-                        <path d="M12 8v4l3 3"/>
-                    </svg>
-                </div>
-                <div class="text-sm font-semibold text-slate-100 mb-1.5">Funcionários IA</div>
-                <div class="text-xs text-slate-500 leading-relaxed">Social Media, Copywriter, SEO, Tráfego, Designer, SDR e mais.</div>
-            </div>
-
-            <div class="feature-card">
-                <div class="w-10 h-10 rounded-xl bg-purple-500/15 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                </div>
-                <div class="text-sm font-semibold text-slate-100 mb-1.5">Conteúdo e SEO</div>
-                <div class="text-xs text-slate-500 leading-relaxed">Posts, blogs, artigos e otimização para busca gerados automaticamente.</div>
-            </div>
-
-            <div class="feature-card">
-                <div class="w-10 h-10 rounded-xl bg-orange-500/15 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                    </svg>
-                </div>
-                <div class="text-sm font-semibold text-slate-100 mb-1.5">Tráfego Pago</div>
-                <div class="text-xs text-slate-500 leading-relaxed">Apoio em campanhas Google Ads e Meta Ads com análise inteligente.</div>
-            </div>
-
-            <div class="feature-card">
-                <div class="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center mb-3">
-                    <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path d="M9 11l3 3L22 4"/>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                    </svg>
-                </div>
-                <div class="text-sm font-semibold text-slate-100 mb-1.5">Aprovações e Logs</div>
-                <div class="text-xs text-slate-500 leading-relaxed">Controle total. Toda ação sensível requer aprovação humana.</div>
-            </div>
-
+{{-- Diferenciais --}}
+<section class="section" style="background:#f8fafc;">
+    <div class="container">
+        <div style="text-align:center;margin-bottom:56px;">
+            <div class="section-label">Por que a Lymity</div>
+            <h2 class="section-title">Não criamos apenas campanhas.<br>Construímos sistemas de crescimento.</h2>
+            <p class="section-subtitle" style="margin:0 auto;">A diferença entre uma agência comum e uma operação de crescimento está na integração. Aqui, cada peça trabalha em conjunto.</p>
         </div>
-    </section>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+            @foreach([
+                ['🎯','Estratégia integrada','Não somos especialistas em uma só coisa. Integramos tráfego, SEO, conteúdo, automação e dados em um único sistema coerente.'],
+                ['⚡','Execução com IA','Funcionários IA especializados executam tarefas operacionais com velocidade e consistência que times humanos não conseguem manter sozinhos.'],
+                ['🛡️','Controle humano total','Toda ação sensível — publicação, envio, alteração de campanha — exige aprovação. Você mantém o controle. A IA executa.'],
+                ['📈','Crescimento previsível','Sistemas bem construídos crescem de forma previsível. Com dados e automação, você sai do modo reativo e entra no modo estratégico.'],
+                ['🔍','Rastreabilidade total','Cada ação tem origem, contexto e log. Você sabe o que foi feito, quando, por quem (ou qual IA) e com que resultado.'],
+                ['🚀','Evolução contínua','A plataforma e os agentes evoluem. O que começa como automação simples se torna inteligência operacional ao longo do tempo.'],
+            ] as [$icon,$title,$desc])
+            <div class="pub-card">
+                <div style="font-size:1.8rem;margin-bottom:14px;">{{ $icon }}</div>
+                <div style="font-size:.95rem;font-weight:700;color:#0f172a;margin-bottom:8px;">{{ $title }}</div>
+                <div style="font-size:.85rem;color:#64748b;line-height:1.7;">{{ $desc }}</div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+</section>
 
-    {{-- Footer --}}
-    <footer class="text-center py-8 border-t border-white/5 text-slate-600 text-xs">
-        © {{ date('Y') }} Lymity AI Agency — Fase 1 · Base SaaS
-    </footer>
+{{-- Funcionários IA --}}
+<section class="section section-dark">
+    <div class="container">
+        <div style="text-align:center;margin-bottom:56px;">
+            <div class="section-label">Funcionários IA</div>
+            <h2 class="section-title" style="color:#fff;">Funcionários IA especializados operando<br>com estratégia, aprovação e rastreabilidade.</h2>
+            <p class="section-subtitle" style="margin:0 auto;">Cada funcionário IA tem função específica, habilidades mapeadas e rotinas definidas — com supervisão humana nos momentos críticos.</p>
+        </div>
+        @if($aiEmployees->isNotEmpty())
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:36px;">
+            @foreach($aiEmployees as $employee)
+            <div class="pub-card-dark">
+                <div style="font-size:2rem;margin-bottom:12px;">{{ $employee->avatar_emoji }}</div>
+                <div style="font-size:.95rem;font-weight:600;color:#f1f5f9;margin-bottom:6px;">{{ $employee->name }}</div>
+                <div style="font-size:.8rem;color:#94a3b8;line-height:1.6;">{{ mb_substr($employee->description, 0, 100) }}...</div>
+            </div>
+            @endforeach
+        </div>
+        @endif
+        <div style="text-align:center;">
+            <a href="{{ route('funcionarios-ia') }}" class="pub-btn-outline-light">Ver todos os funcionários IA →</a>
+        </div>
+    </div>
+</section>
 
-</div>
+{{-- Sistema operacional --}}
+<section class="section">
+    <div class="container">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center;">
+            <div>
+                <div class="section-label">Sistema de crescimento</div>
+                <h2 class="section-title">Do tráfego ao CRM, tudo conectado numa operação inteligente.</h2>
+                <p style="font-size:1rem;color:#64748b;line-height:1.75;margin-bottom:28px;">Sua empresa não precisa de mais ferramentas desconectadas. Precisa de um sistema onde tráfego, conteúdo, SEO e dados trabalham juntos — alimentados por IA e supervisionados por pessoas.</p>
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    @foreach([
+                        ['Aquisição inteligente','Tráfego pago e orgânico com IA otimizando continuamente'],
+                        ['Conversão automatizada','Landing pages, copy e nurturing funcionando 24h'],
+                        ['Análise em tempo real','Dados que geram diagnósticos e ações concretas'],
+                        ['Execução com supervisão','IA executa, humano aprova, plataforma registra'],
+                    ] as [$title,$desc])
+                    <div style="display:flex;gap:14px;align-items:flex-start;">
+                        <div style="width:20px;height:20px;border-radius:50%;background:#eff6ff;border:1px solid #bfdbfe;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;">
+                            <div style="width:6px;height:6px;border-radius:50%;background:#4a6cf7;"></div>
+                        </div>
+                        <div>
+                            <div style="font-size:.9rem;font-weight:600;color:#0f172a;margin-bottom:3px;">{{ $title }}</div>
+                            <div style="font-size:.82rem;color:#64748b;">{{ $desc }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            <div style="background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:20px;padding:40px;border:1px solid #e2e8f0;">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                    @foreach([
+                        ['Tráfego Pago','#4a6cf7','#eff6ff'],
+                        ['SEO','#22c55e','#f0fdf4'],
+                        ['Automação','#f97316','#fff7ed'],
+                        ['Conteúdo','#8b5cf6','#faf5ff'],
+                        ['Dados','#06b6d4','#f0fdfa'],
+                        ['CRM','#f43f5e','#fff1f2'],
+                    ] as [$label,$color,$bg])
+                    <div style="background:#fff;border-radius:10px;padding:16px;text-align:center;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04);">
+                        <div style="width:36px;height:36px;border-radius:8px;background:{{ $bg }};display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+                            <div style="width:12px;height:12px;border-radius:50%;background:{{ $color }};"></div>
+                        </div>
+                        <div style="font-size:.8rem;font-weight:600;color:#334155;">{{ $label }}</div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-</x-layouts.guest>
+{{-- Serviços --}}
+<section class="section" style="background:#f8fafc;">
+    <div class="container">
+        <div style="text-align:center;margin-bottom:48px;">
+            <div class="section-label">Serviços</div>
+            <h2 class="section-title">Uma operação completa.<br>Integrada e escalável.</h2>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+            @foreach([
+                ['🎯','Tráfego Pago','Google Ads e Meta Ads gerenciados com inteligência'],
+                ['🔍','SEO','Otimização técnica e editorial para crescimento orgânico'],
+                ['⚡','Automação','Fluxos inteligentes que operam sem intervenção manual'],
+                ['✍️','Conteúdo','Posts, artigos, copies e landing pages de alto impacto'],
+                ['💻','Desenvolvimento','Sites, sistemas e integrações digitais'],
+                ['📊','Dados & Analytics','Dashboards, relatórios e insights para decisões'],
+                ['📱','Social Media','Calendários, posts e estratégia para redes sociais'],
+                ['🤝','CRM & Vendas','Qualificação de leads e apoio ao processo comercial'],
+            ] as [$icon,$title,$desc])
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:22px;text-align:center;transition:box-shadow .2s;" onmouseover="this.style.boxShadow='0 8px 24px rgba(0,0,0,.08)'" onmouseout="this.style.boxShadow='none'">
+                <div style="font-size:1.6rem;margin-bottom:10px;">{{ $icon }}</div>
+                <div style="font-size:.875rem;font-weight:700;color:#0f172a;margin-bottom:6px;">{{ $title }}</div>
+                <div style="font-size:.78rem;color:#64748b;line-height:1.6;">{{ $desc }}</div>
+            </div>
+            @endforeach
+        </div>
+        <div style="text-align:center;margin-top:36px;">
+            <a href="{{ route('servicos') }}" class="pub-btn-outline">Ver todos os serviços →</a>
+        </div>
+    </div>
+</section>
+
+{{-- CTA Final --}}
+<section class="section" style="background:linear-gradient(135deg,#0f1117,#1a2a6c);">
+    <div class="container" style="text-align:center;max-width:700px;">
+        <div style="font-size:2.4rem;margin-bottom:18px;">🚀</div>
+        <h2 style="font-size:clamp(1.8rem,3.5vw,2.8rem);font-weight:800;color:#fff;line-height:1.2;margin-bottom:16px;letter-spacing:-0.02em;">
+            Pronto para construir sua operação de crescimento?
+        </h2>
+        <p style="color:#94a3b8;font-size:1rem;line-height:1.7;margin-bottom:36px;">
+            Solicite um diagnóstico gratuito e descubra como a Lymity pode transformar sua presença digital em um sistema de crescimento real.
+        </p>
+        <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+            <a href="{{ route('contato') }}" class="pub-btn-primary" style="padding:15px 36px;font-size:1rem;">
+                Solicitar diagnóstico gratuito →
+            </a>
+            <a href="{{ route('funcionarios-ia') }}" class="pub-btn-outline-light" style="padding:15px 28px;font-size:1rem;">
+                Conhecer os Funcionários IA
+            </a>
+        </div>
+    </div>
+</section>
+
+</x-layouts.public>

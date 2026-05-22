@@ -67,31 +67,49 @@
                 Clientes
             </a>
 
-            <a href="#" class="nav-item opacity-50 cursor-not-allowed" title="Disponível na Fase 2">
+            <a href="{{ route('admin.ai-employees.index') }}" class="nav-item {{ request()->routeIs('admin.ai-employees*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2z"/>
                     <path d="M12 8v4l3 3"/>
                 </svg>
                 Funcionários IA
-                <span class="ml-auto text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">Em breve</span>
             </a>
 
-            <a href="#" class="nav-item opacity-50 cursor-not-allowed" title="Disponível na Fase 2">
+            <a href="{{ route('admin.leads.index') }}" class="nav-item {{ request()->routeIs('admin.leads*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M9 11l3 3L22 4"/>
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
-                Aprovações
-                <span class="ml-auto text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">Em breve</span>
+                Leads
             </a>
 
-            <a href="#" class="nav-item opacity-50 cursor-not-allowed" title="Disponível na Fase 3">
+            <span class="nav-section-label">Conteúdo</span>
+
+            <a href="{{ route('admin.blog-posts.index') }}" class="nav-item {{ request()->routeIs('admin.blog-posts*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                     <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
                 </svg>
-                Conteúdo
-                <span class="ml-auto text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">Em breve</span>
+                Blog Posts
+            </a>
+
+            <a href="{{ route('admin.blog-categories.index') }}" class="nav-item {{ request()->routeIs('admin.blog-categories*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                </svg>
+                Categorias
+            </a>
+
+            <a href="{{ route('admin.cases.index') }}" class="nav-item {{ request()->routeIs('admin.cases*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Cases
             </a>
             @endif
 
@@ -164,7 +182,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Fase 1 — Base SaaS
+                    Fase 2 — Site &amp; Blog
                 </span>
 
                 <form method="POST" action="{{ route('logout') }}">

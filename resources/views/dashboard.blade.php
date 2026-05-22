@@ -6,7 +6,7 @@
         <p class="text-sm text-slate-500 mt-1">Aqui está o resumo da sua plataforma.</p>
     </div>
     <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-300 bg-blue-950 border border-blue-800 rounded-full px-3 py-1.5">
-        ✦ Fase 1 — Base SaaS funcional
+        ✦ Fase 2 — Site Institucional &amp; Blog
     </span>
 </div>
 
@@ -79,6 +79,50 @@
         <div class="stat-value">{{ $stats['campaigns_analysis'] }}</div>
     </div>
 
+</div>
+
+{{-- Phase 2 Stats --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="stat-card">
+        <div class="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+            </svg>
+        </div>
+        <div class="stat-label">Blog Posts</div>
+        <div class="stat-value">{{ $stats['blog_posts'] ?? 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="w-9 h-9 rounded-lg bg-teal-50 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-teal-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+        </div>
+        <div class="stat-label">Cases</div>
+        <div class="stat-value">{{ $stats['cases'] ?? 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="w-9 h-9 rounded-lg bg-orange-50 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-orange-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            </svg>
+        </div>
+        <div class="stat-label">Leads</div>
+        <div class="stat-value">{{ $stats['leads'] ?? 0 }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="w-9 h-9 rounded-lg bg-violet-50 flex items-center justify-center mb-3">
+            <svg class="w-4.5 h-4.5 text-violet-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="3"/>
+                <path d="M19.07 4.93A10 10 0 0 1 21.5 12a10 10 0 0 1-2.43 7.07M4.93 4.93A10 10 0 0 0 2.5 12a10 10 0 0 0 2.43 7.07"/>
+            </svg>
+        </div>
+        <div class="stat-label">Leads novos</div>
+        <div class="stat-value">{{ $stats['new_leads'] ?? 0 }}</div>
+    </div>
 </div>
 
 {{-- Bottom grid --}}
