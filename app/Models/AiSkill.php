@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class AiSkill extends Model
 {
-    protected $fillable = ['key', 'name', 'description', 'module'];
+    protected $fillable = ['key', 'name', 'description', 'category', 'module'];
 
     public function employees(): BelongsToMany
     {
-        return $this->belongsToMany(AiEmployee::class, 'ai_employee_skill');
+        return $this->belongsToMany(AiEmployee::class, 'ai_employee_skill')->withPivot('level');
     }
 }

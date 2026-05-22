@@ -1,0 +1,75 @@
+<x-layouts.app title="Logs IA">
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+    <div>
+        <h1 style="font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">Logs IA</h1>
+        <p style="font-size:.85rem;color:#64748b;">Histórico de execução dos funcionários IA.</p>
+    </div>
+    <div style="font-size:.8rem;color:#64748b;background:#0f172a;border:1px solid #1e293b;padding:8px 16px;border-radius:8px;">
+        Total: <strong style="color:#e2e8f0;">{{ $logs->total() }}</strong>
+    </div>
+</div>
+
+<div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;">
+    <form method="GET" style="display:flex;gap:10px;align-items:center;">
+        <select name="level" style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:.8rem;">
+            <option value="">Todos os níveis</option>
+            @foreach(['info'=>'Info','success'=>'Sucesso','warning'=>'Aviso','error'=>'Erro'] as $val=>$label)
+            <option value="{{ $val }}" {{ request('level')===$val?'selected':'' }}>{{ $label }}</option>
+            @endforeach
+        </select>
+        <select name="employee" style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:8px 12px;color:#e2e8f0;font-size:.8rem;">
+            <option value="">Todos os funcionários</option>
+            @foreach($employees as $emp)
+            <option value="{{ $emp->id }}" {{ request('employee')==$emp->id?'selected':'' }}>{{ $emp->name }}</option>
+            @endforeach
+        </select>
+        <button type="submit" style="background:#1e293b;color:#94a3b8;font-size:.8rem;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;">Filtrar</button>
+        @if(request()->hasAny(['level','employee']))
+        <a href="{{ route('admin.ai-logs.index') }}" style="color:#6b8fff;font-size:.8rem;text-decoration:none;">Limpar</a>
+        @endif
+    </form>
+</div>
+
+<div class="table-wrapper">
+    <table style="width:100%;border-collapse:collapse;">
+        <thead>
+            <tr style="border-bottom:1px solid #1e293b;">
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Nível</th>
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Mensagem</th>
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Tarefa</th>
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Funcionário</th>
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Data/Hora</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($logs as $log)
+            @php
+                $colors = ['success'=>['#052e16','#4ade80'],'warning'=>['#451a03','#fb923c'],'error'=>['#2d0a0a','#f87171'],'info'=>['#0c1a2e','#60a5fa']];
+                $lc = $colors[$log->level] ?? ['#0c1a2e','#60a5fa'];
+            @endphp
+            <tr style="border-bottom:1px solid #0f172a;">
+                <td style="padding:10px 16px;">
+                    <span style="background:{{ $lc[0] }};color:{{ $lc[1] }};font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:10px;text-transform:uppercase;">{{ $log->level }}</span>
+                </td>
+                <td style="padding:10px 16px;font-size:.8rem;color:#cbd5e1;max-width:400px;">{{ $log->message }}</td>
+                <td style="padding:10px 16px;font-size:.78rem;color:#6b8fff;">
+                    @if($log->task)
+                    <a href="{{ route('admin.ai-tasks.show', $log->task) }}" style="color:#6b8fff;text-decoration:none;">{{ mb_substr($log->task->title, 0, 40) }}</a>
+                    @else—@endif
+                </td>
+                <td style="padding:10px 16px;font-size:.78rem;color:#94a3b8;">{{ $log->employee?->name ?? '—' }}</td>
+                <td style="padding:10px 16px;font-size:.75rem;color:#475569;">{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="5" style="padding:48px;text-align:center;color:#475569;font-size:.875rem;">Nenhum log registrado.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+@if($logs->hasPages())
+<div style="margin-top:20px;">{{ $logs->links() }}</div>
+@endif
+
+</x-layouts.app>

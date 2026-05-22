@@ -7,6 +7,10 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicSiteController;
 use App\Http\Controllers\Admin\AiEmployeeController;
+use App\Http\Controllers\Admin\AiTaskController;
+use App\Http\Controllers\Admin\AiTaskLogController;
+use App\Http\Controllers\Admin\AiWorkScheduleController;
+use App\Http\Controllers\Admin\AiMemoryController;
 use App\Http\Controllers\Admin\BlogCategoryController;
 use App\Http\Controllers\Admin\BlogPostController;
 use App\Http\Controllers\Admin\CaseStudyController;
@@ -98,9 +102,48 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('/leads/{lead}',    [LeadController::class, 'update'])->name('admin.leads.update');
         Route::delete('/leads/{lead}', [LeadController::class, 'destroy'])->name('admin.leads.destroy');
 
-        // AI Employees
-        Route::get('/ai-employees',              [AiEmployeeController::class, 'index'])->name('admin.ai-employees.index');
-        Route::get('/ai-employees/{aiEmployee}', [AiEmployeeController::class, 'show'])->name('admin.ai-employees.show');
+        // ─── Phase 4 — AI Employees (full CRUD + actions) ───────────────
+        Route::get('/ai-employees',                            [AiEmployeeController::class, 'index'])->name('admin.ai-employees.index');
+        Route::get('/ai-employees/create',                     [AiEmployeeController::class, 'create'])->name('admin.ai-employees.create');
+        Route::post('/ai-employees',                           [AiEmployeeController::class, 'store'])->name('admin.ai-employees.store');
+        Route::get('/ai-employees/{aiEmployee}',               [AiEmployeeController::class, 'show'])->name('admin.ai-employees.show');
+        Route::get('/ai-employees/{aiEmployee}/edit',          [AiEmployeeController::class, 'edit'])->name('admin.ai-employees.edit');
+        Route::put('/ai-employees/{aiEmployee}',               [AiEmployeeController::class, 'update'])->name('admin.ai-employees.update');
+        Route::delete('/ai-employees/{aiEmployee}',            [AiEmployeeController::class, 'destroy'])->name('admin.ai-employees.destroy');
+        Route::post('/ai-employees/{aiEmployee}/pause',        [AiEmployeeController::class, 'pause'])->name('admin.ai-employees.pause');
+        Route::post('/ai-employees/{aiEmployee}/activate',     [AiEmployeeController::class, 'activate'])->name('admin.ai-employees.activate');
+        Route::post('/ai-employees/{aiEmployee}/disable',      [AiEmployeeController::class, 'disable'])->name('admin.ai-employees.disable');
+
+        // AI Tasks
+        Route::get('/ai-tasks',                          [AiTaskController::class, 'index'])->name('admin.ai-tasks.index');
+        Route::get('/ai-tasks/create',                   [AiTaskController::class, 'create'])->name('admin.ai-tasks.create');
+        Route::post('/ai-tasks',                         [AiTaskController::class, 'store'])->name('admin.ai-tasks.store');
+        Route::get('/ai-tasks/{aiTask}',                 [AiTaskController::class, 'show'])->name('admin.ai-tasks.show');
+        Route::post('/ai-tasks/{aiTask}/run',            [AiTaskController::class, 'run'])->name('admin.ai-tasks.run');
+        Route::post('/ai-tasks/{aiTask}/approve',        [AiTaskController::class, 'approve'])->name('admin.ai-tasks.approve');
+        Route::post('/ai-tasks/{aiTask}/reject',         [AiTaskController::class, 'reject'])->name('admin.ai-tasks.reject');
+        Route::post('/ai-tasks/{aiTask}/cancel',         [AiTaskController::class, 'cancel'])->name('admin.ai-tasks.cancel');
+        Route::post('/ai-tasks/{aiTask}/feedback',       [AiTaskController::class, 'storeFeedback'])->name('admin.ai-tasks.feedback');
+
+        // AI Logs
+        Route::get('/ai-logs', [AiTaskLogController::class, 'index'])->name('admin.ai-logs.index');
+
+        // AI Work Schedules
+        Route::get('/ai-schedules',                      [AiWorkScheduleController::class, 'index'])->name('admin.ai-schedules.index');
+        Route::get('/ai-schedules/create',               [AiWorkScheduleController::class, 'create'])->name('admin.ai-schedules.create');
+        Route::post('/ai-schedules',                     [AiWorkScheduleController::class, 'store'])->name('admin.ai-schedules.store');
+        Route::get('/ai-schedules/{aiSchedule}/edit',    [AiWorkScheduleController::class, 'edit'])->name('admin.ai-schedules.edit');
+        Route::put('/ai-schedules/{aiSchedule}',         [AiWorkScheduleController::class, 'update'])->name('admin.ai-schedules.update');
+        Route::delete('/ai-schedules/{aiSchedule}',      [AiWorkScheduleController::class, 'destroy'])->name('admin.ai-schedules.destroy');
+        Route::post('/ai-schedules/{aiSchedule}/toggle', [AiWorkScheduleController::class, 'toggle'])->name('admin.ai-schedules.toggle');
+
+        // AI Memories
+        Route::get('/ai-memories',                    [AiMemoryController::class, 'index'])->name('admin.ai-memories.index');
+        Route::get('/ai-memories/create',             [AiMemoryController::class, 'create'])->name('admin.ai-memories.create');
+        Route::post('/ai-memories',                   [AiMemoryController::class, 'store'])->name('admin.ai-memories.store');
+        Route::get('/ai-memories/{aiMemory}/edit',    [AiMemoryController::class, 'edit'])->name('admin.ai-memories.edit');
+        Route::put('/ai-memories/{aiMemory}',         [AiMemoryController::class, 'update'])->name('admin.ai-memories.update');
+        Route::delete('/ai-memories/{aiMemory}',      [AiMemoryController::class, 'destroy'])->name('admin.ai-memories.destroy');
 
         // ─── Phase 3 — Client Management ─────────────────
         Route::prefix('clients/{client}')->group(function () {

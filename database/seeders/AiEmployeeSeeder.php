@@ -100,18 +100,22 @@ class AiEmployeeSeeder extends Seeder
             $skillKeys = $data['skills'];
             unset($data['skills']);
 
-            $data['status']             = 'active';
-            $data['provider_type']      = 'mock';
-            $data['approval_required']  = true;
-            $data['can_publish']        = false;
-            $data['can_send_messages']  = false;
-            $data['can_manage_ads_budget'] = false;
-            $data['created_by']         = $admin?->id;
+            $data['status']                     = 'active';
+            $data['provider_type']              = 'mock';
+            $data['approval_required']          = true;
+            $data['requires_approval_default']  = true;
+            $data['autonomy_level']             = 'low';
+            $data['max_tasks_per_day']          = 10;
+            $data['can_publish']                = false;
+            $data['can_send_messages']          = false;
+            $data['can_manage_ads_budget']      = false;
+            $data['created_by']                 = $admin?->id;
 
             $employee = AiEmployee::updateOrCreate(['slug' => $data['slug']], $data);
 
-            $skillIds = AiSkill::whereIn('key', $skillKeys)->pluck('id');
-            $employee->skills()->sync($skillIds);
+            $skillIds  = AiSkill::whereIn('key', $skillKeys)->pluck('id');
+            $skillPivot = $skillIds->mapWithKeys(fn($id) => [$id => ['level' => 3]])->toArray();
+            $employee->skills()->sync($skillPivot);
         }
     }
 }

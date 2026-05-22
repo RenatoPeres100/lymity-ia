@@ -35,5 +35,11 @@ class DatabaseSeeder extends Seeder
             ClientKnowledgeBaseSeeder::class,
             ClientBlogPostSeeder::class,
         ]);
+
+        // Phase 4
+        $this->call([
+            AiWorkScheduleSeeder::class,
+            AiMemorySeeder::class,
+        ]);
     }
 }

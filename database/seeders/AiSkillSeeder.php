@@ -36,7 +36,19 @@ class AiSkillSeeder extends Seeder
             ['key' => 'approvals',             'name' => 'Aprovações',                 'module' => 'management'],
         ];
 
+        $categoryMap = [
+            'content'    => 'Conteúdo',
+            'social'     => 'Redes Sociais',
+            'ads'        => 'Anúncios',
+            'seo'        => 'SEO',
+            'design'     => 'Design',
+            'crm'        => 'CRM',
+            'analytics'  => 'Analytics',
+            'management' => 'Gestão',
+        ];
+
         foreach ($skills as $skill) {
+            $skill['category'] = $categoryMap[$skill['module']] ?? null;
             AiSkill::updateOrCreate(['key' => $skill['key']], $skill);
         }
     }

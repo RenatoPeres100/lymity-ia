@@ -75,6 +75,39 @@
                 Funcionários IA
             </a>
 
+            <a href="{{ route('admin.ai-tasks.index') }}" class="nav-item {{ request()->routeIs('admin.ai-tasks*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                    <path d="M9 12l2 2 4-4"/>
+                </svg>
+                Tarefas IA
+            </a>
+
+            <a href="{{ route('admin.ai-logs.index') }}" class="nav-item {{ request()->routeIs('admin.ai-logs*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6M8 13h8M8 17h5"/>
+                </svg>
+                Logs IA
+            </a>
+
+            <a href="{{ route('admin.ai-schedules.index') }}" class="nav-item {{ request()->routeIs('admin.ai-schedules*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                Agendamentos IA
+            </a>
+
+            <a href="{{ route('admin.ai-memories.index') }}" class="nav-item {{ request()->routeIs('admin.ai-memories*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                    <path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/>
+                    <path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/>
+                </svg>
+                Memórias IA
+            </a>
+
             <a href="{{ route('admin.leads.index') }}" class="nav-item {{ request()->routeIs('admin.leads*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>

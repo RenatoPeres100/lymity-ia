@@ -1,12 +1,30 @@
-<x-layouts.app title="{{ $employee->name }}">
+<x-layouts.app title="{{ $aiEmployee->name }}">
+
+@if(session('success'))
+<div style="background:#0f2a1a;border:1px solid #166534;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#4ade80;font-size:.875rem;">✓ {{ session('success') }}</div>
+@endif
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
     <div>
-        <h1 style="font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">{{ $employee->name }}</h1>
+        <h1 style="font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">{{ $aiEmployee->name }}</h1>
         <p style="font-size:.85rem;color:#64748b;"><a href="{{ route('admin.ai-employees.index') }}" style="color:#6b8fff;text-decoration:none;">Funcionários IA</a> / Detalhes</p>
     </div>
-    <span style="background:{{ $employee->status === 'active' ? '#052e16' : '#1e293b' }};color:{{ $employee->status === 'active' ? '#4ade80' : '#94a3b8' }};font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:20px;">{{ $employee->getStatusLabelAttribute() }}</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span style="background:{{ $aiEmployee->status === 'active' ? '#052e16' : '#1e293b' }};color:{{ $aiEmployee->status === 'active' ? '#4ade80' : '#94a3b8' }};font-size:.78rem;font-weight:600;padding:6px 14px;border-radius:20px;">{{ $aiEmployee->getStatusLabelAttribute() }}</span>
+        <a href="{{ route('admin.ai-employees.edit', $aiEmployee) }}" style="background:#1e293b;color:#94a3b8;font-size:.8rem;font-weight:600;padding:7px 16px;border-radius:8px;text-decoration:none;">Editar</a>
+        @if($aiEmployee->status !== 'active')
+        <form method="POST" action="{{ route('admin.ai-employees.activate', $aiEmployee) }}" style="display:inline;">@csrf
+            <button type="submit" style="background:#052e16;color:#4ade80;font-size:.8rem;font-weight:600;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;">Ativar</button>
+        </form>
+        @else
+        <form method="POST" action="{{ route('admin.ai-employees.pause', $aiEmployee) }}" style="display:inline;">@csrf
+            <button type="submit" style="background:#451a03;color:#fb923c;font-size:.8rem;font-weight:600;padding:7px 16px;border-radius:8px;border:none;cursor:pointer;">Pausar</button>
+        </form>
+        @endif
+    </div>
 </div>
+
+@php $employee = $aiEmployee; @endphp
 
 <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;">
 
