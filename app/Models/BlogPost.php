@@ -48,6 +48,27 @@ class BlogPost extends Model
         return $query->where('type', 'agency');
     }
 
+    public function scopeClient(Builder $query, ?int $clientId = null): Builder
+    {
+        $query->where('type', 'client');
+        if ($clientId) {
+            $query->where('client_id', $clientId);
+        }
+        return $query;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'draft'            => 'Rascunho',
+            'pending_approval' => 'Aguardando aprovação',
+            'approved'         => 'Aprovado',
+            'published'        => 'Publicado',
+            'archived'         => 'Arquivado',
+            default            => $this->status ?? '—',
+        };
+    }
+
     public function getReadTimeAttribute(): int
     {
         $words = str_word_count(strip_tags($this->content));

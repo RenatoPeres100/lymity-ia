@@ -43,5 +43,20 @@ class DemoClientSeeder extends Seeder
                 'status'     => 'active',
             ]
         );
+
+        User::updateOrCreate(
+            ['email' => 'cliente@lymity.local'],
+            [
+                'company_id' => $company?->id,
+                'client_id'  => $client->id,
+                'name'       => 'Cliente Lymity',
+                'email'      => 'cliente@lymity.local',
+                'password'   => Hash::make('password'),
+                'role'       => 'cliente_admin',
+                'user_type'  => 'client',
+                'job_title'  => 'Administrador',
+                'status'     => 'active',
+            ]
+        );
     }
 }

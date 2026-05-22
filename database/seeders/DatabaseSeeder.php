@@ -25,5 +25,15 @@ class DatabaseSeeder extends Seeder
             CaseStudySeeder::class,
             LeadSeeder::class,
         ]);
+
+        // Phase 3
+        $this->call([
+            ClientBrandProfileSeeder::class,
+            ClientWebsiteSeeder::class,
+            ClientWebsitePageSeeder::class,
+            ClientAssetSeeder::class,
+            ClientKnowledgeBaseSeeder::class,
+            ClientBlogPostSeeder::class,
+        ]);
     }
 }

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Client extends Model
 {
@@ -23,6 +24,36 @@ class Client extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function brandProfile(): HasOne
+    {
+        return $this->hasOne(ClientBrandProfile::class);
+    }
+
+    public function websites(): HasMany
+    {
+        return $this->hasMany(ClientWebsite::class);
+    }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(ClientAsset::class);
+    }
+
+    public function knowledgeBases(): HasMany
+    {
+        return $this->hasMany(ClientKnowledgeBase::class);
+    }
+
+    public function blogPosts(): HasMany
+    {
+        return $this->hasMany(BlogPost::class)->where('type', 'client');
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
     }
 
     public function isActive(): bool

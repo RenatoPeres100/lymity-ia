@@ -26,6 +26,7 @@
                 <th>Status</th>
                 <th>Empresa</th>
                 <th>Cadastro</th>
+                <th class="text-right">Gestão</th>
             </tr>
         </thead>
         <tbody>
@@ -67,6 +68,22 @@
                 </td>
                 <td class="text-sm text-slate-500">{{ $client->company?->name ?? '—' }}</td>
                 <td class="text-xs text-slate-400">{{ $client->created_at->format('d/m/Y') }}</td>
+                <td class="text-right">
+                    <div class="flex items-center justify-end gap-1.5">
+                        <a href="{{ route('admin.clients.brand.show', $client) }}" class="btn btn-xs btn-secondary" title="Marca">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="13.5" cy="6.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688z"/></svg>
+                        </a>
+                        <a href="{{ route('admin.clients.website.show', $client) }}" class="btn btn-xs btn-secondary" title="Website">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10z"/></svg>
+                        </a>
+                        <a href="{{ route('admin.clients.blog.index', $client) }}" class="btn btn-xs btn-secondary" title="Blog">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+                        </a>
+                        <a href="{{ route('admin.clients.logs.index', $client) }}" class="btn btn-xs btn-secondary" title="Logs">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        </a>
+                    </div>
+                </td>
             </tr>
             @empty
             <tr>
