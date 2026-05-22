@@ -1,5 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureAdminGeral;
+use App\Http\Middleware\EnsureAgencyAccess;
+use App\Http\Middleware\EnsureClientAccess;
+use App\Http\Middleware\EnsureUserIsActive;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -11,7 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        $middleware->alias([
+            'active'        => EnsureUserIsActive::class,
+            'admin_geral'   => EnsureAdminGeral::class,
+            'agency'        => EnsureAgencyAccess::class,
+            'client_access' => EnsureClientAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

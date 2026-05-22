@@ -2,31 +2,113 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password'])]
-#[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
+    protected $fillable = [
+        'company_id', 'client_id', 'name', 'email', 'password',
+        'role', 'user_type', 'job_title', 'status', 'last_login_at',
+    ];
+
+    protected $hidden = ['password', 'remember_token'];
+
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
+            'last_login_at'     => 'datetime',
+            'password'          => 'hashed',
         ];
+    }
+
+    public function company(): BelongsTo
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function client(): BelongsTo
+    {
+        return $this->belongsTo(Client::class);
+    }
+
+    public function permissions(): BelongsToMany
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
+    public function isAdminGeral(): bool
+    {
+        return $this->role === 'admin_geral';
+    }
+
+    public function isAgencyUser(): bool
+    {
+        return $this->user_type === 'agency' &&
+               in_array($this->role, [
+                   'admin_geral', 'agencia_admin', 'agencia_operador',
+                   'social_media', 'gestor_trafego', 'seo',
+                   'copywriter', 'designer',
+               ]);
+    }
+
+    public function isClientUser(): bool
+    {
+        return $this->user_type === 'client' &&
+               in_array($this->role, ['cliente_admin', 'cliente_colaborador', 'viewer']);
+    }
+
+    public function isAiEmployee(): bool
+    {
+        return $this->user_type === 'ai' || $this->role === 'ai_employee';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+
+    public function hasPermission(string $key): bool
+    {
+        if ($this->isAdminGeral()) {
+            return true;
+        }
+
+        return $this->permissions()->where('key', $key)->exists();
+    }
+
+    public function getRoleLabelAttribute(): string
+    {
+        return match ($this->role) {
+            'admin_geral'         => 'Admin Geral',
+            'agencia_admin'       => 'Admin Agência',
+            'agencia_operador'    => 'Operador',
+            'social_media'        => 'Social Media',
+            'gestor_trafego'      => 'Gestor de Tráfego',
+            'seo'                 => 'SEO',
+            'copywriter'          => 'Copywriter',
+            'designer'            => 'Designer',
+            'cliente_admin'       => 'Admin Cliente',
+            'cliente_colaborador' => 'Colaborador',
+            'viewer'              => 'Visualizador',
+            'ai_employee'         => 'Funcionário IA',
+            default               => $this->role ?? 'Sem role',
+        };
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'active'   => 'Ativo',
+            'inactive' => 'Inativo',
+            'blocked'  => 'Bloqueado',
+            default    => $this->status ?? '-',
+        };
     }
 }

@@ -1,0 +1,92 @@
+<x-layouts.app title="Clientes">
+
+<div class="mb-6 flex items-start justify-between flex-wrap gap-4">
+    <div>
+        <h2 class="text-xl font-bold text-slate-900">Clientes</h2>
+        <p class="text-sm text-slate-500 mt-1">Gerencie os clientes atendidos pela agência.</p>
+    </div>
+    <button onclick="alert('Criação de clientes será liberada na Fase 2.')"
+        class="btn btn-primary opacity-75 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Novo cliente
+        <span class="text-xs bg-blue-800/50 rounded px-1.5 py-0.5 ml-1">Fase 2</span>
+    </button>
+</div>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>Segmento</th>
+                <th>Website</th>
+                <th>Instagram</th>
+                <th>Status</th>
+                <th>Empresa</th>
+                <th>Cadastro</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($clients as $client)
+            <tr>
+                <td>
+                    <div class="font-medium text-slate-800">{{ $client->name }}</div>
+                    @if($client->legal_name && $client->legal_name !== $client->name)
+                    <div class="text-xs text-slate-400">{{ $client->legal_name }}</div>
+                    @endif
+                </td>
+                <td>
+                    @if($client->segment)
+                    <span class="badge badge-blue">{{ $client->segment }}</span>
+                    @else
+                    <span class="text-slate-300">—</span>
+                    @endif
+                </td>
+                <td>
+                    @if($client->website)
+                    <a href="{{ $client->website }}" target="_blank" class="text-blue-500 hover:underline text-sm truncate max-w-xs block">
+                        {{ $client->website }}
+                    </a>
+                    @else
+                    <span class="text-slate-300">—</span>
+                    @endif
+                </td>
+                <td>
+                    @if($client->instagram)
+                    <span class="text-sm text-slate-500">{{ $client->instagram }}</span>
+                    @else
+                    <span class="text-slate-300">—</span>
+                    @endif
+                </td>
+                <td>
+                    <span class="badge {{ $client->status === 'active' ? 'badge-green' : 'badge-gray' }}">
+                        {{ $client->status === 'active' ? 'Ativo' : 'Inativo' }}
+                    </span>
+                </td>
+                <td class="text-sm text-slate-500">{{ $client->company?->name ?? '—' }}</td>
+                <td class="text-xs text-slate-400">{{ $client->created_at->format('d/m/Y') }}</td>
+            </tr>
+            @empty
+            <tr>
+                <td colspan="7" class="py-12 text-center text-slate-400">
+                    <svg class="w-10 h-10 mx-auto mb-3 opacity-30" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    </svg>
+                    <div class="text-sm font-medium">Nenhum cliente encontrado</div>
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    @if($clients->hasPages())
+    <div class="flex items-center justify-between px-5 py-3 border-t border-slate-100 text-sm text-slate-500">
+        <span>{{ $clients->firstItem() }}–{{ $clients->lastItem() }} de {{ $clients->total() }} clientes</span>
+        {{ $clients->links() }}
+    </div>
+    @endif
+</div>
+
+</x-layouts.app>
