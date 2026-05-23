@@ -161,6 +161,23 @@
                 Canais
             </a>
 
+            <span class="nav-section-label">SEO</span>
+
+            <a href="{{ route('admin.seo.index') }}" class="nav-item {{ request()->routeIs('admin.seo.index') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                SEO
+            </a>
+
+            <a href="{{ route('admin.seo.blog.index') }}" class="nav-item {{ request()->routeIs('admin.seo.blog*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                Blog SEO
+            </a>
+
             <span class="nav-section-label">Conteúdo</span>
 
             <a href="{{ route('admin.blog-posts.index') }}" class="nav-item {{ request()->routeIs('admin.blog-posts*') ? 'active' : '' }}">
@@ -243,6 +260,21 @@
                 @endif
             </a>
 
+            <span class="nav-section-label">SEO</span>
+            <a href="{{ route('client.seo.index') }}" class="nav-item {{ request()->routeIs('client.seo.index') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                SEO
+            </a>
+            <a href="{{ route('client.seo.blog.index') }}" class="nav-item {{ request()->routeIs('client.seo.blog*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+                </svg>
+                Blog
+            </a>
+
             <span class="nav-section-label">Social Media</span>
             <a href="{{ route('client.social.posts.index') }}" class="nav-item {{ request()->routeIs('client.social.posts*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -300,7 +332,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Fase 6 — Social Media
+                    Fase 7 — SEO &amp; Blog IA
                 </span>
 
                 <form method="POST" action="{{ route('logout') }}">

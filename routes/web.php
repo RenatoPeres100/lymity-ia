@@ -40,6 +40,14 @@ use App\Http\Controllers\Admin\SocialAiController;
 use App\Http\Controllers\Client\SocialPostController as ClientSocialPostController;
 use App\Http\Controllers\Client\SocialCalendarController as ClientSocialCalendarController;
 use App\Http\Controllers\Client\SocialApprovalController;
+use App\Http\Controllers\Admin\SeoDashboardController;
+use App\Http\Controllers\Admin\SeoKeywordController;
+use App\Http\Controllers\Admin\SeoClusterController;
+use App\Http\Controllers\Admin\SeoContentPlanController;
+use App\Http\Controllers\Admin\SeoAuditController;
+use App\Http\Controllers\Admin\AdminBlogController;
+use App\Http\Controllers\Client\SeoDashboardController as ClientSeoDashboardController;
+use App\Http\Controllers\Client\ClientBlogSeoController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Site ──────────────────────────────────────────
@@ -218,6 +226,46 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/social/ai/posts/{post}/improve',          [SocialAiController::class, 'improveForm'])->name('admin.social.ai.improve');
         Route::post('/social/ai/posts/{post}/improve',         [SocialAiController::class, 'improve'])->name('admin.social.ai.improve.store');
 
+        // ─── Phase 7 — SEO & Blog IA ─────────────────────────────────────
+        Route::get('/seo',                                          [SeoDashboardController::class, 'index'])->name('admin.seo.index');
+
+        // Keywords
+        Route::get('/seo/keywords',                                 [SeoKeywordController::class, 'index'])->name('admin.seo.keywords.index');
+        Route::get('/seo/keywords/create',                          [SeoKeywordController::class, 'create'])->name('admin.seo.keywords.create');
+        Route::post('/seo/keywords',                                [SeoKeywordController::class, 'store'])->name('admin.seo.keywords.store');
+        Route::get('/seo/keywords/{seoKeyword}/edit',               [SeoKeywordController::class, 'edit'])->name('admin.seo.keywords.edit');
+        Route::put('/seo/keywords/{seoKeyword}',                    [SeoKeywordController::class, 'update'])->name('admin.seo.keywords.update');
+        Route::delete('/seo/keywords/{seoKeyword}',                 [SeoKeywordController::class, 'destroy'])->name('admin.seo.keywords.destroy');
+
+        // Clusters
+        Route::get('/seo/clusters',                                 [SeoClusterController::class, 'index'])->name('admin.seo.clusters.index');
+        Route::get('/seo/clusters/create',                          [SeoClusterController::class, 'create'])->name('admin.seo.clusters.create');
+        Route::post('/seo/clusters',                                [SeoClusterController::class, 'store'])->name('admin.seo.clusters.store');
+        Route::get('/seo/clusters/{seoCluster}/edit',               [SeoClusterController::class, 'edit'])->name('admin.seo.clusters.edit');
+        Route::put('/seo/clusters/{seoCluster}',                    [SeoClusterController::class, 'update'])->name('admin.seo.clusters.update');
+        Route::delete('/seo/clusters/{seoCluster}',                 [SeoClusterController::class, 'destroy'])->name('admin.seo.clusters.destroy');
+
+        // Content Plans
+        Route::get('/seo/content-plans',                            [SeoContentPlanController::class, 'index'])->name('admin.seo.content-plans.index');
+        Route::get('/seo/content-plans/create',                     [SeoContentPlanController::class, 'create'])->name('admin.seo.content-plans.create');
+        Route::post('/seo/content-plans',                           [SeoContentPlanController::class, 'store'])->name('admin.seo.content-plans.store');
+        Route::get('/seo/content-plans/{seoContentPlan}',           [SeoContentPlanController::class, 'show'])->name('admin.seo.content-plans.show');
+        Route::get('/seo/content-plans/{seoContentPlan}/edit',      [SeoContentPlanController::class, 'edit'])->name('admin.seo.content-plans.edit');
+        Route::put('/seo/content-plans/{seoContentPlan}',           [SeoContentPlanController::class, 'update'])->name('admin.seo.content-plans.update');
+
+        // Audits
+        Route::get('/seo/audits',                                   [SeoAuditController::class, 'index'])->name('admin.seo.audits.index');
+        Route::get('/seo/audits/create',                            [SeoAuditController::class, 'create'])->name('admin.seo.audits.create');
+        Route::post('/seo/audits',                                  [SeoAuditController::class, 'store'])->name('admin.seo.audits.store');
+        Route::get('/seo/audits/{seoAudit}',                        [SeoAuditController::class, 'show'])->name('admin.seo.audits.show');
+        Route::post('/seo/audits/{seoAudit}/generate-mock',         [SeoAuditController::class, 'generateMock'])->name('admin.seo.audits.generate-mock');
+
+        // Blog SEO (AI generation & management)
+        Route::get('/seo/blog',                                     [AdminBlogController::class, 'index'])->name('admin.seo.blog.index');
+        Route::get('/seo/blog/generate-ai',                         [AdminBlogController::class, 'generateAiForm'])->name('admin.seo.blog.generate');
+        Route::post('/seo/blog/generate-ai',                        [AdminBlogController::class, 'generateAi'])->name('admin.seo.blog.generate.store');
+        Route::post('/seo/blog/{blogPost}/send-approval',           [AdminBlogController::class, 'sendToApproval'])->name('admin.seo.blog.send-approval');
+        Route::post('/seo/blog/{blogPost}/publish',                 [AdminBlogController::class, 'publish'])->name('admin.seo.blog.publish');
 
         // ─── Phase 3 — Client Management ─────────────────
         Route::prefix('clients/{client}')->group(function () {
@@ -303,6 +351,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/social/approvals',              [SocialApprovalController::class, 'index'])->name('client.social.approvals.index');
         Route::post('/social/approvals/{approvalRequest}/approve', [SocialApprovalController::class, 'approve'])->name('client.social.approvals.approve');
         Route::post('/social/approvals/{approvalRequest}/reject',  [SocialApprovalController::class, 'reject'])->name('client.social.approvals.reject');
+
+        // Phase 7 — Client SEO
+        Route::get('/seo',                                          [ClientSeoDashboardController::class, 'index'])->name('client.seo.index');
+        Route::get('/seo/blog',                                     [ClientBlogSeoController::class, 'index'])->name('client.seo.blog.index');
+        Route::get('/seo/blog/approvals',                           [ClientBlogSeoController::class, 'approvals'])->name('client.seo.blog.approvals');
+        Route::get('/seo/blog/{blogPost}',                          [ClientBlogSeoController::class, 'show'])->name('client.seo.blog.show');
     });
 
 });

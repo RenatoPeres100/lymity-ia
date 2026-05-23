@@ -54,5 +54,13 @@ class DatabaseSeeder extends Seeder
             SocialCalendarSeeder::class,
             SocialPostSeeder::class,
         ]);
+
+        // Phase 7
+        $this->call([
+            SeoKeywordSeeder::class,
+            SeoClusterSeeder::class,
+            SeoContentPlanSeeder::class,
+            SeoAuditSeeder::class,
+        ]);
     }
 }

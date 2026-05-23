@@ -47,4 +47,24 @@ class Company extends Model
     {
         return $this->hasMany(SocialContentBrief::class);
     }
+
+    public function seoKeywords(): HasMany
+    {
+        return $this->hasMany(SeoKeyword::class);
+    }
+
+    public function seoClusters(): HasMany
+    {
+        return $this->hasMany(SeoCluster::class);
+    }
+
+    public function seoContentPlans(): HasMany
+    {
+        return $this->hasMany(SeoContentPlan::class);
+    }
+
+    public function seoAudits(): HasMany
+    {
+        return $this->hasMany(SeoAudit::class);
+    }
 }

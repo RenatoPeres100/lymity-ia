@@ -21,6 +21,12 @@ class MockAiProvider
             'generate_social_calendar'           => $this->generateSocialCalendar($title, $desc, $clientName),
             'generate_social_variants'           => $this->generateSocialVariants($title, $desc, $clientName),
             'improve_social_post'                => $this->improveSocialPost($title, $desc, $clientName),
+            'generate_blog_post'                 => $this->generateBlogPostJson($title, $desc, $clientName),
+            'generate_seo_plan'                  => $this->generateSeoContentPlanJson($title, $desc, $clientName),
+            'generate_keyword_cluster'           => $this->generateKeywordClusterJson($title, $desc, $clientName),
+            'improve_blog_post'                  => $this->improveBlogPost($title, $desc, $clientName),
+            'generate_meta_description'          => $this->generateMetaDescription($title, $desc, $clientName),
+            'generate_seo_audit_mock'            => $this->generateSeoAuditMockJson($title, $desc, $clientName),
             'seo_plan'             => $this->generateSeoPlan($title, $desc, $clientName),
             'ads_analysis'         => $this->generateAdsAnalysis($title, $desc, $clientName),
             'copywriting'          => $this->generateCopywriting($title, $desc, $clientName),
@@ -30,6 +36,196 @@ class MockAiProvider
             'creative_briefing'    => $this->generateCreativeBriefing($title, $desc, $clientName),
             default                => $this->generateGenericOutput($title, $desc, $clientName, $taskType, $employee, $skillList),
         };
+    }
+
+    private function generateBlogPostJson(string $title, ?string $desc, string $clientName): string
+    {
+        $keyword = $desc ?? 'marketing digital com inteligência artificial';
+        $slug    = \Illuminate\Support\Str::slug($title);
+
+        $data = [
+            'title'              => $title,
+            'slug'               => $slug,
+            'subtitle'           => "Guia completo sobre {$keyword} para empresas que querem crescer",
+            'excerpt'            => "Descubra como {$keyword} pode transformar os resultados da sua empresa. Neste artigo, exploramos estratégias práticas e casos reais de sucesso com {$clientName}.",
+            'seo_title'          => "{$title} — Guia Definitivo | {$clientName}",
+            'seo_description'    => "Aprenda tudo sobre {$keyword} com exemplos práticos, estratégias comprovadas e dicas exclusivas da {$clientName}. Leia agora e transforme seus resultados.",
+            'focus_keyword'      => $keyword,
+            'secondary_keywords' => [
+                "{$keyword} para empresas",
+                "como usar {$keyword}",
+                "estratégias de {$keyword}",
+                "{$keyword} no Brasil",
+            ],
+            'content'            => $this->generateBlogContent($title, $keyword, $clientName),
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function generateBlogContent(string $title, string $keyword, string $clientName): string
+    {
+        return "<h2>Introdução</h2>
+
+<p>No cenário digital atual, dominar {$keyword} se tornou essencial para empresas que desejam se destacar da concorrência. A {$clientName} tem ajudado dezenas de negócios a implementar estratégias eficazes e mensuráveis nessa área.</p>
+
+<p>Neste guia completo, você vai encontrar tudo o que precisa saber para aplicar {$keyword} de forma inteligente, desde os conceitos básicos até as táticas mais avançadas utilizadas pelos melhores especialistas do mercado.</p>
+
+<h2>O que é {$keyword} e por que é importante</h2>
+
+<p>Antes de entrar nas estratégias práticas, é fundamental entender o que é {$keyword} e qual o seu papel no crescimento de negócios modernos. Em essência, trata-se de um conjunto de técnicas e práticas que, quando bem executadas, geram resultados consistentes e escaláveis.</p>
+
+<p>Empresas que investem em {$keyword} de forma estruturada registram, em média, um crescimento de 40% a 60% na geração de oportunidades qualificadas. Esses números não são coincidência — são resultado de planejamento, execução e otimização contínua.</p>
+
+<h2>Principais benefícios para o seu negócio</h2>
+
+<p>A adoção de estratégias de {$keyword} traz uma série de vantagens competitivas. Entre os principais benefícios que nossos clientes relatam, destacamos:</p>
+
+<p>Primeiramente, o aumento significativo na visibilidade orgânica. Quando sua empresa aparece nos primeiros resultados de busca para termos relevantes do seu setor, a percepção de autoridade cresce naturalmente, atraindo clientes que já estão no momento de decisão.</p>
+
+<p>Em segundo lugar, a redução do custo de aquisição de clientes. Estratégias bem executadas de {$keyword} tendem a ter um ROI muito superior às mídias pagas tradicionais, especialmente no médio e longo prazo.</p>
+
+<h2>Estratégias práticas que funcionam</h2>
+
+<p>A teoria é importante, mas o que realmente faz a diferença são as ações práticas. Com base na experiência da {$clientName} com clientes de diferentes setores, listamos as estratégias que consistentemente entregam os melhores resultados:</p>
+
+<p>A criação de conteúdo relevante e otimizado é o pilar central de qualquer estratégia eficaz. Isso significa produzir artigos, vídeos e materiais que respondam genuinamente às dúvidas do seu público-alvo, utilizando as palavras-chave certas no contexto correto.</p>
+
+<p>A consistência na publicação é outro fator crítico. Empresas que publicam conteúdo de forma regular e previsível constroem uma audiência engajada e sinalizam para os algoritmos que são fontes confiáveis de informação.</p>
+
+<h2>Como a IA está transformando essa área</h2>
+
+<p>A inteligência artificial está revolucionando a forma como empresas abordam {$keyword}. Ferramentas inteligentes permitem agora analisar volumes massivos de dados, identificar padrões de comportamento e personalizar experiências em uma escala que seria impossível manualmente.</p>
+
+<p>Na {$clientName}, utilizamos IA para otimizar cada etapa do processo — desde a pesquisa de palavras-chave até a análise de performance. O resultado é uma operação mais eficiente, com decisões baseadas em dados reais e não em suposições.</p>
+
+<h2>Erros comuns que você deve evitar</h2>
+
+<p>Conhecer os erros mais frequentes pode poupar meses de trabalho desperdiçado. O primeiro e mais comum é a falta de planejamento estratégico. Muitas empresas iniciam suas ações de {$keyword} sem uma pesquisa adequada de palavras-chave ou uma compreensão clara do seu público-alvo.</p>
+
+<p>Outro erro frequente é ignorar a análise de dados. Sem monitorar regularmente as métricas corretas, é impossível identificar o que está funcionando e o que precisa ser ajustado. Ferramentas como Google Analytics 4 e Search Console são aliadas indispensáveis.</p>
+
+<h2>Próximos passos para implementar</h2>
+
+<p>Agora que você compreende os fundamentos e as melhores práticas de {$keyword}, é hora de agir. Comece com um diagnóstico honesto da situação atual da sua empresa — entenda onde você está antes de definir para onde quer ir.</p>
+
+<p>Em seguida, defina objetivos claros e mensuráveis. Não basta querer 'aparecer no Google' — é preciso especificar quais termos, em qual prazo e com qual nível de busca mensal. Metas bem definidas permitem estratégias bem executadas.</p>
+
+<h2>Conclusão</h2>
+
+<p>Implementar uma estratégia sólida de {$keyword} é um investimento que se paga ao longo do tempo, gerando fluxo constante de oportunidades e fortalecendo a presença digital da sua empresa de forma sustentável.</p>
+
+<p>A {$clientName} está pronta para ajudar o seu negócio a dar esse passo. Entre em contato com nossa equipe e descubra como podemos criar uma estratégia personalizada para os seus objetivos.</p>";
+    }
+
+    private function generateSeoContentPlanJson(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'title'       => $title,
+            'description' => $desc ?? "Plano de conteúdo SEO para {$clientName}",
+            'weeks'       => [
+                ['week' => 1, 'theme' => 'Autoridade e posicionamento', 'posts' => 2],
+                ['week' => 2, 'theme' => 'Educação e tutoriais', 'posts' => 2],
+                ['week' => 3, 'theme' => 'Casos de sucesso', 'posts' => 2],
+                ['week' => 4, 'theme' => 'Geração de leads', 'posts' => 2],
+            ],
+            'keywords'    => [
+                'Palavra-chave principal',
+                'Variação long tail 1',
+                'Variação long tail 2',
+                'Termo relacionado',
+            ],
+            'notes'       => "Plano gerado para {$clientName} em modo mock. Substitua pelos dados reais.",
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function generateKeywordClusterJson(string $title, ?string $desc, string $clientName): string
+    {
+        $mainKeyword = $desc ?? $title;
+        $data = [
+            'cluster_name'   => $title,
+            'main_keyword'   => $mainKeyword,
+            'keywords'       => [
+                ['keyword' => $mainKeyword, 'type' => 'pillar', 'intent' => 'commercial'],
+                ['keyword' => "o que é {$mainKeyword}", 'type' => 'supporting', 'intent' => 'informational'],
+                ['keyword' => "como usar {$mainKeyword}", 'type' => 'supporting', 'intent' => 'informational'],
+                ['keyword' => "{$mainKeyword} para empresas", 'type' => 'supporting', 'intent' => 'commercial'],
+                ['keyword' => "{$mainKeyword} preço", 'type' => 'supporting', 'intent' => 'transactional'],
+                ['keyword' => "melhor {$mainKeyword}", 'type' => 'supporting', 'intent' => 'commercial'],
+            ],
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function improveBlogPost(string $title, ?string $desc, string $clientName): string
+    {
+        $original = $desc ?? 'Conteúdo original não fornecido.';
+        return <<<OUTPUT
+# ✍️ Post de Blog Melhorado — {$title}
+**Cliente:** {$clientName} | **Modo:** Mock
+
+## Melhorias Aplicadas
+
+1. **Título otimizado:** Inclusão de palavra-chave principal no início
+2. **Introdução reescrita:** Gancho mais forte com dado ou pergunta provocadora
+3. **Subtítulos H2/H3:** Estrutura hierárquica para melhor escaneabilidade
+4. **Parágrafos:** Máximo 3-4 linhas para facilitar leitura mobile
+5. **CTA interno:** Adicionado ao meio e ao fim do artigo
+6. **SEO técnico:** Meta description e focus keyword otimizados
+
+## Conteúdo Melhorado
+
+{$original}
+
+> ✅ Versão melhorada gerada em modo mock. Revise e personalize antes de publicar.
+OUTPUT;
+    }
+
+    private function generateMetaDescription(string $title, ?string $desc, string $clientName): string
+    {
+        $keyword = $desc ?? $title;
+        return "Descubra tudo sobre {$keyword} com a {$clientName}. Estratégias práticas, exemplos reais e dicas exclusivas para transformar os resultados do seu negócio. Leia agora!";
+    }
+
+    private function generateSeoAuditMockJson(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'title'   => $title,
+            'score'   => 68,
+            'summary' => "Auditoria SEO gerada em modo mock para {$clientName}. Conecte ferramentas reais (GSC, Semrush, Ahrefs) para dados precisos.",
+            'recommendations' => [
+                [
+                    'title'       => 'Otimizar meta descriptions',
+                    'description' => 'Várias páginas estão sem meta description ou com textos duplicados. Defina descrições únicas e com chamada para ação para cada página relevante.',
+                    'priority'    => 'high',
+                ],
+                [
+                    'title'       => 'Melhorar velocidade de carregamento',
+                    'description' => 'O site apresenta tempo de carregamento superior a 3 segundos em mobile. Otimize imagens, ative cache e considere um CDN.',
+                    'priority'    => 'critical',
+                ],
+                [
+                    'title'       => 'Estrutura de headings',
+                    'description' => 'Algumas páginas têm múltiplos H1 ou pulam níveis de heading. Organize a hierarquia corretamente: H1 > H2 > H3.',
+                    'priority'    => 'medium',
+                ],
+                [
+                    'title'       => 'Construir backlinks de qualidade',
+                    'description' => 'O perfil de backlinks atual é limitado. Considere guest posts, parcerias estratégicas e relações públicas digitais.',
+                    'priority'    => 'medium',
+                ],
+                [
+                    'title'       => 'Schema markup',
+                    'description' => 'Implemente dados estruturados (schema.org) para melhorar a apresentação nos resultados de busca com rich snippets.',
+                    'priority'    => 'low',
+                ],
+            ],
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
     private function generateSocialPosts(string $title, ?string $desc, string $clientName, $employee): string
