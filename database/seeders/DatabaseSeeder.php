@@ -41,5 +41,10 @@ class DatabaseSeeder extends Seeder
             AiWorkScheduleSeeder::class,
             AiMemorySeeder::class,
         ]);
+
+        // Phase 5
+        $this->call([
+            ApprovalRequestSeeder::class,
+        ]);
     }
 }

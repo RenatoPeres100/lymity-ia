@@ -6,6 +6,7 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublicSiteController;
+use App\Http\Controllers\Admin\ApprovalController as AdminApprovalController;
 use App\Http\Controllers\Admin\AiEmployeeController;
 use App\Http\Controllers\Admin\AiTaskController;
 use App\Http\Controllers\Admin\AiTaskLogController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\Admin\ClientWebsitePageController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Client\ApprovalController as ClientApprovalController;
 use App\Http\Controllers\Client\BlogController as ClientBlogController;
 use App\Http\Controllers\Client\BrandController as ClientBrandController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
@@ -101,6 +103,17 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/leads/{lead}',    [LeadController::class, 'show'])->name('admin.leads.show');
         Route::put('/leads/{lead}',    [LeadController::class, 'update'])->name('admin.leads.update');
         Route::delete('/leads/{lead}', [LeadController::class, 'destroy'])->name('admin.leads.destroy');
+
+        // ─── Phase 5 — Approvals ─────────────────────────────────────────
+        Route::get('/approvals',                                        [AdminApprovalController::class, 'index'])->name('admin.approvals.index');
+        Route::get('/approvals/create',                                 [AdminApprovalController::class, 'create'])->name('admin.approvals.create');
+        Route::post('/approvals',                                       [AdminApprovalController::class, 'store'])->name('admin.approvals.store');
+        Route::get('/approvals/{approvalRequest}',                      [AdminApprovalController::class, 'show'])->name('admin.approvals.show');
+        Route::post('/approvals/{approvalRequest}/approve',             [AdminApprovalController::class, 'approve'])->name('admin.approvals.approve');
+        Route::post('/approvals/{approvalRequest}/reject',              [AdminApprovalController::class, 'reject'])->name('admin.approvals.reject');
+        Route::post('/approvals/{approvalRequest}/request-changes',     [AdminApprovalController::class, 'requestChanges'])->name('admin.approvals.request-changes');
+        Route::post('/approvals/{approvalRequest}/cancel',              [AdminApprovalController::class, 'cancel'])->name('admin.approvals.cancel');
+        Route::post('/approvals/{approvalRequest}/comments',            [AdminApprovalController::class, 'storeComment'])->name('admin.approvals.comments');
 
         // ─── Phase 4 — AI Employees (full CRUD + actions) ───────────────
         Route::get('/ai-employees',                            [AiEmployeeController::class, 'index'])->name('admin.ai-employees.index');
@@ -209,6 +222,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/pages/{page}',                  [ClientPageController::class, 'show'])->name('client.pages.show');
         Route::post('/pages/{page}/approve',         [ClientPageController::class, 'approve'])->name('client.pages.approve');
         Route::post('/pages/{page}/reject',          [ClientPageController::class, 'reject'])->name('client.pages.reject');
+        // Phase 5 — Client Approvals
+        Route::get('/approvals',                                        [ClientApprovalController::class, 'index'])->name('client.approvals.index');
+        Route::get('/approvals/{approvalRequest}',                      [ClientApprovalController::class, 'show'])->name('client.approvals.show');
+        Route::post('/approvals/{approvalRequest}/approve',             [ClientApprovalController::class, 'approve'])->name('client.approvals.approve');
+        Route::post('/approvals/{approvalRequest}/reject',              [ClientApprovalController::class, 'reject'])->name('client.approvals.reject');
+        Route::post('/approvals/{approvalRequest}/request-changes',     [ClientApprovalController::class, 'requestChanges'])->name('client.approvals.request-changes');
+        Route::post('/approvals/{approvalRequest}/comments',            [ClientApprovalController::class, 'storeComment'])->name('client.approvals.comments');
+
         Route::get('/blog',                          [ClientBlogController::class, 'index'])->name('client.blog.index');
         Route::get('/blog/{blogPost}',               [ClientBlogController::class, 'show'])->name('client.blog.show');
         Route::post('/blog/{blogPost}/approve',      [ClientBlogController::class, 'approve'])->name('client.blog.approve');

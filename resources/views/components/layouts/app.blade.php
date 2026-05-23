@@ -59,6 +59,17 @@
                 Usuários
             </a>
 
+            <a href="{{ route('admin.approvals.index') }}" class="nav-item {{ request()->routeIs('admin.approvals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Aprovações
+                @php $pendingCount = \App\Models\ApprovalRequest::where('status','pending')->count(); @endphp
+                @if($pendingCount > 0)
+                <span class="ml-auto text-xs bg-amber-900 text-amber-300 px-2 py-0.5 rounded-full">{{ $pendingCount }}</span>
+                @endif
+            </a>
+
             <a href="{{ route('admin.clients') }}" class="nav-item {{ request()->routeIs('admin.clients') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -189,6 +200,16 @@
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 Blog
             </a>
+            <a href="{{ route('client.approvals.index') }}" class="nav-item {{ request()->routeIs('client.approvals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Aprovações
+                @php $clientPending = auth()->user()->client_id ? \App\Models\ApprovalRequest::where('client_id', auth()->user()->client_id)->where('status','pending')->count() : 0; @endphp
+                @if($clientPending > 0)
+                <span class="ml-auto text-xs bg-amber-900 text-amber-300 px-2 py-0.5 rounded-full">{{ $clientPending }}</span>
+                @endif
+            </a>
             @endif
 
         </nav>
@@ -227,7 +248,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Fase 3 — Clientes
+                    Fase 5 — Aprovações
                 </span>
 
                 <form method="POST" action="{{ route('logout') }}">

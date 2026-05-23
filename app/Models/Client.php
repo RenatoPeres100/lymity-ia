@@ -56,6 +56,16 @@ class Client extends Model
         return $this->hasMany(ActivityLog::class);
     }
 
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(ApprovalRequest::class);
+    }
+
+    public function appNotifications(): HasMany
+    {
+        return $this->hasMany(AppNotification::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

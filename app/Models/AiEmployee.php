@@ -66,6 +66,11 @@ class AiEmployee extends Model
         return $this->belongsTo(Client::class, 'default_client_id');
     }
 
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(ApprovalRequest::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

@@ -5,6 +5,7 @@ namespace App\Services\Ai;
 use App\Models\AiEmployee;
 use App\Models\AiTask;
 use App\Models\User;
+use App\Services\Approval\ApprovalService;
 use Illuminate\Support\Facades\Auth;
 use Throwable;
 
@@ -63,6 +64,7 @@ class AiTaskService
 
             if ($nextStatus === 'waiting_approval') {
                 $this->logger->warning($task, 'Output gerado. Aguardando aprovação do responsável.');
+                $this->createApprovalRequestForTask($task);
             } else {
                 $this->logger->success($task, 'Tarefa concluída com sucesso.');
             }
@@ -114,6 +116,36 @@ class AiTaskService
         $this->logger->warning($task, "Tarefa rejeitada por {$rejectorName}. Motivo: " . ($reason ?: '—'));
 
         return $task->fresh();
+    }
+
+    private function createApprovalRequestForTask(AiTask $task): void
+    {
+        $existingApproval = $task->approvalRequests()->where('status', 'pending')->exists();
+
+        if ($existingApproval) {
+            return;
+        }
+
+        $sensitiveLevel = $task->sensitive_action ? 'high' : 'medium';
+        $approvalType   = $task->sensitive_action ? 'external_action' : 'ai_task';
+
+        app(ApprovalService::class)->createApproval([
+            'client_id'       => $task->client_id,
+            'requested_by'    => $task->created_by,
+            'ai_employee_id'  => $task->ai_employee_id,
+            'approvable_type' => AiTask::class,
+            'approvable_id'   => $task->id,
+            'title'           => "Aprovação necessária: {$task->title}",
+            'description'     => $task->output ?? $task->description,
+            'approval_type'   => $approvalType,
+            'sensitive_level' => $sensitiveLevel,
+            'payload'         => [
+                'task_type'         => $task->getEffectiveTaskType(),
+                'output'            => $task->output,
+                'requires_approval' => $task->requires_approval,
+                'sensitive_action'  => $task->sensitive_action,
+            ],
+        ]);
     }
 
     public function cancelTask(AiTask $task): AiTask

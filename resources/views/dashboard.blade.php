@@ -52,8 +52,9 @@
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
             </svg>
         </div>
-        <div class="stat-label">Aprovações</div>
+        <div class="stat-label">Pendentes</div>
         <div class="stat-value">{{ $stats['pending_approvals'] }}</div>
+        <a href="{{ route('admin.approvals.index') }}?status=pending" style="font-size:.7rem;color:#6b8fff;text-decoration:none;display:block;margin-top:4px;">ver todas →</a>
     </div>
 
     <div class="stat-card">
@@ -124,6 +125,49 @@
         <div class="stat-value">{{ $stats['new_leads'] ?? 0 }}</div>
     </div>
 </div>
+
+{{-- Phase 5 Approval Stats --}}
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div style="background:#0f172a;border:1px solid #78350f;border-radius:12px;padding:20px;">
+        <div style="font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Aprovações Pendentes</div>
+        <div style="font-size:2rem;font-weight:700;color:#fbbf24;">{{ $stats['pending_approvals'] }}</div>
+        <a href="{{ route('admin.approvals.index') }}?status=pending" style="font-size:.72rem;color:#6b8fff;text-decoration:none;">ver →</a>
+    </div>
+    <div style="background:#0f172a;border:1px solid #7f1d1d;border-radius:12px;padding:20px;">
+        <div style="font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Críticas</div>
+        <div style="font-size:2rem;font-weight:700;color:#f87171;">{{ $stats['critical_approvals'] }}</div>
+        <a href="{{ route('admin.approvals.index') }}?status=pending&level=critical" style="font-size:.72rem;color:#6b8fff;text-decoration:none;">ver →</a>
+    </div>
+    <div style="background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:20px;">
+        <div style="font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Vencidas</div>
+        <div style="font-size:2rem;font-weight:700;color:#fb923c;">{{ $stats['overdue_approvals'] }}</div>
+    </div>
+    <div style="background:#0f172a;border:1px solid #166534;border-radius:12px;padding:20px;">
+        <div style="font-size:.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Aprovadas (mês)</div>
+        <div style="font-size:2rem;font-weight:700;color:#4ade80;">{{ $stats['approved_this_month'] }}</div>
+    </div>
+</div>
+
+@if($urgent_approvals->isNotEmpty())
+<div style="background:#0f172a;border:1px solid #7f1d1d;border-radius:14px;padding:24px;margin-bottom:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h3 style="font-size:.9rem;font-weight:700;color:#f87171;">🔴 Aprovações Urgentes</h3>
+        <a href="{{ route('admin.approvals.index') }}?status=pending" style="font-size:.75rem;color:#6b8fff;text-decoration:none;">ver todas →</a>
+    </div>
+    @foreach($urgent_approvals as $ua)
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e293b;">
+        <div>
+            <span style="font-size:.875rem;font-weight:600;color:#e2e8f0;">{{ $ua->title }}</span>
+            @if($ua->client) <span style="font-size:.75rem;color:#475569;margin-left:8px;">{{ $ua->client->name }}</span> @endif
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <span style="background:{{ $ua->sensitive_badge_color }};color:#fff;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:10px;">{{ $ua->sensitive_level_label }}</span>
+            <a href="{{ route('admin.approvals.show', $ua->id) }}" style="background:#1e293b;color:#6b8fff;font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:6px;text-decoration:none;">Analisar</a>
+        </div>
+    </div>
+    @endforeach
+</div>
+@endif
 
 {{-- Bottom grid --}}
 <div class="grid lg:grid-cols-3 gap-6">

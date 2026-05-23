@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class AiTask extends Model
 {
@@ -58,6 +59,16 @@ class AiTask extends Model
     public function approvals(): HasMany
     {
         return $this->hasMany(AiApproval::class);
+    }
+
+    public function approvalRequests(): MorphMany
+    {
+        return $this->morphMany(ApprovalRequest::class, 'approvable');
+    }
+
+    public function pendingApprovalRequest(): ?ApprovalRequest
+    {
+        return $this->approvalRequests()->where('status', 'pending')->latest()->first();
     }
 
     public function getEffectiveTaskType(): string
