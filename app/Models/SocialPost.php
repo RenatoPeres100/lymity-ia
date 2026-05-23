@@ -41,6 +41,11 @@ class SocialPost extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function aiEmployee(): BelongsTo
     {
         return $this->belongsTo(AiEmployee::class);
