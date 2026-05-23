@@ -31,6 +31,15 @@ use App\Http\Controllers\Client\BlogController as ClientBlogController;
 use App\Http\Controllers\Client\BrandController as ClientBrandController;
 use App\Http\Controllers\Client\DashboardController as ClientDashboardController;
 use App\Http\Controllers\Client\PageController as ClientPageController;
+use App\Http\Controllers\Admin\SocialDashboardController;
+use App\Http\Controllers\Admin\SocialPostController as AdminSocialPostController;
+use App\Http\Controllers\Admin\SocialCalendarController as AdminSocialCalendarController;
+use App\Http\Controllers\Admin\SocialChannelController;
+use App\Http\Controllers\Admin\SocialContentBriefController;
+use App\Http\Controllers\Admin\SocialAiController;
+use App\Http\Controllers\Client\SocialPostController as ClientSocialPostController;
+use App\Http\Controllers\Client\SocialCalendarController as ClientSocialCalendarController;
+use App\Http\Controllers\Client\SocialApprovalController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Site ──────────────────────────────────────────
@@ -158,6 +167,58 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::put('/ai-memories/{aiMemory}',         [AiMemoryController::class, 'update'])->name('admin.ai-memories.update');
         Route::delete('/ai-memories/{aiMemory}',      [AiMemoryController::class, 'destroy'])->name('admin.ai-memories.destroy');
 
+        // ─── Phase 6 — Social Media ───────────────────────────────────────
+        Route::get('/social',                                   [SocialDashboardController::class, 'index'])->name('admin.social.index');
+
+        // Posts
+        Route::get('/social/posts',                            [AdminSocialPostController::class, 'index'])->name('admin.social.posts.index');
+        Route::get('/social/posts/create',                     [AdminSocialPostController::class, 'create'])->name('admin.social.posts.create');
+        Route::post('/social/posts',                           [AdminSocialPostController::class, 'store'])->name('admin.social.posts.store');
+        Route::get('/social/posts/{post}',                     [AdminSocialPostController::class, 'show'])->name('admin.social.posts.show');
+        Route::get('/social/posts/{post}/edit',                [AdminSocialPostController::class, 'edit'])->name('admin.social.posts.edit');
+        Route::patch('/social/posts/{post}',                   [AdminSocialPostController::class, 'update'])->name('admin.social.posts.update');
+        Route::delete('/social/posts/{post}',                  [AdminSocialPostController::class, 'destroy'])->name('admin.social.posts.destroy');
+        Route::post('/social/posts/{post}/send-approval',      [AdminSocialPostController::class, 'sendToApproval'])->name('admin.social.posts.send-approval');
+        Route::post('/social/posts/{post}/approve',            [AdminSocialPostController::class, 'approve'])->name('admin.social.posts.approve');
+        Route::post('/social/posts/{post}/reject',             [AdminSocialPostController::class, 'reject'])->name('admin.social.posts.reject');
+        Route::patch('/social/posts/{post}/schedule',          [AdminSocialPostController::class, 'schedule'])->name('admin.social.posts.schedule');
+        Route::post('/social/posts/{post}/mark-published',     [AdminSocialPostController::class, 'markPublished'])->name('admin.social.posts.mark-published');
+        Route::post('/social/posts/{post}/back-to-draft',      [AdminSocialPostController::class, 'backToDraft'])->name('admin.social.posts.back-to-draft');
+
+        // Calendar
+        Route::get('/social/calendar',                         [AdminSocialCalendarController::class, 'index'])->name('admin.social.calendar.index');
+        Route::get('/social/calendar/create',                  [AdminSocialCalendarController::class, 'create'])->name('admin.social.calendar.create');
+        Route::post('/social/calendar',                        [AdminSocialCalendarController::class, 'store'])->name('admin.social.calendar.store');
+        Route::get('/social/calendar/{calendar}',              [AdminSocialCalendarController::class, 'show'])->name('admin.social.calendar.show');
+        Route::patch('/social/calendar/{calendar}',            [AdminSocialCalendarController::class, 'update'])->name('admin.social.calendar.update');
+        Route::delete('/social/calendar/{calendar}',           [AdminSocialCalendarController::class, 'destroy'])->name('admin.social.calendar.destroy');
+
+        // Channels
+        Route::get('/social/channels',                         [SocialChannelController::class, 'index'])->name('admin.social.channels.index');
+        Route::get('/social/channels/create',                  [SocialChannelController::class, 'create'])->name('admin.social.channels.create');
+        Route::post('/social/channels',                        [SocialChannelController::class, 'store'])->name('admin.social.channels.store');
+        Route::get('/social/channels/{channel}/edit',          [SocialChannelController::class, 'edit'])->name('admin.social.channels.edit');
+        Route::patch('/social/channels/{channel}',             [SocialChannelController::class, 'update'])->name('admin.social.channels.update');
+        Route::delete('/social/channels/{channel}',            [SocialChannelController::class, 'destroy'])->name('admin.social.channels.destroy');
+
+        // Briefs
+        Route::get('/social/briefs',                           [SocialContentBriefController::class, 'index'])->name('admin.social.briefs.index');
+        Route::get('/social/briefs/create',                    [SocialContentBriefController::class, 'create'])->name('admin.social.briefs.create');
+        Route::post('/social/briefs',                          [SocialContentBriefController::class, 'store'])->name('admin.social.briefs.store');
+        Route::get('/social/briefs/{brief}',                   [SocialContentBriefController::class, 'show'])->name('admin.social.briefs.show');
+        Route::get('/social/briefs/{brief}/edit',              [SocialContentBriefController::class, 'edit'])->name('admin.social.briefs.edit');
+        Route::patch('/social/briefs/{brief}',                 [SocialContentBriefController::class, 'update'])->name('admin.social.briefs.update');
+        Route::delete('/social/briefs/{brief}',                [SocialContentBriefController::class, 'destroy'])->name('admin.social.briefs.destroy');
+
+        // AI Generation
+        Route::get('/social/ai/generate',                      [SocialAiController::class, 'generateForm'])->name('admin.social.ai.generate');
+        Route::post('/social/ai/generate',                     [SocialAiController::class, 'generate'])->name('admin.social.ai.store');
+        Route::get('/social/ai/posts/{post}/variants',         [SocialAiController::class, 'generateVariantsForm'])->name('admin.social.ai.variants');
+        Route::post('/social/ai/posts/{post}/variants',        [SocialAiController::class, 'generateVariants'])->name('admin.social.ai.variants.store');
+        Route::get('/social/ai/posts/{post}/improve',          [SocialAiController::class, 'improveForm'])->name('admin.social.ai.improve');
+        Route::post('/social/ai/posts/{post}/improve',         [SocialAiController::class, 'improve'])->name('admin.social.ai.improve.store');
+
+
         // ─── Phase 3 — Client Management ─────────────────
         Route::prefix('clients/{client}')->group(function () {
 
@@ -234,6 +295,14 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/blog/{blogPost}',               [ClientBlogController::class, 'show'])->name('client.blog.show');
         Route::post('/blog/{blogPost}/approve',      [ClientBlogController::class, 'approve'])->name('client.blog.approve');
         Route::post('/blog/{blogPost}/reject',       [ClientBlogController::class, 'reject'])->name('client.blog.reject');
+
+        // Phase 6 — Client Social Media
+        Route::get('/social/posts',                  [ClientSocialPostController::class, 'index'])->name('client.social.posts.index');
+        Route::get('/social/posts/{post}',           [ClientSocialPostController::class, 'show'])->name('client.social.posts.show');
+        Route::get('/social/calendar',               [ClientSocialCalendarController::class, 'index'])->name('client.social.calendar.index');
+        Route::get('/social/approvals',              [SocialApprovalController::class, 'index'])->name('client.social.approvals.index');
+        Route::post('/social/approvals/{approvalRequest}/approve', [SocialApprovalController::class, 'approve'])->name('client.social.approvals.approve');
+        Route::post('/social/approvals/{approvalRequest}/reject',  [SocialApprovalController::class, 'reject'])->name('client.social.approvals.reject');
     });
 
 });

@@ -18,6 +18,9 @@ class MockAiProvider
 
         return match ($taskType) {
             'generate_social_post','social_post' => $this->generateSocialPosts($title, $desc, $clientName, $employee),
+            'generate_social_calendar'           => $this->generateSocialCalendar($title, $desc, $clientName),
+            'generate_social_variants'           => $this->generateSocialVariants($title, $desc, $clientName),
+            'improve_social_post'                => $this->improveSocialPost($title, $desc, $clientName),
             'seo_plan'             => $this->generateSeoPlan($title, $desc, $clientName),
             'ads_analysis'         => $this->generateAdsAnalysis($title, $desc, $clientName),
             'copywriting'          => $this->generateCopywriting($title, $desc, $clientName),
@@ -82,6 +85,187 @@ class MockAiProvider
 ---
 
 > ⚠️ **Rascunho para aprovação.** Nenhum conteúdo foi publicado. Revise antes de autorizar.
+OUTPUT;
+    }
+
+    private function generateSocialCalendar(string $title, ?string $desc, string $clientName): string
+    {
+        return <<<OUTPUT
+# 📅 Calendário Editorial Social — {$title}
+**Cliente:** {$clientName} | **Modo:** Mock
+
+---
+
+## 🎯 Resumo Estratégico do Mês
+
+**Tema central:** Autoridade + Geração de Leads
+**Distribuição de objetivos:**
+- 30% Autoridade (educar, posicionar como referência)
+- 25% Relacionamento (aproximar, humanizar)
+- 25% Captação de Leads (gerar interesse qualificado)
+- 20% Engajamento (interação, comunidade)
+
+**Formatos prioritários:** Carrossel, Reels, Feed, Stories
+
+---
+
+## 📋 8 Ideias de Posts
+
+| Semana | Tema | Objetivo | Formato | Plataforma |
+|---|---|---|---|---|
+| S1 | "O que é possível com IA no seu negócio" | Awareness | Carrossel | Instagram/LinkedIn |
+| S1 | "Bastidores: como funciona nossa operação" | Relacionamento | Reels | Instagram |
+| S2 | "3 resultados que nossos clientes alcançaram" | Autoridade | Carrossel | Instagram/LinkedIn |
+| S2 | "Você sabe quanto custa não ter estratégia?" | Leads | Feed | Instagram |
+| S3 | "IA no marketing: mitos e verdades" | Educacional | Carrossel | LinkedIn |
+| S3 | "Antes e depois: transformação digital real" | Prova Social | Reels | Instagram |
+| S4 | "Por que sua empresa precisa de IA agora" | Autoridade | Thread | LinkedIn/Threads |
+| S4 | "Solicite um diagnóstico gratuito" | Leads | Story + CTA | Instagram |
+
+---
+
+## 📊 Distribuição Semanal
+
+- **Semana 1:** 2 posts (apresentação + bastidores)
+- **Semana 2:** 2 posts (resultados + urgência)
+- **Semana 3:** 2 posts (educação + prova social)
+- **Semana 4:** 2 posts (autoridade + captação)
+
+---
+
+## 💡 Temas Semanais Sugeridos
+
+1. **Semana 1:** Posicionamento e awareness
+2. **Semana 2:** Prova social e resultados
+3. **Semana 3:** Educação e autoridade
+4. **Semana 4:** Captação e urgência
+
+---
+
+> ⚠️ **Rascunho para aprovação.** Nenhum post foi publicado ou agendado automaticamente.
+OUTPUT;
+    }
+
+    private function generateSocialVariants(string $title, ?string $desc, string $clientName): string
+    {
+        return <<<OUTPUT
+# 🔄 Variações por Plataforma — {$title}
+**Cliente:** {$clientName} | **Modo:** Mock
+
+---
+
+## 📸 Instagram
+**Tom:** Visual, emocional, com emojis
+**Legenda:**
+> Sua empresa já usa IA para crescer? 🤖
+> Enquanto outros perdem tempo com tarefas manuais, empresas inteligentes deixam a IA trabalhar — e focam no que realmente importa.
+>
+> Na {$clientName}, cada funcionário IA cria, analisa e entrega. Você aprova antes de publicar. 🎯
+>
+> Quer ver como funciona? Link na bio.
+
+**Hashtags:** #InteligênciaArtificial #MarketingDigital #AutomaçãoIA #GrowthHacking #LymityIA
+**CTA:** Acesse o link na bio
+
+---
+
+## 💼 LinkedIn
+**Tom:** Profissional, focado em dados e resultado
+**Legenda:**
+> Empresas que ainda dependem de processos manuais estão perdendo competitividade.
+>
+> Dados recentes mostram que equipes que adotam IA no marketing digital reduzem em até 60% o tempo de produção de conteúdo — sem perder qualidade.
+>
+> A {$clientName} oferece uma plataforma de Funcionários IA que trabalham 24h, sempre sob supervisão humana e com aprovação antes de qualquer publicação.
+>
+> Curioso para saber mais? Comente abaixo ou envie uma mensagem direta.
+
+**Hashtags:** #InteligênciaArtificial #MarketingB2B #Inovação #Automação
+**CTA:** Solicite uma demonstração
+
+---
+
+## 🎵 TikTok
+**Tom:** Dinâmico, direto, com gancho forte
+**Legenda:**
+> POV: Sua empresa tem 8 especialistas IA trabalhando enquanto você dorme 😮
+> {$clientName} — IA que trabalha, humanos que aprovam.
+
+**Hashtags:** #IA #AutomaçãoDigital #MarketingDigital #TechTok
+**CTA:** Siga para mais conteúdo sobre IA
+
+---
+
+## 🧵 Threads
+**Tom:** Conversacional, opiniativo, provocador
+**Legenda:**
+> Empresas que ainda fazem tudo manual em 2025 vão ficar para trás.
+>
+> Não é pessimismo. É matemática.
+>
+> IA para marketing não é tendência. É necessidade.
+>
+> {$clientName} ajuda empresas a automatizarem sua operação de marketing — com aprovação humana em cada etapa.
+
+**CTA:** Me conta: sua empresa já usa IA?
+
+---
+
+> ⚠️ **Rascunho para aprovação.** Nenhuma variação foi publicada automaticamente.
+OUTPUT;
+    }
+
+    private function improveSocialPost(string $title, ?string $desc, string $clientName): string
+    {
+        $original = $desc ?? 'Conteúdo original não fornecido.';
+        return <<<OUTPUT
+# ✨ Post Melhorado — {$title}
+**Cliente:** {$clientName} | **Modo:** Mock
+
+---
+
+## 📝 Versão Original
+> {$original}
+
+---
+
+## 🚀 Versão Melhorada
+
+> **Gancho:** Você sabia que a maioria das empresas desperdiça até 40% do tempo em tarefas que a IA faz em segundos?
+>
+> Na {$clientName}, transformamos isso em realidade para nossos clientes.
+>
+> Funcionários IA especializados criam, analisam e entregam — enquanto você foca em crescer.
+>
+> E o melhor: você aprova TUDO antes de publicar. Sem surpresas. 🎯
+>
+> Quer saber como funciona? Link na bio.
+
+---
+
+## 💡 O que foi melhorado
+
+1. **Gancho mais forte:** Dado numérico gera curiosidade imediata
+2. **Proposta de valor clara:** Explicação do diferencial em 1 frase
+3. **Prova de controle:** "você aprova tudo" reduz objeção de confiança
+4. **CTA direto:** Direcionamento claro para próxima ação
+5. **Tom equilibrado:** Profissional mas acessível
+
+---
+
+## 🔄 CTA Alternativo
+- "Solicite um diagnóstico gratuito"
+- "Agende uma conversa de 15 minutos"
+- "Veja cases de resultado"
+
+---
+
+## #️⃣ Hashtags Otimizadas
+#InteligênciaArtificial #AutomaçãoDigital #MarketingIA #GrowthMarketing #AgênciaDigital #LymityIA #ResultadosReais #MarketingComIA
+
+---
+
+> ⚠️ **Rascunho para aprovação.** Nenhum post foi publicado ou agendado.
 OUTPUT;
     }
 

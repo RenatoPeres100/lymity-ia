@@ -71,6 +71,11 @@ class AiEmployee extends Model
         return $this->hasMany(ApprovalRequest::class);
     }
 
+    public function socialPosts(): HasMany
+    {
+        return $this->hasMany(SocialPost::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

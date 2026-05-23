@@ -129,6 +129,38 @@
                 Leads
             </a>
 
+            <span class="nav-section-label">Social Media</span>
+
+            <a href="{{ route('admin.social.index') }}" class="nav-item {{ request()->routeIs('admin.social.index') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/>
+                </svg>
+                Social Media
+            </a>
+
+            <a href="{{ route('admin.social.posts.index') }}" class="nav-item {{ request()->routeIs('admin.social.posts*') || request()->routeIs('admin.social.ai*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <path d="M3 9h18M9 21V9"/>
+                </svg>
+                Posts Sociais
+            </a>
+
+            <a href="{{ route('admin.social.calendar.index') }}" class="nav-item {{ request()->routeIs('admin.social.calendar*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/>
+                    <path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                Calendário
+            </a>
+
+            <a href="{{ route('admin.social.channels.index') }}" class="nav-item {{ request()->routeIs('admin.social.channels*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
+                </svg>
+                Canais
+            </a>
+
             <span class="nav-section-label">Conteúdo</span>
 
             <a href="{{ route('admin.blog-posts.index') }}" class="nav-item {{ request()->routeIs('admin.blog-posts*') ? 'active' : '' }}">
@@ -200,7 +232,7 @@
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                 Blog
             </a>
-            <a href="{{ route('client.approvals.index') }}" class="nav-item {{ request()->routeIs('client.approvals*') ? 'active' : '' }}">
+            <a href="{{ route('client.approvals.index') }}" class="nav-item {{ request()->routeIs('client.approvals*') && !request()->routeIs('client.social*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
@@ -209,6 +241,26 @@
                 @if($clientPending > 0)
                 <span class="ml-auto text-xs bg-amber-900 text-amber-300 px-2 py-0.5 rounded-full">{{ $clientPending }}</span>
                 @endif
+            </a>
+
+            <span class="nav-section-label">Social Media</span>
+            <a href="{{ route('client.social.posts.index') }}" class="nav-item {{ request()->routeIs('client.social.posts*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                </svg>
+                Meus Posts
+            </a>
+            <a href="{{ route('client.social.calendar.index') }}" class="nav-item {{ request()->routeIs('client.social.calendar*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                </svg>
+                Calendário
+            </a>
+            <a href="{{ route('client.social.approvals.index') }}" class="nav-item {{ request()->routeIs('client.social.approvals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Aprovar Posts
             </a>
             @endif
 
@@ -248,7 +300,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Fase 5 — Aprovações
+                    Fase 6 — Social Media
                 </span>
 
                 <form method="POST" action="{{ route('logout') }}">

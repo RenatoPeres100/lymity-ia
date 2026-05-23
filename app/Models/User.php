@@ -64,6 +64,16 @@ class User extends Authenticatable
         return $this->hasMany(AppNotification::class);
     }
 
+    public function createdSocialPosts(): HasMany
+    {
+        return $this->hasMany(SocialPost::class, 'created_by');
+    }
+
+    public function approvedSocialPosts(): HasMany
+    {
+        return $this->hasMany(SocialPost::class, 'approved_by');
+    }
+
     public function isAdminGeral(): bool
     {
         return $this->role === 'admin_geral';

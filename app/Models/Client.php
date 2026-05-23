@@ -66,6 +66,26 @@ class Client extends Model
         return $this->hasMany(AppNotification::class);
     }
 
+    public function socialChannels(): HasMany
+    {
+        return $this->hasMany(SocialChannel::class);
+    }
+
+    public function socialPosts(): HasMany
+    {
+        return $this->hasMany(SocialPost::class);
+    }
+
+    public function socialCalendars(): HasMany
+    {
+        return $this->hasMany(SocialCalendar::class);
+    }
+
+    public function socialContentBriefs(): HasMany
+    {
+        return $this->hasMany(SocialContentBrief::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

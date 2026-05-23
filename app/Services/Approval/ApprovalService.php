@@ -149,6 +149,11 @@ class ApprovalService
             $this->syncContentStatus($approvable, $newStatus);
             return;
         }
+
+        if ($modelClass === \App\Models\SocialPost::class) {
+            $this->syncSocialPostStatus($approvable, $newStatus, $user);
+            return;
+        }
     }
 
     private function syncAiTaskStatus(\App\Models\AiTask $task, string $newStatus, ?User $user): void
@@ -185,6 +190,35 @@ class ApprovalService
         app(\App\Services\Ai\AiLogService::class)->$logLevel(
             $task,
             "Status atualizado para {$taskStatus} via ApprovalRequest #{$task->approvalRequests()->latest()->first()?->id}."
+        );
+    }
+
+    private function syncSocialPostStatus(\App\Models\SocialPost $post, string $newStatus, ?User $user): void
+    {
+        $targetStatus = match ($newStatus) {
+            'approved'          => 'approved',
+            'rejected'          => 'rejected',
+            'changes_requested' => 'draft',
+            default             => null,
+        };
+
+        if (!$targetStatus) {
+            return;
+        }
+
+        $updateData = ['status' => $targetStatus];
+
+        if ($newStatus === 'approved') {
+            $updateData['approved_by'] = $user?->id;
+            $updateData['approved_at'] = now();
+        }
+
+        $post->update($updateData);
+
+        $this->logActivity(
+            new \App\Models\ApprovalRequest(['client_id' => $post->client_id]),
+            $user ?? new User(),
+            'social_post_' . $newStatus
         );
     }
 

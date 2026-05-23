@@ -46,5 +46,13 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ApprovalRequestSeeder::class,
         ]);
+
+        // Phase 6
+        $this->call([
+            SocialChannelSeeder::class,
+            SocialContentBriefSeeder::class,
+            SocialCalendarSeeder::class,
+            SocialPostSeeder::class,
+        ]);
     }
 }
