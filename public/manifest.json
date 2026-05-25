@@ -1,0 +1,36 @@
+{
+    "name": "Lymity IA",
+    "short_name": "Lymity",
+    "description": "Plataforma de agência digital com IA — aprovações, relatórios e acompanhamento.",
+    "start_url": "/app",
+    "display": "standalone",
+    "background_color": "#0f172a",
+    "theme_color": "#0f172a",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Aprovações",
+            "url": "/app/approvals",
+            "description": "Ver aprovações pendentes"
+        },
+        {
+            "name": "Agenda",
+            "url": "/app/calendar",
+            "description": "Ver agenda e próximos itens"
+        }
+    ]
+}

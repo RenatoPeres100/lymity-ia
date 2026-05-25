@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\App\AppApprovalController;
+use App\Http\Controllers\App\AppCalendarController;
+use App\Http\Controllers\App\AppDashboardController;
+use App\Http\Controllers\App\AppProfileController;
+use App\Http\Controllers\App\AppReportController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\ContactController;
@@ -461,4 +466,21 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/contracts/{clientContract}',                   [ClientContractController::class, 'show'])->name('client.contracts.show');
     });
 
+});
+
+// Phase 10 — Mobile PWA App
+Route::prefix('app')->name('app.')->middleware(['auth', 'active', 'client_access'])->group(function () {
+
+    Route::get('/',                                              AppDashboardController::class)->name('dashboard');
+    Route::get('/calendar',                                      AppCalendarController::class)->name('calendar');
+    Route::get('/reports',                                       AppReportController::class)->name('reports');
+    Route::get('/profile',                                       AppProfileController::class)->name('profile');
+
+    // Approvals
+    Route::get('/approvals',                                     [AppApprovalController::class, 'index'])->name('approvals.index');
+    Route::get('/approvals/{approvalRequest}',                   [AppApprovalController::class, 'show'])->name('approvals.show');
+    Route::post('/approvals/{approvalRequest}/approve',          [AppApprovalController::class, 'approve'])->name('approvals.approve');
+    Route::post('/approvals/{approvalRequest}/reject',           [AppApprovalController::class, 'reject'])->name('approvals.reject');
+    Route::post('/approvals/{approvalRequest}/request-changes',  [AppApprovalController::class, 'requestChanges'])->name('approvals.request-changes');
+    Route::post('/approvals/{approvalRequest}/comments',         [AppApprovalController::class, 'comment'])->name('approvals.comment');
 });
