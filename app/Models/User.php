@@ -74,6 +74,16 @@ class User extends Authenticatable
         return $this->hasMany(SocialPost::class, 'approved_by');
     }
 
+    public function createdProposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class, 'created_by');
+    }
+
+    public function approvedProposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class, 'approved_by');
+    }
+
     public function isAdminGeral(): bool
     {
         return $this->role === 'admin_geral';

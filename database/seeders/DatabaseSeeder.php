@@ -69,5 +69,12 @@ class DatabaseSeeder extends Seeder
             AdCampaignSeeder::class,
             CampaignMetricSeeder::class,
         ]);
+
+        // Phase 9 — Commercial
+        $this->call([
+            ProposalSeeder::class,
+            BudgetSeeder::class,
+            ClientContractSeeder::class,
+        ]);
     }
 }

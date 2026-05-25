@@ -58,6 +58,12 @@ use App\Http\Controllers\Client\AdsDashboardController as ClientAdsDashboardCont
 use App\Http\Controllers\Client\AdCampaignController as ClientAdCampaignController;
 use App\Http\Controllers\Client\AdsApprovalController;
 use App\Http\Controllers\Client\AdsReportController;
+use App\Http\Controllers\Admin\ProposalController as AdminProposalController;
+use App\Http\Controllers\Admin\BudgetController as AdminBudgetController;
+use App\Http\Controllers\Admin\ClientContractController as AdminContractController;
+use App\Http\Controllers\Client\ProposalController as ClientProposalController;
+use App\Http\Controllers\Client\BudgetController as ClientBudgetController;
+use App\Http\Controllers\Client\ContractController as ClientContractController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Site ──────────────────────────────────────────
@@ -309,6 +315,37 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/ads/budget-approvals',                        [CampaignBudgetChangeController::class, 'store'])->name('admin.ads.budget-approvals.store');
         Route::post('/ads/budget-approvals/{campaignBudgetChange}/apply', [CampaignBudgetChangeController::class, 'apply'])->name('admin.ads.budget-approvals.apply');
 
+        // ─── Phase 9 — Commercial ────────────────────────
+        Route::get('/proposals',                                        [AdminProposalController::class, 'index'])->name('admin.proposals.index');
+        Route::get('/proposals/create',                                 [AdminProposalController::class, 'create'])->name('admin.proposals.create');
+        Route::post('/proposals',                                       [AdminProposalController::class, 'store'])->name('admin.proposals.store');
+        Route::get('/proposals/{proposal}',                             [AdminProposalController::class, 'show'])->name('admin.proposals.show');
+        Route::get('/proposals/{proposal}/edit',                        [AdminProposalController::class, 'edit'])->name('admin.proposals.edit');
+        Route::put('/proposals/{proposal}',                             [AdminProposalController::class, 'update'])->name('admin.proposals.update');
+        Route::delete('/proposals/{proposal}',                          [AdminProposalController::class, 'destroy'])->name('admin.proposals.destroy');
+        Route::post('/proposals/{proposal}/send-approval',              [AdminProposalController::class, 'sendApproval'])->name('admin.proposals.send-approval');
+        Route::post('/proposals/{proposal}/send-client',                [AdminProposalController::class, 'sendClient'])->name('admin.proposals.send-client');
+        Route::post('/proposals/generate-ai',                           [AdminProposalController::class, 'generateAi'])->name('admin.proposals.generate-ai');
+
+        Route::get('/budgets',                                          [AdminBudgetController::class, 'index'])->name('admin.budgets.index');
+        Route::get('/budgets/create',                                   [AdminBudgetController::class, 'create'])->name('admin.budgets.create');
+        Route::post('/budgets',                                         [AdminBudgetController::class, 'store'])->name('admin.budgets.store');
+        Route::get('/budgets/{budget}',                                 [AdminBudgetController::class, 'show'])->name('admin.budgets.show');
+        Route::get('/budgets/{budget}/edit',                            [AdminBudgetController::class, 'edit'])->name('admin.budgets.edit');
+        Route::put('/budgets/{budget}',                                 [AdminBudgetController::class, 'update'])->name('admin.budgets.update');
+        Route::delete('/budgets/{budget}',                              [AdminBudgetController::class, 'destroy'])->name('admin.budgets.destroy');
+        Route::post('/budgets/{budget}/send-approval',                  [AdminBudgetController::class, 'sendApproval'])->name('admin.budgets.send-approval');
+
+        Route::get('/contracts',                                        [AdminContractController::class, 'index'])->name('admin.contracts.index');
+        Route::get('/contracts/create',                                 [AdminContractController::class, 'create'])->name('admin.contracts.create');
+        Route::post('/contracts',                                       [AdminContractController::class, 'store'])->name('admin.contracts.store');
+        Route::get('/contracts/{clientContract}',                       [AdminContractController::class, 'show'])->name('admin.contracts.show');
+        Route::get('/contracts/{clientContract}/edit',                  [AdminContractController::class, 'edit'])->name('admin.contracts.edit');
+        Route::put('/contracts/{clientContract}',                       [AdminContractController::class, 'update'])->name('admin.contracts.update');
+        Route::post('/contracts/{clientContract}/pending-signature',    [AdminContractController::class, 'pendingSignature'])->name('admin.contracts.pending-signature');
+        Route::post('/contracts/{clientContract}/mark-signed',          [AdminContractController::class, 'markSigned'])->name('admin.contracts.mark-signed');
+        Route::post('/contracts/{clientContract}/cancel',               [AdminContractController::class, 'cancel'])->name('admin.contracts.cancel');
+
         // ─── Phase 3 — Client Management ─────────────────
         Route::prefix('clients/{client}')->group(function () {
 
@@ -406,6 +443,22 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/ads/campaigns/{adCampaign}',                   [ClientAdCampaignController::class, 'show'])->name('client.ads.campaigns.show');
         Route::get('/ads/approvals',                                [AdsApprovalController::class, 'index'])->name('client.ads.approvals.index');
         Route::get('/ads/reports',                                  [AdsReportController::class, 'index'])->name('client.ads.reports.index');
+
+        // Phase 9 — Client Commercial
+        Route::get('/proposals',                                    [ClientProposalController::class, 'index'])->name('client.proposals.index');
+        Route::get('/proposals/{proposal}',                         [ClientProposalController::class, 'show'])->name('client.proposals.show');
+        Route::post('/proposals/{proposal}/accept',                 [ClientProposalController::class, 'accept'])->name('client.proposals.accept');
+        Route::post('/proposals/{proposal}/reject',                 [ClientProposalController::class, 'reject'])->name('client.proposals.reject');
+        Route::post('/proposals/{proposal}/comment',                [ClientProposalController::class, 'comment'])->name('client.proposals.comment');
+
+        Route::get('/budgets',                                      [ClientBudgetController::class, 'index'])->name('client.budgets.index');
+        Route::get('/budgets/{budget}',                             [ClientBudgetController::class, 'show'])->name('client.budgets.show');
+        Route::post('/budgets/{budget}/approve',                    [ClientBudgetController::class, 'approve'])->name('client.budgets.approve');
+        Route::post('/budgets/{budget}/reject',                     [ClientBudgetController::class, 'reject'])->name('client.budgets.reject');
+        Route::post('/budgets/{budget}/comment',                    [ClientBudgetController::class, 'comment'])->name('client.budgets.comment');
+
+        Route::get('/contracts',                                    [ClientContractController::class, 'index'])->name('client.contracts.index');
+        Route::get('/contracts/{clientContract}',                   [ClientContractController::class, 'show'])->name('client.contracts.show');
     });
 
 });

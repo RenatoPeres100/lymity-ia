@@ -164,6 +164,16 @@ class ApprovalService
             $this->syncCampaignBudgetChangeStatus($approvable, $newStatus, $user);
             return;
         }
+
+        if ($modelClass === \App\Models\Proposal::class) {
+            $this->syncProposalStatus($approvable, $newStatus, $user);
+            return;
+        }
+
+        if ($modelClass === \App\Models\Budget::class) {
+            $this->syncBudgetStatus($approvable, $newStatus, $user);
+            return;
+        }
     }
 
     private function syncAiTaskStatus(\App\Models\AiTask $task, string $newStatus, ?User $user): void
@@ -257,6 +267,34 @@ class ApprovalService
 
         if (!empty($updates)) {
             $change->update($updates);
+        }
+    }
+
+    private function syncProposalStatus(\App\Models\Proposal $proposal, string $newStatus, ?User $user): void
+    {
+        $updates = match ($newStatus) {
+            'approved'          => ['status' => 'approved', 'approved_by' => $user?->id, 'approved_at' => now()],
+            'rejected'          => ['status' => 'rejected'],
+            'changes_requested' => ['status' => 'draft'],
+            default             => [],
+        };
+
+        if (!empty($updates)) {
+            $proposal->update($updates);
+        }
+    }
+
+    private function syncBudgetStatus(\App\Models\Budget $budget, string $newStatus, ?User $user): void
+    {
+        $updates = match ($newStatus) {
+            'approved'          => ['status' => 'approved'],
+            'rejected'          => ['status' => 'rejected'],
+            'changes_requested' => ['status' => 'draft'],
+            default             => [],
+        };
+
+        if (!empty($updates)) {
+            $budget->update($updates);
         }
     }
 

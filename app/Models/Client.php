@@ -116,6 +116,21 @@ class Client extends Model
         return $this->hasMany(AdCampaign::class);
     }
 
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class);
+    }
+
+    public function budgets(): HasMany
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    public function contracts(): HasMany
+    {
+        return $this->hasMany(ClientContract::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

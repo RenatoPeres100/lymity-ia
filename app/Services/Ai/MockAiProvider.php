@@ -36,6 +36,10 @@ class MockAiProvider
             'generate_audience_suggestions'       => $this->generateAudienceSuggestions($title, $desc, $clientName),
             'analyze_campaign_metrics'            => $this->analyzeCampaignMetrics($title, $desc, $clientName),
             'suggest_budget_change'               => $this->suggestBudgetChange($title, $desc, $clientName),
+            'generate_proposal'                   => $this->generateProposalJson($title, $desc, $clientName),
+            'generate_budget'                     => $this->generateBudgetJson($title, $desc, $clientName),
+            'improve_proposal'                    => $this->improveProposalJson($title, $desc, $clientName),
+            'summarize_budget'                    => $this->summarizeBudgetJson($title, $desc, $clientName),
             'copywriting'                         => $this->generateCopywriting($title, $desc, $clientName),
             'project_plan'                        => $this->generateProjectPlan($title, $desc, $clientName),
             'lead_qualification'                  => $this->generateLeadQualification($title, $desc, $clientName),
@@ -1103,5 +1107,130 @@ Tipo de tarefa "{$taskType}" processado com framework genérico.
 
 > ⚠️ **Rascunho para aprovação.** Nenhuma ação externa foi executada.
 OUTPUT;
+    }
+
+    private function generateProposalJson(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'title'       => $title,
+            'description' => "Proposta comercial para {$clientName} focada em crescimento digital com inteligência artificial. " . ($desc ?? ''),
+            'terms'       => "Pagamento: mensal, antecipado.\nVigência: 3 meses (renovável).\nReajuste: IGPM anual.\nCancelamento: aviso prévio de 30 dias.\nSuporte: horário comercial, resposta em até 24h.\nOs serviços serão executados com aprovação humana em cada etapa relevante.",
+            'recommendation' => "Recomendamos início imediato pelo Setup Estratégico para garantir baseline de dados antes das campanhas.",
+            'items' => [
+                [
+                    'name'        => 'Setup Estratégico e Diagnóstico',
+                    'description' => 'Auditoria completa, mapeamento de oportunidades, definição de KPIs e plano de ação 90 dias',
+                    'quantity'    => 1,
+                    'unit_price'  => 1800.00,
+                ],
+                [
+                    'name'        => 'Gestão de Tráfego Pago (Google + Meta)',
+                    'description' => 'Criação, otimização e relatórios mensais de campanhas Google Ads e Meta Ads',
+                    'quantity'    => 1,
+                    'unit_price'  => 2400.00,
+                ],
+                [
+                    'name'        => 'SEO e Conteúdo com IA',
+                    'description' => 'Produção de 8 artigos/mês otimizados, link building e monitoramento de posições',
+                    'quantity'    => 1,
+                    'unit_price'  => 1600.00,
+                ],
+                [
+                    'name'        => 'Automação e Nutrição de Leads',
+                    'description' => 'Configuração de fluxos de automação, landing pages e sequência de e-mails',
+                    'quantity'    => 1,
+                    'unit_price'  => 1200.00,
+                ],
+                [
+                    'name'        => 'Relatório de Performance Mensal',
+                    'description' => 'Dashboard executivo com análise de resultados e recomendações estratégicas',
+                    'quantity'    => 1,
+                    'unit_price'  => 600.00,
+                ],
+            ],
+        ];
+
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function generateBudgetJson(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'title'       => $title,
+            'description' => "Orçamento mensal de operação digital para {$clientName}. " . ($desc ?? ''),
+            'justification' => 'Distribuição baseada em benchmarks do setor para empresas em fase de aceleração.',
+            'items' => [
+                [
+                    'category'    => 'media',
+                    'name'        => 'Investimento Google Ads',
+                    'description' => 'Verba de mídia para campanhas de search e performance',
+                    'amount'      => 3500.00,
+                ],
+                [
+                    'category'    => 'media',
+                    'name'        => 'Investimento Meta Ads',
+                    'description' => 'Verba de mídia para Facebook e Instagram',
+                    'amount'      => 2500.00,
+                ],
+                [
+                    'category'    => 'production',
+                    'name'        => 'Produção de Criativos',
+                    'description' => 'Peças estáticas, vídeos curtos e stories mensais',
+                    'amount'      => 1200.00,
+                ],
+                [
+                    'category'    => 'service',
+                    'name'        => 'Gestão e Operação',
+                    'description' => 'Fee mensal de gestão da agência',
+                    'amount'      => 2800.00,
+                ],
+                [
+                    'category'    => 'tool',
+                    'name'        => 'Ferramentas e Plataformas',
+                    'description' => 'Licenças de SEO, automação e analytics',
+                    'amount'      => 600.00,
+                ],
+            ],
+        ];
+
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function improveProposalJson(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'action'      => 'improve_proposal',
+            'target'      => $title,
+            'instruction' => $desc ?? 'Melhoria geral',
+            'suggestions' => [
+                'Reforçar a proposta de valor única da solução com IA.',
+                'Incluir estimativas de ROI baseadas em benchmarks do setor.',
+                'Adicionar depoimentos ou resultados de clientes semelhantes.',
+                'Tornar os termos mais claros e objetivos.',
+                'Destacar o diferencial da aprovação humana em cada etapa.',
+            ],
+            'improved_terms' => "Pagamento: mensal, antecipado via boleto/PIX.\nVigência: 3 meses com opção de renovação automática.\nResultados esperados: aumento de 30-50% em leads qualificados nos primeiros 90 dias.\nGarantia de satisfação: revisão gratuita nas primeiras 2 semanas.",
+            'notes'       => "Proposta revisada com foco em conversão. Recomenda-se adicionar casos de sucesso relevantes antes do envio ao cliente.",
+        ];
+
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+    }
+
+    private function summarizeBudgetJson(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'action'  => 'summarize_budget',
+            'title'   => $title,
+            'summary' => "O orçamento de {$clientName} está distribuído de forma estratégica, priorizando mídia paga (maior ROI imediato) e operação de qualidade. A proporção mídia/gestão está dentro do benchmark recomendado de 60/40.",
+            'insights' => [
+                'Investimento em mídia representa 55% do orçamento total — dentro do ideal para fase de aquisição.',
+                'Fee de gestão competitivo considerando o escopo entregue.',
+                'Ferramentas representam menos de 5% — eficiência operacional adequada.',
+                'Recomenda-se revisão trimestral para rebalancear verba conforme performance.',
+            ],
+            'recommendation' => 'Aprovação recomendada. Orçamento alinhado com objetivos de crescimento.',
+        ];
+
+        return json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
     }
 }

@@ -215,6 +215,29 @@
                 Aprov. Orçamento
             </a>
 
+            <span class="nav-section-label">Comercial</span>
+
+            <a href="{{ route('admin.proposals.index') }}" class="nav-item {{ request()->routeIs('admin.proposals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+                </svg>
+                Propostas
+            </a>
+
+            <a href="{{ route('admin.budgets.index') }}" class="nav-item {{ request()->routeIs('admin.budgets*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                </svg>
+                Orçamentos
+            </a>
+
+            <a href="{{ route('admin.contracts.index') }}" class="nav-item {{ request()->routeIs('admin.contracts*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="9" y1="17" x2="8" y2="17"/>
+                </svg>
+                Contratos
+            </a>
+
             <span class="nav-section-label">Conteúdo</span>
 
             <a href="{{ route('admin.blog-posts.index') }}" class="nav-item {{ request()->routeIs('admin.blog-posts*') ? 'active' : '' }}">
@@ -350,6 +373,26 @@
                     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
                 </svg>
                 Relatórios
+            </a>
+
+            <span class="nav-section-label">Comercial</span>
+            <a href="{{ route('client.proposals.index') }}" class="nav-item {{ request()->routeIs('client.proposals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z"/>
+                </svg>
+                Propostas
+            </a>
+            <a href="{{ route('client.budgets.index') }}" class="nav-item {{ request()->routeIs('client.budgets*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                </svg>
+                Orçamentos
+            </a>
+            <a href="{{ route('client.contracts.index') }}" class="nav-item {{ request()->routeIs('client.contracts*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="9" y1="17" x2="8" y2="17"/>
+                </svg>
+                Contratos
             </a>
             @endif
 
