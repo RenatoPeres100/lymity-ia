@@ -480,11 +480,78 @@ tbody tr:hover td { background: #f8fafc; }
     background: rgba(74,108,247,0.05);
 }
 
+/* ─── Hamburger (hidden on desktop) ─── */
+.hamburger { display: none; }
+
+/* ─── Sidebar Overlay ─── */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 45;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+.sidebar-overlay.open { display: block; }
+
+/* ─── Responsive Grid Helpers ─── */
+.grid-cols-2-auto { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.grid-cols-3-auto { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.grid-cols-4-auto { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+
 /* ─── Responsive ─── */
+@media (max-width: 1024px) {
+    .grid-cols-4-auto { grid-template-columns: repeat(2, 1fr); }
+}
+
 @media (max-width: 768px) {
+    /* Sidebar & layout */
     .sidebar { transform: translateX(-100%); }
     .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.4); }
-    .main-content { margin-left: 0; }
     .hamburger { display: block; }
+    .main-content { margin-left: 0 !important; }
+    .topbar { padding: 0 16px; }
+    .main-content > main { padding: 16px; }
+
+    /* Card & stat sizing */
+    .stat-value { font-size: 1.5rem; }
+    .card-body { padding: 16px; }
+    .card-header { padding: 14px 16px; }
+
+    /* Grid helpers */
+    .grid-cols-2-auto,
+    .grid-cols-3-auto,
+    .grid-cols-4-auto { grid-template-columns: 1fr; }
     .home-nav { padding: 16px 20px; }
+
+    /* Tables — horizontal scroll */
+    .card { overflow: visible; }
+    .card-body { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .table-wrapper { border-radius: 8px; }
+    tbody td { padding: 10px 12px; font-size: 0.82rem; }
+    thead th { padding: 10px 12px; }
+    table { min-width: 520px; }
+
+    /* Buttons */
+    .btn { font-size: 0.82rem; padding: 8px 14px; }
+
+    /* ── Override inline grid styles in platform views ── */
+    main [style*="grid-template-columns:repeat(4"],
+    main [style*="grid-template-columns:repeat(3"] {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    main [style*="grid-template-columns:2fr 1fr"],
+    main [style*="grid-template-columns:1fr 2fr"],
+    main [style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 480px) {
+    main [style*="grid-template-columns:repeat(4"],
+    main [style*="grid-template-columns:repeat(3"],
+    main [style*="grid-template-columns:1fr 1fr"] {
+        grid-template-columns: 1fr !important;
+    }
 }

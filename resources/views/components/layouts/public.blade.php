@@ -211,12 +211,31 @@
             .pub-hamburger { display: block; }
             .pub-footer-grid { grid-template-columns: 1fr 1fr; gap: 32px; }
         }
+        @media (max-width: 768px) {
+            /* Override inline fixed-column grids in page content */
+            .pub-content [style*="grid-template-columns:1fr 1fr"],
+            .pub-content [style*="grid-template-columns:2fr 1fr"],
+            .pub-content [style*="grid-template-columns:1fr 2fr"],
+            .pub-content [style*="grid-template-columns: 1fr 1fr"],
+            .pub-content [style*="grid-template-columns: 2fr 1fr"],
+            .pub-content [style*="grid-template-columns: 1fr 2fr"] {
+                grid-template-columns: 1fr !important;
+                gap: 24px !important;
+            }
+            .section-subtitle { font-size: 0.95rem; }
+            .pub-btn-primary, .pub-btn-outline, .pub-btn-outline-light {
+                font-size: 0.875rem;
+                padding: 11px 20px;
+            }
+        }
         @media (max-width: 640px) {
             .pub-nav-inner { padding: 0 20px; }
             .section { padding: 56px 20px; }
             .section-sm { padding: 40px 20px; }
             .pub-footer { padding: 48px 20px 24px; }
             .pub-footer-grid { grid-template-columns: 1fr; gap: 28px; }
+            .pub-card, .pub-card-dark { padding: 20px; }
+            .section-title { margin-bottom: 12px; }
         }
     </style>
 </head>

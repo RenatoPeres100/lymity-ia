@@ -371,7 +371,7 @@
     </aside>
 
     {{-- Main --}}
-    <div class="flex flex-col flex-1 ml-60">
+    <div class="flex flex-col flex-1 ml-60 main-content">
 
         {{-- Topbar --}}
         <header class="topbar">
@@ -389,7 +389,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Fase 7 — SEO &amp; Blog IA
+                    Fase 8 — Ads
                 </span>
 
                 <form method="POST" action="{{ route('logout') }}">
