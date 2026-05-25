@@ -1,0 +1,110 @@
+@extends('components.layouts.app')
+
+@section('content')
+<div class="space-y-5">
+
+    <div class="flex items-center gap-4">
+        <a href="{{ route('admin.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <div>
+            <h1 class="text-2xl font-bold text-white">Relatório de Campanhas</h1>
+            <p class="text-sm text-slate-400 mt-1">Todos os clientes · Google Ads & Meta Ads</p>
+        </div>
+    </div>
+
+    {{-- KPI cards --}}
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+        @foreach([
+            ['label'=>'Total',       'value'=>$data['total'],                        'color'=>'#38bdf8'],
+            ['label'=>'Ativas',      'value'=>$data['active'],                       'color'=>'#4ade80'],
+            ['label'=>'Pausadas',    'value'=>$data['paused'],                       'color'=>'#fde047'],
+            ['label'=>'Concluídas',  'value'=>$data['completed'],                    'color'=>'#94a3b8'],
+        ] as $card)
+        <div class="card"><div class="card-body" style="padding:16px;">
+            <div style="font-size:32px;font-weight:800;color:{{ $card['color'] }};">{{ $card['value'] }}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;">{{ $card['label'] }}</div>
+        </div></div>
+        @endforeach
+    </div>
+
+    {{-- Metrics --}}
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;">
+        @foreach([
+            ['label'=>'Impressões',  'value'=>number_format($data['total_impressions']), 'color'=>'#a78bfa'],
+            ['label'=>'Cliques',     'value'=>number_format($data['total_clicks']),      'color'=>'#22d3ee'],
+            ['label'=>'Custo',       'value'=>'R$ '.number_format($data['total_cost'],2,',','.'), 'color'=>'#f87171'],
+            ['label'=>'Leads',       'value'=>number_format($data['total_leads']),       'color'=>'#4ade80'],
+        ] as $card)
+        <div class="card"><div class="card-body" style="padding:16px;">
+            <div style="font-size:22px;font-weight:800;color:{{ $card['color'] }};">{{ $card['value'] }}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;">{{ $card['label'] }}</div>
+        </div></div>
+        @endforeach
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;">
+        @foreach([
+            ['label'=>'CTR Médio',  'value'=>$data['avg_ctr'].'%',  'color'=>'#fb923c'],
+            ['label'=>'CPC Médio',  'value'=>'R$ '.$data['avg_cpc'], 'color'=>'#fde047'],
+            ['label'=>'ROAS Médio', 'value'=>$data['avg_roas'].'x',  'color'=>'#4ade80'],
+        ] as $card)
+        <div class="card"><div class="card-body" style="padding:16px;">
+            <div style="font-size:28px;font-weight:800;color:{{ $card['color'] }};">{{ $card['value'] }}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px;text-transform:uppercase;">{{ $card['label'] }}</div>
+        </div></div>
+        @endforeach
+    </div>
+
+    {{-- By platform --}}
+    @if(count($data['by_platform']))
+    <div class="card">
+        <div class="card-header"><h3 class="font-semibold text-white text-sm">Por Plataforma</h3></div>
+        <div class="card-body" style="padding:20px;">
+            @php $max = max($data['by_platform']) ?: 1; @endphp
+            @foreach($data['by_platform'] as $platform => $count)
+            <div style="margin-bottom:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+                    <span style="font-size:13px;color:#e2e8f0;">{{ ucwords(str_replace('_', ' ', $platform)) }}</span>
+                    <span style="font-size:13px;color:#94a3b8;">{{ $count }}</span>
+                </div>
+                <div style="height:8px;background:#1e293b;border-radius:4px;overflow:hidden;">
+                    <div style="height:100%;width:{{ round($count/$max*100) }}%;background:#a78bfa;border-radius:4px;"></div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
+    {{-- Recent campaigns --}}
+    <div class="card">
+        <div class="card-header"><h3 class="font-semibold text-white text-sm">Campanhas Recentes</h3></div>
+        <div class="card-body" style="overflow-x:auto;">
+            <table style="width:100%;border-collapse:collapse;font-size:13px;">
+                <thead>
+                    <tr style="border-bottom:1px solid #334155;">
+                        <th style="text-align:left;padding:8px 12px;color:#64748b;">Nome</th>
+                        <th style="text-align:left;padding:8px 12px;color:#64748b;">Plataforma</th>
+                        <th style="text-align:left;padding:8px 12px;color:#64748b;">Objetivo</th>
+                        <th style="text-align:left;padding:8px 12px;color:#64748b;">Status</th>
+                        <th style="text-align:left;padding:8px 12px;color:#64748b;">Budget Diário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($data['recent'] as $c)
+                    <tr style="border-bottom:1px solid #1e293b;">
+                        <td style="padding:8px 12px;color:#e2e8f0;">{{ Str::limit($c->name, 40) }}</td>
+                        <td style="padding:8px 12px;color:#94a3b8;">{{ ucwords(str_replace('_', ' ', $c->platform)) }}</td>
+                        <td style="padding:8px 12px;color:#94a3b8;">{{ ucfirst($c->objective) }}</td>
+                        <td style="padding:8px 12px;"><span class="badge badge-{{ $c->status }}">{{ ucfirst($c->status) }}</span></td>
+                        <td style="padding:8px 12px;color:#4ade80;">R$ {{ number_format($c->daily_budget, 2, ',', '.') }}</td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="5" style="padding:24px;text-align:center;color:#475569;">Nenhuma campanha encontrada.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+@endsection

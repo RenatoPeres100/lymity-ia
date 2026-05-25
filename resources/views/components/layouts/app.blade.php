@@ -274,6 +274,40 @@
             @endif
 
             @if(auth()->user()->isAdminGeral())
+            <span class="nav-section-label">Relatórios</span>
+
+            <a href="{{ route('admin.dashboard') }}" class="nav-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                Dashboard Executivo
+            </a>
+
+            <a href="{{ route('admin.reports.index') }}" class="nav-item {{ request()->routeIs('admin.reports*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Relatórios
+            </a>
+
+            <a href="{{ route('admin.activity-logs.index') }}" class="nav-item {{ request()->routeIs('admin.activity-logs*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6M8 13h8M8 17h5"/>
+                </svg>
+                Logs de Atividade
+            </a>
+
+            <a href="{{ route('admin.security-logs.index') }}" class="nav-item {{ request()->routeIs('admin.security-logs*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Logs de Segurança
+            </a>
+
             <span class="nav-section-label">Sistema</span>
 
             <a href="{{ route('admin.settings') }}" class="nav-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
@@ -282,14 +316,6 @@
                     <path d="M19.07 4.93A10 10 0 0 1 21.5 12a10 10 0 0 1-2.43 7.07M4.93 4.93A10 10 0 0 0 2.5 12a10 10 0 0 0 2.43 7.07"/>
                 </svg>
                 Configurações
-            </a>
-
-            <a href="#" class="nav-item opacity-50 cursor-not-allowed" title="Disponível na Fase 2">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                </svg>
-                Logs de Auditoria
-                <span class="ml-auto text-xs bg-slate-700 text-slate-400 px-2 py-0.5 rounded-full">Em breve</span>
             </a>
             @endif
 
@@ -408,6 +434,14 @@
                 </svg>
                 App Mobile
             </a>
+
+            <span class="nav-section-label">Relatórios</span>
+            <a href="{{ route('client.reports.index') }}" class="nav-item {{ request()->routeIs('client.reports*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Relatórios
+            </a>
             @endif
 
         </nav>
@@ -446,7 +480,7 @@
             <div class="flex items-center gap-3">
                 <span class="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 bg-slate-100 border border-slate-200 rounded-full px-3 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
-                    Fase 8 — Ads
+                    Fase 11 — Relatórios &amp; Logs
                 </span>
 
                 <form method="POST" action="{{ route('logout') }}">

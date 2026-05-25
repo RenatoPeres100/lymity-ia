@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController;
+use App\Http\Controllers\Admin\SecurityLogController;
+use App\Http\Controllers\Client\ReportController as ClientReportController;
 use App\Http\Controllers\App\AppApprovalController;
 use App\Http\Controllers\App\AppCalendarController;
 use App\Http\Controllers\App\AppDashboardController;
@@ -104,6 +109,19 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // ─── Admin — Agency ───────────────────────────────────
     Route::prefix('admin')->middleware('agency')->group(function () {
+
+        // Phase 11 — Dashboards, Reports, Logs
+        Route::get('/dashboard',                    [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/reports',                      [AdminReportController::class, 'index'])->name('admin.reports.index');
+        Route::get('/reports/social',               [AdminReportController::class, 'social'])->name('admin.reports.social');
+        Route::get('/reports/campaigns',            [AdminReportController::class, 'campaigns'])->name('admin.reports.campaigns');
+        Route::get('/reports/seo',                  [AdminReportController::class, 'seo'])->name('admin.reports.seo');
+        Route::get('/reports/ai',                   [AdminReportController::class, 'ai'])->name('admin.reports.ai');
+        Route::get('/reports/approvals',            [AdminReportController::class, 'approvals'])->name('admin.reports.approvals');
+        Route::get('/reports/executive',            [AdminReportController::class, 'executive'])->name('admin.reports.executive');
+        Route::get('/activity-logs',                [ActivityLogController::class, 'index'])->name('admin.activity-logs.index');
+        Route::get('/activity-logs/export',         [ActivityLogController::class, 'export'])->name('admin.activity-logs.export');
+        Route::get('/security-logs',                [SecurityLogController::class, 'index'])->name('admin.security-logs.index');
 
         // Users & Clients (Phase 1)
         Route::get('/users',    [UserController::class,   'index'])->name('admin.users');
@@ -408,6 +426,14 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ─── Client Area ──────────────────────────────────────
     Route::prefix('client')->middleware('client_access')->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
+
+        // Phase 11 — Client Reports
+        Route::get('/reports',                      [ClientReportController::class, 'index'])->name('client.reports.index');
+        Route::get('/reports/social',               [ClientReportController::class, 'social'])->name('client.reports.social');
+        Route::get('/reports/campaigns',            [ClientReportController::class, 'campaigns'])->name('client.reports.campaigns');
+        Route::get('/reports/seo',                  [ClientReportController::class, 'seo'])->name('client.reports.seo');
+        Route::get('/reports/approvals',            [ClientReportController::class, 'approvals'])->name('client.reports.approvals');
+        Route::get('/reports/executive',            [ClientReportController::class, 'executive'])->name('client.reports.executive');
 
         // Phase 3 — Client self-service
         Route::get('/brand',                         [ClientBrandController::class, 'show'])->name('client.brand');

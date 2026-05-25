@@ -76,5 +76,10 @@ class DatabaseSeeder extends Seeder
             BudgetSeeder::class,
             ClientContractSeeder::class,
         ]);
+
+        // Phase 11 — Logs & Reports
+        $this->call([
+            ActivityLogSeeder::class,
+        ]);
     }
 }

@@ -281,6 +281,22 @@ tbody tr:hover td { background: #f8fafc; }
 .badge-gray   { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
 .badge-orange { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
 
+/* Status badges */
+.badge-pending, .badge-queued   { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+.badge-approved, .badge-active, .badge-published, .badge-done, .badge-signed, .badge-success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.badge-rejected, .badge-failed, .badge-error, .badge-critical, .badge-canceled { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.badge-draft, .badge-info      { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.badge-sent, .badge-running    { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-changes_requested       { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badge-accepted                { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.badge-paused, .badge-archived { background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; }
+.badge-warning                 { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+.badge-pending_approval        { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+.badge-high                    { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+.badge-medium                  { background: #fefce8; color: #854d0e; border: 1px solid #fef08a; }
+.badge-low                     { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+.badge-critical                { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+
 /* ─── Buttons ─── */
 .btn {
     display: inline-flex;
