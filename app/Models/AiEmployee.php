@@ -137,4 +137,9 @@ class AiEmployee extends Model
     {
         return $this->tasks()->whereDate('created_at', today())->count();
     }
+
+    public function providerCalls(): HasMany
+    {
+        return $this->hasMany(AiProviderCall::class);
+    }
 }

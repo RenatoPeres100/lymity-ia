@@ -148,6 +148,11 @@ class User extends Authenticatable
         return $this->hasMany(ExternalFile::class, 'uploaded_by');
     }
 
+    public function aiProviderCalls(): HasMany
+    {
+        return $this->hasMany(AiProviderCall::class);
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {

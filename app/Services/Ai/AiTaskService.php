@@ -12,9 +12,12 @@ use Throwable;
 class AiTaskService
 {
     public function __construct(
-        private AiProviderManager $provider,
-        private AiLogService $logger,
-    ) {}
+        private AiProviderManager  $provider,
+        private AiLogService       $logger,
+        private ?AiGenerationService $generation = null,
+    ) {
+        $this->generation ??= app(AiGenerationService::class);
+    }
 
     public function createManualTask(AiEmployee $employee, array $data): AiTask
     {
@@ -51,14 +54,26 @@ class AiTaskService
         $this->logger->info($task, 'Execução iniciada.');
 
         try {
-            $output = $this->provider->generate($task);
+            // Use AiGenerationService (logs call, records cost, enriches context)
+            $result = $this->generation->generateForTask($task);
 
+            if (!$result['success']) {
+                $task->update([
+                    'status'        => 'failed',
+                    'error_message' => $result['error_message'],
+                    'finished_at'   => now(),
+                ]);
+                $this->logger->error($task, 'Geração falhou: ' . $result['error_message']);
+                return $task->fresh();
+            }
+
+            $output     = $result['response'];
             $nextStatus = $task->requires_approval ? 'waiting_approval' : 'completed';
 
             $task->update([
-                'status'     => $nextStatus,
-                'output'     => $output,
-                'started_at' => $task->started_at ?? now(),
+                'status'      => $nextStatus,
+                'output'      => $output,
+                'started_at'  => $task->started_at ?? now(),
                 'finished_at' => $nextStatus === 'completed' ? now() : null,
             ]);
 

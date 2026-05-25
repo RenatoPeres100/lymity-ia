@@ -140,4 +140,9 @@ class AiTask extends Model
     {
         return in_array($this->status, ['waiting_approval', 'pending_approval']);
     }
+
+    public function providerCalls(): HasMany
+    {
+        return $this->hasMany(AiProviderCall::class);
+    }
 }

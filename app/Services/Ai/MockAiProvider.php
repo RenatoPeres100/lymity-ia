@@ -4,19 +4,57 @@ namespace App\Services\Ai;
 
 use App\Models\AiTask;
 
-class MockAiProvider
+class MockAiProvider implements AiProviderInterface
 {
-    public function generate(AiTask $task): string
-    {
-        $employee  = $task->employee;
-        $client    = $task->client;
-        $taskType  = $task->getEffectiveTaskType();
-        $title     = $task->title;
-        $desc      = $task->description;
-        $clientName = $client?->name ?? 'Lymity IA';
-        $skillList  = $employee?->skills->pluck('name')->implode(', ') ?? '—';
+    public function providerName(): string { return 'mock'; }
 
-        return match ($taskType) {
+    public function supportsStructuredOutput(): bool { return true; }
+
+    public function testConnection(): array
+    {
+        return [
+            'success'    => true,
+            'message'    => 'Mock provider sempre disponível. Nenhuma API externa necessária.',
+            'model'      => config('ai.model', 'mock-growth-agent'),
+            'latency_ms' => rand(5, 30),
+        ];
+    }
+
+    /**
+     * Accept array payload (from AiGenerationService) OR a legacy AiTask object
+     * so that code that calls generate($task) directly still works.
+     *
+     * @param array|AiTask $payload
+     */
+    public function generate(array|AiTask $payload): array
+    {
+        // Legacy: accept AiTask directly
+        if ($payload instanceof AiTask) {
+            $task       = $payload;
+            $employee   = $task->employee;
+            $taskType   = $task->getEffectiveTaskType();
+            $title      = $task->title;
+            $desc       = $task->description;
+            $clientName = $task->client?->name ?? 'Lymity IA';
+        } else {
+            $employee   = $payload['employee']    ?? null;
+            $taskType   = $payload['task_type']   ?? 'general';
+            $title      = $payload['title']       ?? 'Sem título';
+            $desc       = $payload['description'] ?? null;
+            $clientName = $payload['client_name'] ?? 'Lymity IA';
+
+            // Enrich description with client context if available
+            if (!empty($payload['client_context'])) {
+                $ctx  = $payload['client_context'];
+                $desc = $desc
+                    ? "{$desc}\n\nContexto: " . json_encode($ctx, JSON_UNESCAPED_UNICODE)
+                    : 'Contexto: ' . json_encode($ctx, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        $skillList = $employee?->skills->pluck('name')->implode(', ') ?? '—';
+
+        $response = match ($taskType) {
             'generate_social_post','social_post'  => $this->generateSocialPosts($title, $desc, $clientName, $employee),
             'generate_social_calendar'            => $this->generateSocialCalendar($title, $desc, $clientName),
             'generate_social_variants'            => $this->generateSocialVariants($title, $desc, $clientName),
@@ -47,6 +85,21 @@ class MockAiProvider
             'creative_briefing'                   => $this->generateCreativeBriefing($title, $desc, $clientName),
             default                               => $this->generateGenericOutput($title, $desc, $clientName, $taskType, $employee, $skillList),
         };
+
+        return [
+            'success'          => true,
+            'provider'         => 'mock',
+            'model'            => config('ai.model', 'mock-growth-agent'),
+            'prompt_preview'   => "[mock] {$taskType} — {$title}",
+            'response'         => $response,
+            'response_summary' => mb_substr(strip_tags($response), 0, 300),
+            'input_tokens'     => null,
+            'output_tokens'    => null,
+            'total_tokens'     => null,
+            'estimated_cost'   => 0.0,
+            'error_message'    => null,
+            'raw_response'     => null,
+        ];
     }
 
     private function generateBlogPostJson(string $title, ?string $desc, string $clientName): string

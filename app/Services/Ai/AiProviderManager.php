@@ -6,17 +6,39 @@ use App\Models\AiTask;
 
 class AiProviderManager
 {
-    public function generate(AiTask $task): string
+    /**
+     * Resolve the configured provider instance.
+     */
+    public function provider(): AiProviderInterface
     {
-        return $this->resolve()->generate($task);
+        $name = strtolower(config('ai.provider', 'mock'));
+
+        return match ($name) {
+            'openai' => new OpenAiProvider(),
+            'claude' => new ClaudeProvider(),
+            default  => new MockAiProvider(),
+        };
     }
 
-    private function resolve(): MockAiProvider
+    /**
+     * Generate via the resolved provider using a structured payload.
+     * Returns a standardised result array.
+     */
+    public function generateFromPayload(array $payload): array
     {
-        $provider = config('ai.provider', 'mock');
+        return $this->provider()->generate($payload);
+    }
 
-        return match ($provider) {
-            default => new MockAiProvider(),
-        };
+    /**
+     * Legacy method — kept for backward compatibility.
+     * Callers that still pass an AiTask directly continue to work.
+     *
+     * @deprecated Prefer AiGenerationService->generateForTask()
+     */
+    public function generate(AiTask $task): string
+    {
+        $mock = new MockAiProvider();
+        $result = $mock->generate($task);
+        return $result['response'] ?? '';
     }
 }

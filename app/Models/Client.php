@@ -150,4 +150,9 @@ class Client extends Model
     {
         return $this->status === 'active';
     }
+
+    public function aiProviderCalls(): HasMany
+    {
+        return $this->hasMany(AiProviderCall::class);
+    }
 }

@@ -119,6 +119,15 @@
                 Memórias IA
             </a>
 
+            <a href="{{ route('admin.ai-settings.index') }}" class="nav-item {{ request()->routeIs('admin.ai-settings*', 'admin.ai-usage*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+                    <path d="M12 2v2M12 20v2M2 12h2M20 12h2"/>
+                </svg>
+                Configurações IA
+            </a>
+
             <a href="{{ route('admin.leads.index') }}" class="nav-item {{ request()->routeIs('admin.leads*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>

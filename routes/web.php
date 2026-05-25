@@ -80,6 +80,8 @@ use App\Http\Controllers\Admin\ClientContractController as AdminContractControll
 use App\Http\Controllers\Client\ProposalController as ClientProposalController;
 use App\Http\Controllers\Client\BudgetController as ClientBudgetController;
 use App\Http\Controllers\Client\ContractController as ClientContractController;
+use App\Http\Controllers\Admin\AiSettingsController;
+use App\Http\Controllers\Admin\AiUsageController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Site ──────────────────────────────────────────
@@ -447,6 +449,13 @@ Route::middleware(['auth', 'active'])->group(function () {
             // Logs
             Route::get('/logs', [ClientActivityLogController::class, 'index'])->name('admin.clients.logs.index');
         });
+
+        // ─── Phase 15 — AI Provider Settings & Usage ──────────────────────
+        Route::get('/ai-settings',         [AiSettingsController::class, 'index'])->name('admin.ai-settings.index');
+        Route::post('/ai-settings',        [AiSettingsController::class, 'update'])->name('admin.ai-settings.update');
+        Route::get('/ai-settings/test',    [AiSettingsController::class, 'testForm'])->name('admin.ai-settings.test');
+        Route::post('/ai-settings/test',   [AiSettingsController::class, 'testConnection'])->name('admin.ai-settings.test.run');
+        Route::get('/ai-usage',            [AiUsageController::class, 'index'])->name('admin.ai-usage.index');
     });
 
     // ─── Client Area ──────────────────────────────────────
