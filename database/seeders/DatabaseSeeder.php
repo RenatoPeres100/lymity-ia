@@ -88,5 +88,11 @@ class DatabaseSeeder extends Seeder
             ClientFolderSeeder::class,
             ExternalFileSeeder::class,
         ]);
+
+        // Phase 14 — Final Polish & Demo Data
+        $this->call([
+            DemoUsersSeeder::class,
+            FinalDemoSeeder::class,
+        ]);
     }
 }
