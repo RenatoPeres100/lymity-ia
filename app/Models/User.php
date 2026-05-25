@@ -143,6 +143,11 @@ class User extends Authenticatable
         };
     }
 
+    public function uploadedFiles(): HasMany
+    {
+        return $this->hasMany(ExternalFile::class, 'uploaded_by');
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {

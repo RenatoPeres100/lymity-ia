@@ -81,5 +81,12 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ActivityLogSeeder::class,
         ]);
+
+        // Phase 13 — Files & Google Drive
+        $this->call([
+            StorageIntegrationSeeder::class,
+            ClientFolderSeeder::class,
+            ExternalFileSeeder::class,
+        ]);
     }
 }

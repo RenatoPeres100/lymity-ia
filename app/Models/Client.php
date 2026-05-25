@@ -131,6 +131,21 @@ class Client extends Model
         return $this->hasMany(ClientContract::class);
     }
 
+    public function folders(): HasMany
+    {
+        return $this->hasMany(ClientFolder::class);
+    }
+
+    public function externalFiles(): HasMany
+    {
+        return $this->hasMany(ExternalFile::class);
+    }
+
+    public function storageIntegrations(): HasMany
+    {
+        return $this->hasMany(StorageIntegration::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === 'active';

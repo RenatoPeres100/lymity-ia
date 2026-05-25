@@ -2,6 +2,11 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\SystemHealthController;
+use App\Http\Controllers\Admin\FileController as AdminFileController;
+use App\Http\Controllers\Admin\ClientFileController as AdminClientFileController;
+use App\Http\Controllers\Admin\GoogleDriveAdminController;
+use App\Http\Controllers\Client\FileController as ClientFileController;
+use App\Http\Controllers\Client\GoogleDriveController as ClientGoogleDriveController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\SecurityLogController;
@@ -113,6 +118,23 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         // Phase 12 — System Health
         Route::get('/system-health', SystemHealthController::class)->name('admin.system-health');
+
+        // Phase 13 — Files & Google Drive
+        Route::get('/files',                               [AdminFileController::class, 'index'])->name('admin.files.index');
+        Route::get('/files/create',                        [AdminFileController::class, 'create'])->name('admin.files.create');
+        Route::post('/files',                              [AdminFileController::class, 'store'])->name('admin.files.store');
+        Route::get('/files/google-drive/connect',         [GoogleDriveAdminController::class, 'connect'])->name('admin.files.google-drive');
+        Route::get('/files/{externalFile}',               [AdminFileController::class, 'show'])->name('admin.files.show');
+        Route::delete('/files/{externalFile}',            [AdminFileController::class, 'destroy'])->name('admin.files.destroy');
+        Route::post('/files/{externalFile}/relate',       [AdminFileController::class, 'relate'])->name('admin.files.relate');
+
+        Route::get('/clients/{client}/files',                    [AdminClientFileController::class, 'index'])->name('admin.clients.files.index');
+        Route::get('/clients/{client}/files/create',             [AdminClientFileController::class, 'create'])->name('admin.clients.files.create');
+        Route::post('/clients/{client}/files',                   [AdminClientFileController::class, 'store'])->name('admin.clients.files.store');
+        Route::get('/clients/{client}/files/google-drive',       [GoogleDriveAdminController::class, 'connectForClient'])->name('admin.clients.files.google-drive');
+        Route::get('/clients/{client}/files/{externalFile}',     [AdminClientFileController::class, 'show'])->name('admin.clients.files.show');
+        Route::delete('/clients/{client}/files/{externalFile}',  [AdminClientFileController::class, 'destroy'])->name('admin.clients.files.destroy');
+        Route::post('/clients/{client}/folders',                 [AdminClientFileController::class, 'storeFolder'])->name('admin.clients.folders.store');
 
         // Phase 11 — Dashboards, Reports, Logs
         Route::get('/dashboard',                    [AdminDashboardController::class, 'index'])->name('admin.dashboard');
@@ -430,6 +452,15 @@ Route::middleware(['auth', 'active'])->group(function () {
     // ─── Client Area ──────────────────────────────────────
     Route::prefix('client')->middleware('client_access')->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
+
+        // Phase 13 — Client Files
+        Route::get('/files',                          [ClientFileController::class, 'index'])->name('client.files.index');
+        Route::get('/files/create',                   [ClientFileController::class, 'create'])->name('client.files.create');
+        Route::post('/files',                         [ClientFileController::class, 'store'])->name('client.files.store');
+        Route::get('/files/google-drive/connect',    [ClientGoogleDriveController::class, 'connect'])->name('client.files.google-drive');
+        Route::get('/files/{externalFile}',           [ClientFileController::class, 'show'])->name('client.files.show');
+        Route::delete('/files/{externalFile}',        [ClientFileController::class, 'destroy'])->name('client.files.destroy');
+        Route::post('/folders',                       [ClientFileController::class, 'storeFolder'])->name('client.folders.store');
 
         // Phase 11 — Client Reports
         Route::get('/reports',                      [ClientReportController::class, 'index'])->name('client.reports.index');

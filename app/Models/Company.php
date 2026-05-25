@@ -77,4 +77,14 @@ class Company extends Model
     {
         return $this->hasMany(AdCampaign::class);
     }
+
+    public function externalFiles(): HasMany
+    {
+        return $this->hasMany(ExternalFile::class);
+    }
+
+    public function storageIntegrations(): HasMany
+    {
+        return $this->hasMany(StorageIntegration::class);
+    }
 }
