@@ -178,6 +178,43 @@
                 Blog SEO
             </a>
 
+            <span class="nav-section-label">Ads</span>
+
+            <a href="{{ route('admin.ads.index') }}" class="nav-item {{ request()->routeIs('admin.ads.index') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M3 3h18v4H3z"/><path d="M3 10h10v11H3z"/><path d="M15 10h6v11h-6z"/>
+                </svg>
+                Visão Geral
+            </a>
+
+            <a href="{{ route('admin.ads.accounts.index') }}" class="nav-item {{ request()->routeIs('admin.ads.accounts*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>
+                </svg>
+                Contas
+            </a>
+
+            <a href="{{ route('admin.ads.campaigns.index') }}" class="nav-item {{ request()->routeIs('admin.ads.campaigns*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                Campanhas
+            </a>
+
+            <a href="{{ route('admin.ads.metrics.index') }}" class="nav-item {{ request()->routeIs('admin.ads.metrics*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Métricas
+            </a>
+
+            <a href="{{ route('admin.ads.budget-approvals.index') }}" class="nav-item {{ request()->routeIs('admin.ads.budget-approvals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/>
+                </svg>
+                Aprov. Orçamento
+            </a>
+
             <span class="nav-section-label">Conteúdo</span>
 
             <a href="{{ route('admin.blog-posts.index') }}" class="nav-item {{ request()->routeIs('admin.blog-posts*') ? 'active' : '' }}">
@@ -293,6 +330,26 @@
                     <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
                 </svg>
                 Aprovar Posts
+            </a>
+
+            <span class="nav-section-label">Ads</span>
+            <a href="{{ route('client.ads.campaigns.index') }}" class="nav-item {{ request()->routeIs('client.ads.campaigns*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
+                Campanhas
+            </a>
+            <a href="{{ route('client.ads.approvals.index') }}" class="nav-item {{ request()->routeIs('client.ads.approvals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Aprovações
+            </a>
+            <a href="{{ route('client.ads.reports.index') }}" class="nav-item {{ request()->routeIs('client.ads.reports*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                </svg>
+                Relatórios
             </a>
             @endif
 

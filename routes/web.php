@@ -48,6 +48,16 @@ use App\Http\Controllers\Admin\SeoAuditController;
 use App\Http\Controllers\Admin\AdminBlogController;
 use App\Http\Controllers\Client\SeoDashboardController as ClientSeoDashboardController;
 use App\Http\Controllers\Client\ClientBlogSeoController;
+use App\Http\Controllers\Admin\AdsDashboardController;
+use App\Http\Controllers\Admin\AdAccountController;
+use App\Http\Controllers\Admin\AdCampaignController as AdminAdCampaignController;
+use App\Http\Controllers\Admin\CampaignMetricController;
+use App\Http\Controllers\Admin\CampaignBudgetChangeController;
+use App\Http\Controllers\Admin\AdsAiController;
+use App\Http\Controllers\Client\AdsDashboardController as ClientAdsDashboardController;
+use App\Http\Controllers\Client\AdCampaignController as ClientAdCampaignController;
+use App\Http\Controllers\Client\AdsApprovalController;
+use App\Http\Controllers\Client\AdsReportController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Site ──────────────────────────────────────────
@@ -267,6 +277,38 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/seo/blog/{blogPost}/send-approval',           [AdminBlogController::class, 'sendToApproval'])->name('admin.seo.blog.send-approval');
         Route::post('/seo/blog/{blogPost}/publish',                 [AdminBlogController::class, 'publish'])->name('admin.seo.blog.publish');
 
+        // ─── Phase 8 — Ads ───────────────────────────────────────────────────
+        Route::get('/ads',                                          [AdsDashboardController::class, 'index'])->name('admin.ads.index');
+
+        // Accounts
+        Route::get('/ads/accounts',                                 [AdAccountController::class, 'index'])->name('admin.ads.accounts.index');
+        Route::get('/ads/accounts/create',                          [AdAccountController::class, 'create'])->name('admin.ads.accounts.create');
+        Route::post('/ads/accounts',                                [AdAccountController::class, 'store'])->name('admin.ads.accounts.store');
+        Route::get('/ads/accounts/{adAccount}/edit',                [AdAccountController::class, 'edit'])->name('admin.ads.accounts.edit');
+        Route::put('/ads/accounts/{adAccount}',                     [AdAccountController::class, 'update'])->name('admin.ads.accounts.update');
+
+        // Campaigns
+        Route::get('/ads/campaigns',                                [AdminAdCampaignController::class, 'index'])->name('admin.ads.campaigns.index');
+        Route::get('/ads/campaigns/create',                         [AdminAdCampaignController::class, 'create'])->name('admin.ads.campaigns.create');
+        Route::post('/ads/campaigns',                               [AdminAdCampaignController::class, 'store'])->name('admin.ads.campaigns.store');
+        Route::get('/ads/campaigns/{adCampaign}',                   [AdminAdCampaignController::class, 'show'])->name('admin.ads.campaigns.show');
+        Route::get('/ads/campaigns/{adCampaign}/edit',              [AdminAdCampaignController::class, 'edit'])->name('admin.ads.campaigns.edit');
+        Route::put('/ads/campaigns/{adCampaign}',                   [AdminAdCampaignController::class, 'update'])->name('admin.ads.campaigns.update');
+        Route::post('/ads/campaigns/{adCampaign}/send-approval',    [AdminAdCampaignController::class, 'sendApproval'])->name('admin.ads.campaigns.send-approval');
+        Route::post('/ads/campaigns/{adCampaign}/schedule',         [AdminAdCampaignController::class, 'schedule'])->name('admin.ads.campaigns.schedule');
+        Route::post('/ads/campaigns/{adCampaign}/pause-sandbox',    [AdminAdCampaignController::class, 'pauseSandbox'])->name('admin.ads.campaigns.pause-sandbox');
+        Route::post('/ads/campaigns/{adCampaign}/generate-mock-metrics', [AdminAdCampaignController::class, 'generateMockMetrics'])->name('admin.ads.campaigns.generate-mock-metrics');
+        Route::post('/ads/campaigns/generate-ai',                   [AdsAiController::class, 'generateAi'])->name('admin.ads.campaigns.generate-ai');
+
+        // Metrics
+        Route::get('/ads/metrics',                                  [CampaignMetricController::class, 'index'])->name('admin.ads.metrics.index');
+
+        // Budget Approvals
+        Route::get('/ads/budget-approvals',                         [CampaignBudgetChangeController::class, 'index'])->name('admin.ads.budget-approvals.index');
+        Route::get('/ads/budget-approvals/create',                  [CampaignBudgetChangeController::class, 'create'])->name('admin.ads.budget-approvals.create');
+        Route::post('/ads/budget-approvals',                        [CampaignBudgetChangeController::class, 'store'])->name('admin.ads.budget-approvals.store');
+        Route::post('/ads/budget-approvals/{campaignBudgetChange}/apply', [CampaignBudgetChangeController::class, 'apply'])->name('admin.ads.budget-approvals.apply');
+
         // ─── Phase 3 — Client Management ─────────────────
         Route::prefix('clients/{client}')->group(function () {
 
@@ -357,6 +399,13 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/seo/blog',                                     [ClientBlogSeoController::class, 'index'])->name('client.seo.blog.index');
         Route::get('/seo/blog/approvals',                           [ClientBlogSeoController::class, 'approvals'])->name('client.seo.blog.approvals');
         Route::get('/seo/blog/{blogPost}',                          [ClientBlogSeoController::class, 'show'])->name('client.seo.blog.show');
+
+        // Phase 8 — Client Ads
+        Route::get('/ads',                                          [ClientAdsDashboardController::class, 'index'])->name('client.ads.index');
+        Route::get('/ads/campaigns',                                [ClientAdCampaignController::class, 'index'])->name('client.ads.campaigns.index');
+        Route::get('/ads/campaigns/{adCampaign}',                   [ClientAdCampaignController::class, 'show'])->name('client.ads.campaigns.show');
+        Route::get('/ads/approvals',                                [AdsApprovalController::class, 'index'])->name('client.ads.approvals.index');
+        Route::get('/ads/reports',                                  [AdsReportController::class, 'index'])->name('client.ads.reports.index');
     });
 
 });

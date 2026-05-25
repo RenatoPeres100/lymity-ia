@@ -67,4 +67,14 @@ class Company extends Model
     {
         return $this->hasMany(SeoAudit::class);
     }
+
+    public function adAccounts(): HasMany
+    {
+        return $this->hasMany(AdAccount::class);
+    }
+
+    public function adCampaigns(): HasMany
+    {
+        return $this->hasMany(AdCampaign::class);
+    }
 }

@@ -154,6 +154,16 @@ class ApprovalService
             $this->syncSocialPostStatus($approvable, $newStatus, $user);
             return;
         }
+
+        if ($modelClass === \App\Models\AdCampaign::class) {
+            $this->syncAdCampaignStatus($approvable, $newStatus, $user);
+            return;
+        }
+
+        if ($modelClass === \App\Models\CampaignBudgetChange::class) {
+            $this->syncCampaignBudgetChangeStatus($approvable, $newStatus, $user);
+            return;
+        }
     }
 
     private function syncAiTaskStatus(\App\Models\AiTask $task, string $newStatus, ?User $user): void
@@ -220,6 +230,34 @@ class ApprovalService
             $user ?? new User(),
             'social_post_' . $newStatus
         );
+    }
+
+    private function syncAdCampaignStatus(\App\Models\AdCampaign $campaign, string $newStatus, ?User $user): void
+    {
+        $updates = match ($newStatus) {
+            'approved'          => ['status' => 'approved', 'approved_by' => $user?->id, 'approved_at' => now()],
+            'rejected'          => ['status' => 'rejected'],
+            'changes_requested' => ['status' => 'draft'],
+            default             => [],
+        };
+
+        if (!empty($updates)) {
+            $campaign->update($updates);
+        }
+    }
+
+    private function syncCampaignBudgetChangeStatus(\App\Models\CampaignBudgetChange $change, string $newStatus, ?User $user): void
+    {
+        $updates = match ($newStatus) {
+            'approved'          => ['status' => 'approved', 'approved_by' => $user?->id, 'approved_at' => now()],
+            'rejected'          => ['status' => 'rejected'],
+            'changes_requested' => ['status' => 'pending_approval'],
+            default             => [],
+        };
+
+        if (!empty($updates)) {
+            $change->update($updates);
+        }
     }
 
     private function syncContentStatus($model, string $newStatus): void

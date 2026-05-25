@@ -62,5 +62,12 @@ class DatabaseSeeder extends Seeder
             SeoContentPlanSeeder::class,
             SeoAuditSeeder::class,
         ]);
+
+        // Phase 8 — Ads
+        $this->call([
+            AdAccountSeeder::class,
+            AdCampaignSeeder::class,
+            CampaignMetricSeeder::class,
+        ]);
     }
 }

@@ -17,24 +17,31 @@ class MockAiProvider
         $skillList  = $employee?->skills->pluck('name')->implode(', ') ?? '—';
 
         return match ($taskType) {
-            'generate_social_post','social_post' => $this->generateSocialPosts($title, $desc, $clientName, $employee),
-            'generate_social_calendar'           => $this->generateSocialCalendar($title, $desc, $clientName),
-            'generate_social_variants'           => $this->generateSocialVariants($title, $desc, $clientName),
-            'improve_social_post'                => $this->improveSocialPost($title, $desc, $clientName),
-            'generate_blog_post'                 => $this->generateBlogPostJson($title, $desc, $clientName),
-            'generate_seo_plan'                  => $this->generateSeoContentPlanJson($title, $desc, $clientName),
-            'generate_keyword_cluster'           => $this->generateKeywordClusterJson($title, $desc, $clientName),
-            'improve_blog_post'                  => $this->improveBlogPost($title, $desc, $clientName),
-            'generate_meta_description'          => $this->generateMetaDescription($title, $desc, $clientName),
-            'generate_seo_audit_mock'            => $this->generateSeoAuditMockJson($title, $desc, $clientName),
-            'seo_plan'             => $this->generateSeoPlan($title, $desc, $clientName),
-            'ads_analysis'         => $this->generateAdsAnalysis($title, $desc, $clientName),
-            'copywriting'          => $this->generateCopywriting($title, $desc, $clientName),
-            'project_plan'         => $this->generateProjectPlan($title, $desc, $clientName),
-            'lead_qualification'   => $this->generateLeadQualification($title, $desc, $clientName),
-            'data_analysis'        => $this->generateDataAnalysis($title, $desc, $clientName),
-            'creative_briefing'    => $this->generateCreativeBriefing($title, $desc, $clientName),
-            default                => $this->generateGenericOutput($title, $desc, $clientName, $taskType, $employee, $skillList),
+            'generate_social_post','social_post'  => $this->generateSocialPosts($title, $desc, $clientName, $employee),
+            'generate_social_calendar'            => $this->generateSocialCalendar($title, $desc, $clientName),
+            'generate_social_variants'            => $this->generateSocialVariants($title, $desc, $clientName),
+            'improve_social_post'                 => $this->improveSocialPost($title, $desc, $clientName),
+            'generate_blog_post'                  => $this->generateBlogPostJson($title, $desc, $clientName),
+            'generate_seo_plan'                   => $this->generateSeoContentPlanJson($title, $desc, $clientName),
+            'generate_keyword_cluster'            => $this->generateKeywordClusterJson($title, $desc, $clientName),
+            'improve_blog_post'                   => $this->improveBlogPost($title, $desc, $clientName),
+            'generate_meta_description'           => $this->generateMetaDescription($title, $desc, $clientName),
+            'generate_seo_audit_mock'             => $this->generateSeoAuditMockJson($title, $desc, $clientName),
+            'seo_plan'                            => $this->generateSeoPlan($title, $desc, $clientName),
+            'ads_analysis'                        => $this->generateAdsAnalysis($title, $desc, $clientName),
+            'generate_google_ads_campaign'        => $this->generateGoogleAdsCampaign($title, $desc, $clientName),
+            'generate_meta_ads_campaign'          => $this->generateMetaAdsCampaign($title, $desc, $clientName),
+            'generate_ad_creatives'               => $this->generateAdCreatives($title, $desc, $clientName),
+            'generate_keywords'                   => $this->generateAdKeywords($title, $desc, $clientName),
+            'generate_audience_suggestions'       => $this->generateAudienceSuggestions($title, $desc, $clientName),
+            'analyze_campaign_metrics'            => $this->analyzeCampaignMetrics($title, $desc, $clientName),
+            'suggest_budget_change'               => $this->suggestBudgetChange($title, $desc, $clientName),
+            'copywriting'                         => $this->generateCopywriting($title, $desc, $clientName),
+            'project_plan'                        => $this->generateProjectPlan($title, $desc, $clientName),
+            'lead_qualification'                  => $this->generateLeadQualification($title, $desc, $clientName),
+            'data_analysis'                       => $this->generateDataAnalysis($title, $desc, $clientName),
+            'creative_briefing'                   => $this->generateCreativeBriefing($title, $desc, $clientName),
+            default                               => $this->generateGenericOutput($title, $desc, $clientName, $taskType, $employee, $skillList),
         };
     }
 
@@ -811,6 +818,240 @@ Botão ou elemento de destaque: "Solicite uma demonstração"
 
 > ⚠️ **Rascunho para aprovação.** Nenhum material foi produzido ou publicado.
 OUTPUT;
+    }
+
+    private function generateGoogleAdsCampaign(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'platform'  => 'google_ads',
+            'mode'      => 'sandbox',
+            'strategy'  => "Campanha Google Ads para {$clientName} com foco em captação de leads via busca intencional. Estrutura de funil: topo (awareness), meio (consideração) e fundo (conversão).",
+            'campaign'  => [
+                'name'       => "{$title} — Google Search",
+                'type'       => 'SEARCH',
+                'budget_day' => 50,
+                'start'      => now()->addDays(3)->toDateString(),
+            ],
+            'groups'    => [
+                ['name' => 'Grupo Fundo de Funil', 'keywords_count' => 5, 'bid_strategy' => 'CPA alvo'],
+                ['name' => 'Grupo Meio de Funil',  'keywords_count' => 4, 'bid_strategy' => 'CPC manual'],
+            ],
+            'keywords'  => [
+                ['keyword' => "agência digital com IA",             'match' => 'exact',   'type' => 'positive'],
+                ['keyword' => "marketing digital para empresas",    'match' => 'phrase',  'type' => 'positive'],
+                ['keyword' => "automação de marketing",             'match' => 'broad',   'type' => 'positive'],
+                ['keyword' => "como captar leads online",           'match' => 'phrase',  'type' => 'positive'],
+                ['keyword' => "agência barata",                     'match' => 'exact',   'type' => 'negative'],
+                ['keyword' => "marketing freelancer",               'match' => 'phrase',  'type' => 'negative'],
+            ],
+            'creatives' => [
+                ['headline' => "Sua Agência Digital com IA", 'description' => "Funcionários IA especializados. Aprovação humana. Resultados reais.", 'cta' => 'Solicitar Demo'],
+                ['headline' => "Marketing com Inteligência Artificial", 'description' => "Cresça com IA. Conteúdo, anúncios e SEO automatizados.", 'cta' => 'Saiba Mais'],
+            ],
+            'extensions'        => ['callout', 'sitelink', 'call', 'location'],
+            'expected_metrics'  => [
+                'impressions_week' => 8500,
+                'clicks_week'      => 340,
+                'ctr'              => '4.0%',
+                'avg_cpc'          => 'R$ 4,50',
+                'conversions_week' => 17,
+                'cpa'              => 'R$ 90,00',
+            ],
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function generateMetaAdsCampaign(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'platform' => 'meta_ads',
+            'mode'     => 'sandbox',
+            'strategy' => "Campanha Meta Ads para {$clientName}. Funil completo: cold audience (interesses) + lookalike + remarketing. Formatos: carrossel + vídeo curto.",
+            'audiences' => [
+                ['name' => 'Cold — Empreendedores BR',     'size' => '500k–1M',   'type' => 'interest'],
+                ['name' => 'Lookalike 1% — Clientes',     'size' => '200k–400k', 'type' => 'lookalike'],
+                ['name' => 'Remarketing — Site 30 dias',  'size' => '5k–20k',    'type' => 'custom'],
+            ],
+            'creatives' => [
+                ['format' => 'single_image', 'headline' => "IA que trabalha para você", 'cta' => 'Saiba Mais'],
+                ['format' => 'carousel',     'headline' => "3 razões para usar {$clientName}", 'cta' => 'Solicitar Demo'],
+                ['format' => 'video_short',  'headline' => "Veja como funciona em 30s", 'cta' => 'Assista Agora'],
+            ],
+            'copies' => [
+                "Sua empresa ainda faz marketing manualmente? Conheça os Funcionários IA da {$clientName}.",
+                "IA especializada em marketing + aprovação humana = resultados reais. Saiba mais.",
+                "Reduza até 60% do tempo em criação de conteúdo. {$clientName} faz isso acontecer.",
+            ],
+            'funnel' => ['topo' => '50%', 'meio' => '30%', 'fundo' => '20%'],
+            'expected_metrics' => [
+                'impressions_week' => 25000,
+                'reach_week'       => 18000,
+                'clicks_week'      => 500,
+                'ctr'              => '2.0%',
+                'cpl'              => 'R$ 35,00',
+                'leads_week'       => 40,
+            ],
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function generateAdCreatives(string $title, ?string $desc, string $clientName): string
+    {
+        return <<<OUTPUT
+# 🎨 Criativos para Anúncios — {$title}
+**Cliente:** {$clientName} | **Modo:** Sandbox
+
+## Google Ads — Anúncios Responsivos de Pesquisa
+
+**Títulos (até 30 caracteres cada):**
+1. Agência Digital com IA
+2. Marketing Automatizado
+3. Resultados com Inteligência
+4. Sua Empresa no Próximo Nível
+5. IA que Trabalha para Você
+
+**Descrições (até 90 caracteres cada):**
+1. Funcionários IA especializados com aprovação humana. Resultados reais.
+2. Cresça com automação inteligente. SEO, social, anúncios integrados.
+
+## Meta Ads — Copies por Formato
+
+**Single Image:**
+> "Você sabia que empresas com IA crescem 3x mais rápido? A {$clientName} prova isso todo dia."
+> CTA: Saiba Mais
+
+**Carrossel:**
+> Slide 1: "IA para Marketing Digital"
+> Slide 2: "Conteúdo criado em segundos"
+> Slide 3: "Aprovação humana em tudo"
+> Slide 4: "Resultados mensuráveis"
+> CTA: Solicitar Demonstração
+
+> ⚠️ Rascunho para aprovação. Nenhum anúncio foi publicado.
+OUTPUT;
+    }
+
+    private function generateAdKeywords(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'campaign'  => $title,
+            'client'    => $clientName,
+            'mode'      => 'sandbox',
+            'keywords'  => [
+                ['keyword' => 'agência digital com inteligência artificial', 'match' => 'exact',   'cpc_est' => 'R$ 3,50', 'volume' => 'médio'],
+                ['keyword' => 'marketing digital para pequenas empresas',    'match' => 'phrase',  'cpc_est' => 'R$ 2,80', 'volume' => 'alto'],
+                ['keyword' => 'automação de marketing digital',             'match' => 'broad',   'cpc_est' => 'R$ 4,20', 'volume' => 'médio'],
+                ['keyword' => 'como captar leads online',                   'match' => 'phrase',  'cpc_est' => 'R$ 1,90', 'volume' => 'alto'],
+                ['keyword' => 'agência de marketing resultados',            'match' => 'exact',   'cpc_est' => 'R$ 5,00', 'volume' => 'baixo'],
+                ['keyword' => 'agência barata',                             'match' => 'negative', 'reason' => 'baixa intenção de compra'],
+                ['keyword' => 'marketing freelancer',                       'match' => 'negative', 'reason' => 'perfil não alinhado'],
+            ],
+            'notes' => 'Lista gerada em modo sandbox. Valide com ferramentas reais (Google Keyword Planner, SEMrush) antes de usar.',
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function generateAudienceSuggestions(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'campaign' => $title,
+            'client'   => $clientName,
+            'mode'     => 'sandbox',
+            'audiences' => [
+                [
+                    'name'        => 'Empreendedores e Gestores de Marketing',
+                    'platform'    => 'meta_ads',
+                    'type'        => 'interest',
+                    'size_est'    => '500k–1M',
+                    'interests'   => ['marketing digital', 'empreendedorismo', 'gestão empresarial'],
+                    'demographics' => ['age' => '25-54', 'location' => 'Brasil'],
+                ],
+                [
+                    'name'        => 'Lookalike 1% — Base de Clientes',
+                    'platform'    => 'meta_ads',
+                    'type'        => 'lookalike',
+                    'size_est'    => '200k–400k',
+                    'source'      => 'lista de clientes existentes',
+                ],
+                [
+                    'name'        => 'Remarketing — Visitantes 30 dias',
+                    'platform'    => 'meta_ads',
+                    'type'        => 'custom',
+                    'size_est'    => '5k–20k',
+                    'condition'   => 'visitou o site nos últimos 30 dias',
+                ],
+                [
+                    'name'        => 'In-Market: Serviços de Marketing',
+                    'platform'    => 'google_ads',
+                    'type'        => 'in_market',
+                    'description' => 'Usuários pesquisando ativamente por serviços de marketing',
+                ],
+            ],
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
+
+    private function analyzeCampaignMetrics(string $title, ?string $desc, string $clientName): string
+    {
+        return <<<OUTPUT
+# 📊 Análise de Métricas — {$title}
+**Cliente:** {$clientName} | **Modo:** Sandbox
+
+## Resumo de Performance (Simulado)
+
+| Métrica | Resultado | Benchmark | Status |
+|---|---|---|---|
+| CTR | 3,8% | 3–5% | ✅ Dentro do esperado |
+| CPC | R$ 4,20 | R$ 4–8 | ✅ Eficiente |
+| CPA | R$ 85,00 | R$ 40–120 | ✅ Aceitável |
+| ROAS | 3,2x | 3–5x | ⚠️ Pode melhorar |
+| Taxa de conversão LP | 4,1% | 2–5% | ✅ Boa |
+
+## Insights Principais
+
+1. **CTR acima da média** — Criativos estão com bom desempenho de cliques
+2. **ROAS abaixo do potencial** — Avaliar melhorias na landing page e oferta
+3. **CPA estável** — Manter estrutura de segmentação atual
+
+## Recomendações
+
+- Aumentar budget 20% no grupo com menor CPA
+- Pausar palavras-chave com CPA > R$ 150
+- Testar novo formato de criativo (vídeo curto)
+- Revisar landing page: clareza da oferta e velocidade
+
+> ⚠️ Análise gerada em modo sandbox. Conecte dados reais para análise precisa.
+OUTPUT;
+    }
+
+    private function suggestBudgetChange(string $title, ?string $desc, string $clientName): string
+    {
+        $data = [
+            'campaign'    => $title,
+            'client'      => $clientName,
+            'mode'        => 'sandbox',
+            'suggestion'  => [
+                'type'       => 'increase',
+                'current'    => 50,
+                'suggested'  => 75,
+                'increase'   => '50%',
+                'rationale'  => 'Campanha com CPA abaixo do target e CTR acima da média nos últimos 7 dias. Escalar orçamento pode multiplicar resultados mantendo eficiência.',
+            ],
+            'projections' => [
+                'leads_week_current'   => 20,
+                'leads_week_projected' => 32,
+                'cpa_projected'        => 'R$ 82,00',
+                'roas_projected'       => '3,8x',
+            ],
+            'conditions'  => 'Recomendação válida apenas se CTR manter-se acima de 3,5% e CPA abaixo de R$ 100.',
+            'requires_approval' => true,
+        ];
+
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     }
 
     private function generateGenericOutput(string $title, ?string $desc, string $clientName, string $taskType, $employee, string $skillList): string
