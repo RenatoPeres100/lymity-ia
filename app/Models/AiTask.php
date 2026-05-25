@@ -36,6 +36,11 @@ class AiTask extends Model
         return $this->belongsTo(AiEmployee::class, 'ai_employee_id');
     }
 
+    public function aiEmployee(): BelongsTo
+    {
+        return $this->belongsTo(AiEmployee::class, 'ai_employee_id');
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

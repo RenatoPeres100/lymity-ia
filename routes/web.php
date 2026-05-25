@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\ReportController as AdminReportController;
 use App\Http\Controllers\Admin\SecurityLogController;
@@ -109,6 +110,9 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     // ─── Admin — Agency ───────────────────────────────────
     Route::prefix('admin')->middleware('agency')->group(function () {
+
+        // Phase 12 — System Health
+        Route::get('/system-health', SystemHealthController::class)->name('admin.system-health');
 
         // Phase 11 — Dashboards, Reports, Logs
         Route::get('/dashboard',                    [AdminDashboardController::class, 'index'])->name('admin.dashboard');
