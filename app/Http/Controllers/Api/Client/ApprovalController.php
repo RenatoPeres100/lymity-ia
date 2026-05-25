@@ -16,7 +16,7 @@ class ApprovalController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = ApprovalRequest::with(['client', 'requestedBy']);
+        $query = ApprovalRequest::with(['client', 'requester']);
 
         if (!$user->isAdminGeral()) {
             $query->where('client_id', $user->client_id);
@@ -34,7 +34,7 @@ class ApprovalController extends Controller
     {
         $this->authorizeAccess($request, $approvalRequest);
 
-        return response()->json(['data' => new ApprovalResource($approvalRequest->load(['client', 'requestedBy', 'actions', 'comments']))]);
+        return response()->json(['data' => new ApprovalResource($approvalRequest->load(['client', 'requester', 'actions', 'comments']))]);
     }
 
     public function approve(Request $request, ApprovalRequest $approvalRequest): JsonResponse

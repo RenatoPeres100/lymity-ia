@@ -34,7 +34,7 @@
     </div>
     @endif
 
-    <div class="detail-row"><span class="detail-key">Solicitado por</span><span class="detail-val">{{ $approvalRequest->requestedBy?->name ?? '—' }}</span></div>
+    <div class="detail-row"><span class="detail-key">Solicitado por</span><span class="detail-val">{{ $approvalRequest->requester?->name ?? '—' }}</span></div>
     <div class="detail-row"><span class="detail-key">Criado em</span><span class="detail-val">{{ $approvalRequest->created_at->format('d/m/Y H:i') }}</span></div>
     @if($approvalRequest->due_at)
     <div class="detail-row"><span class="detail-key">Prazo</span><span class="detail-val" style="color:#f87171;">{{ $approvalRequest->due_at->format('d/m/Y') }}</span></div>

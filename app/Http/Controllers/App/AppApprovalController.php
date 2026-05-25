@@ -16,7 +16,7 @@ class AppApprovalController extends Controller
     public function index(Request $request): View
     {
         $user  = $request->user();
-        $query = ApprovalRequest::with(['client', 'requestedBy']);
+        $query = ApprovalRequest::with(['client', 'requester']);
 
         if (!$user->isAdminGeral()) {
             $query->where('client_id', $user->client_id);
@@ -31,7 +31,7 @@ class AppApprovalController extends Controller
     {
         $this->authorizeAccess($request, $approvalRequest);
 
-        $approvalRequest->load(['client', 'requestedBy', 'actions.user', 'comments.user']);
+        $approvalRequest->load(['client', 'requester', 'actions.user', 'comments.user']);
 
         return view('app.approvals.show', compact('approvalRequest'));
     }

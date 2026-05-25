@@ -18,7 +18,7 @@ class ApprovalResource extends JsonResource
             'sensitive_level' => $this->sensitive_level,
             'due_at'          => $this->due_at?->toIso8601String(),
             'client'          => $this->client ? ['id' => $this->client->id, 'name' => $this->client->name] : null,
-            'requested_by'    => $this->requestedBy ? ['id' => $this->requestedBy->id, 'name' => $this->requestedBy->name] : null,
+            'requested_by'    => $this->requester ? ['id' => $this->requester->id, 'name' => $this->requester->name] : null,
             'created_at'      => $this->created_at->toIso8601String(),
             'actions_count'   => $this->actions()->count(),
             'comments_count'  => $this->comments()->count(),
