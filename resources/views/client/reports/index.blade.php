@@ -1,6 +1,4 @@
-@extends('components.layouts.app')
-
-@section('content')
+<x-layouts.app title="Relatórios">
 <div class="space-y-6">
 
     <div>
@@ -48,4 +46,4 @@
     </div>
 
 </div>
-@endsection
+</x-layouts.app>

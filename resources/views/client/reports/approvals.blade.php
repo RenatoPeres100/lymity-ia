@@ -1,6 +1,4 @@
-@extends('components.layouts.app')
-
-@section('content')
+<x-layouts.app title="Relatório — Aprovações">
 <div class="space-y-5">
     <div class="flex items-center gap-4">
         <a href="{{ route('client.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
@@ -52,4 +50,4 @@
         </div>
     </div>
 </div>
-@endsection
+</x-layouts.app>

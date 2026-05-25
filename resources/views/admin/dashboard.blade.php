@@ -1,6 +1,4 @@
-@extends('components.layouts.app')
-
-@section('content')
+<x-layouts.app title="Dashboard Executivo">
 <div class="space-y-6">
 
     {{-- Header --}}
@@ -146,4 +144,4 @@
     </div>
 
 </div>
-@endsection
+</x-layouts.app>

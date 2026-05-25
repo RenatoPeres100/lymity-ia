@@ -1,6 +1,4 @@
-@extends('components.layouts.app')
-
-@section('content')
+<x-layouts.app title="Logs de Atividade">
 <div class="space-y-5">
 
     <div class="flex items-center justify-between">
@@ -118,4 +116,4 @@
     @endif
 
 </div>
-@endsection
+</x-layouts.app>
