@@ -138,6 +138,15 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('/clients/{client}/files/{externalFile}',  [AdminClientFileController::class, 'destroy'])->name('admin.clients.files.destroy');
         Route::post('/clients/{client}/folders',                 [AdminClientFileController::class, 'storeFolder'])->name('admin.clients.folders.store');
 
+        // Real Phase 3 — Instagram / Meta Connection
+        Route::prefix('social/instagram')->group(function () {
+            Route::get('/',           [App\Http\Controllers\Admin\InstagramConnectionController::class, 'index'])->name('admin.social.instagram.index');
+            Route::get('/connect',    [App\Http\Controllers\Admin\InstagramConnectionController::class, 'connect'])->name('admin.social.instagram.connect');
+            Route::get('/callback',   [App\Http\Controllers\Admin\InstagramConnectionController::class, 'callback'])->name('admin.social.instagram.callback');
+            Route::post('/disconnect',[App\Http\Controllers\Admin\InstagramConnectionController::class, 'disconnect'])->name('admin.social.instagram.disconnect');
+            Route::post('/check',     [App\Http\Controllers\Admin\InstagramConnectionController::class, 'check'])->name('admin.social.instagram.check');
+        });
+
         // Real Phase 1 — Operation & Publishing Queue
         Route::get('/operation',         [App\Http\Controllers\Admin\OperationController::class, 'index'])->name('admin.operation');
         Route::get('/publishing-queue',  [App\Http\Controllers\Admin\PublishingQueueController::class, 'index'])->name('admin.publishing-queue');

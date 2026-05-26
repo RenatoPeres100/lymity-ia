@@ -18,6 +18,10 @@ return [
     'reports_fake_module' => false,
     'cases_demo_module'   => false,
 
+    // === INSTAGRAM / META ===
+    'instagram_connection'  => true,
+    'instagram_publishing'  => false,
+
     // === MODO DEMO ===
     'demo_mode'           => false,
 ];

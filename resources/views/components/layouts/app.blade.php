@@ -75,6 +75,17 @@
             </a>
             @endif
 
+            @if(config('features.instagram_connection'))
+            <a href="{{ route('admin.social.instagram.index') }}" class="nav-item {{ request()->routeIs('admin.social.instagram*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="2" width="20" height="20" rx="5"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+                Conexão Instagram
+            </a>
+            @endif
+
             @if(config('features.instagram_pipeline'))
             <a href="{{ route('admin.social.posts.index') }}" class="nav-item {{ request()->routeIs('admin.social.posts*','admin.social.ai*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
