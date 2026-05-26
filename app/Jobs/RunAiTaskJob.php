@@ -29,6 +29,11 @@ class RunAiTaskJob implements ShouldQueue
             return;
         }
 
+        if (!$task->canRun()) {
+            Log::info("RunAiTaskJob: task {$this->taskId} skipped (status={$task->status}).");
+            return;
+        }
+
         $service->runTask($task);
     }
 

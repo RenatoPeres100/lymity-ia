@@ -19,9 +19,9 @@ class RunFullDemoFlowCommand extends Command
         $this->info('');
 
         $clientName = $this->option('client');
-        $result = $service->run($clientName);
+        $result     = $service->run($clientName);
 
-        if (! $result['success']) {
+        if (!$result['success']) {
             $this->error('Erro: ' . $result['error']);
             return self::FAILURE;
         }
@@ -33,14 +33,14 @@ class RunFullDemoFlowCommand extends Command
         $errorCount   = 0;
 
         foreach ($result['steps'] as $step) {
-            $icon   = match ($step['status']) {
+            $icon = match ($step['status']) {
                 'success' => '<fg=green>✓</>',
                 'error'   => '<fg=red>✗</>',
                 'warning' => '<fg=yellow>⚠</>',
                 default   => '•',
             };
 
-            $label = str_pad("[{$step['step']}] {$step['title']}", 28);
+            $label = str_pad("[{$step['step']}] {$step['title']}", 32);
             $this->line("  {$icon} {$label}  {$step['detail']}");
 
             if ($step['status'] === 'success') {
@@ -51,7 +51,25 @@ class RunFullDemoFlowCommand extends Command
         }
 
         $this->info('');
-        $this->info('──────────────────────────────────────────────────');
+        $this->info('══════════════════════════════════════════════════');
+        $this->info('  VARIÁVEIS DE SAÍDA');
+        $this->info('══════════════════════════════════════════════════');
+        $this->line("  SOCIAL_POST_ID={$service->socialPostId}");
+        $this->line("  SOCIAL_APPROVAL_STATUS={$service->socialApprovalStatus}");
+        $this->line("  SOCIAL_POST_STATUS={$service->socialPostStatus}");
+        $this->line("  AD_CAMPAIGN_ID={$service->adCampaignId}");
+        $this->line("  CAMPAIGN_APPROVAL_STATUS={$service->campaignApprovalStatus}");
+        $this->line("  BLOG_POST_ID={$service->blogPostId}");
+        $this->line("  BLOG_APPROVAL_STATUS={$service->blogApprovalStatus}");
+        $this->line("  BUDGET_ID={$service->budgetId}");
+        $this->line("  BUDGET_STATUS={$service->budgetStatus}");
+        $this->line("  AI_REPORT_TASK_ID={$service->aiReportTaskId}");
+        $this->line("  ACTIVITY_LOGS_COUNT={$service->activityLogsCount}");
+        $finalStatus = $errorCount === 0 ? 'OK' : 'ERROR';
+        $this->line("  FINAL_STATUS={$finalStatus}");
+
+        $this->info('══════════════════════════════════════════════════');
+        $this->info('');
 
         if ($errorCount === 0) {
             $this->info("  Resultado: {$successCount}/" . count($result['steps']) . " etapas concluídas com sucesso.");
@@ -61,7 +79,7 @@ class RunFullDemoFlowCommand extends Command
             $this->warn('  Status: <fg=yellow>DEMO FLOW COM AVISOS</>');
         }
 
-        $this->info('──────────────────────────────────────────────────');
+        $this->info('══════════════════════════════════════════════════');
         $this->info('');
 
         return $errorCount > 0 ? self::FAILURE : self::SUCCESS;
