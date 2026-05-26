@@ -28,6 +28,13 @@ class AiGenerationService
     {
         $provider = config('ai.provider', 'mock');
 
+        // Warn when running mock in production — content will not be published externally
+        if ($provider === 'mock' && app()->isProduction()) {
+            Log::warning('[AiGenerationService] Modo mock ativo em produção. Configure AI_PROVIDER real para gerar conteúdo publicável.', [
+                'task_id' => $task->id,
+            ]);
+        }
+
         // Enforce limits for real providers
         if ($provider !== 'mock') {
             if (!$this->costService->canRunTask($task->client)) {

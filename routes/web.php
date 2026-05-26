@@ -138,6 +138,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('/clients/{client}/files/{externalFile}',  [AdminClientFileController::class, 'destroy'])->name('admin.clients.files.destroy');
         Route::post('/clients/{client}/folders',                 [AdminClientFileController::class, 'storeFolder'])->name('admin.clients.folders.store');
 
+        // Real Phase 1 — Operation & Publishing Queue
+        Route::get('/operation',         [App\Http\Controllers\Admin\OperationController::class, 'index'])->name('admin.operation');
+        Route::get('/publishing-queue',  [App\Http\Controllers\Admin\PublishingQueueController::class, 'index'])->name('admin.publishing-queue');
+        Route::get('/operation/logs',    fn() => redirect()->route('admin.activity-logs.index'))->name('admin.operation.logs');
+
         // Phase 11 — Dashboards, Reports, Logs
         Route::get('/dashboard',                    [AdminDashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/reports',                      [AdminReportController::class, 'index'])->name('admin.reports.index');
