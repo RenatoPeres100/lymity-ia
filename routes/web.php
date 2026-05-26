@@ -143,6 +143,29 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/publishing-queue',  [App\Http\Controllers\Admin\PublishingQueueController::class, 'index'])->name('admin.publishing-queue');
         Route::get('/operation/logs',    fn() => redirect()->route('admin.activity-logs.index'))->name('admin.operation.logs');
 
+        // Real Phase 2 — Blog Pipeline
+        Route::prefix('blog')->group(function () {
+            // Pipeline view
+            Route::get('/pipeline',              [App\Http\Controllers\Admin\BlogPipelineController::class, 'index'])->name('admin.blog.pipeline.index');
+            // AI generation
+            Route::get('/pipeline/generate-ai',  [App\Http\Controllers\Admin\BlogAiController::class, 'create'])->name('admin.blog.pipeline.generate-ai');
+            Route::post('/pipeline/generate-ai', [App\Http\Controllers\Admin\BlogAiController::class, 'store'])->name('admin.blog.pipeline.generate-ai.store');
+            // Manual post creation (use existing BlogPostController; new routes with pipeline redirect)
+            Route::get('/posts/create-pipeline',  [App\Http\Controllers\Admin\BlogPostController::class, 'create'])->name('admin.blog.posts.create');
+            Route::post('/posts',                  [App\Http\Controllers\Admin\BlogPostController::class, 'store'])->name('admin.blog.posts.store');
+            Route::get('/posts/{blogPost}',        [App\Http\Controllers\Admin\BlogPostController::class, 'show'])->name('admin.blog.posts.show');
+            Route::get('/posts/{blogPost}/edit',   [App\Http\Controllers\Admin\BlogPostController::class, 'edit'])->name('admin.blog.posts.edit');
+            Route::put('/posts/{blogPost}',        [App\Http\Controllers\Admin\BlogPostController::class, 'update'])->name('admin.blog.posts.update');
+            // Publication actions
+            Route::post('/posts/{blogPost}/submit-approval', [App\Http\Controllers\Admin\BlogPublicationController::class, 'submitApproval'])->name('admin.blog.posts.submit-approval');
+            Route::post('/posts/{blogPost}/approve',         [App\Http\Controllers\Admin\BlogPublicationController::class, 'approve'])->name('admin.blog.posts.approve');
+            Route::post('/posts/{blogPost}/reject',          [App\Http\Controllers\Admin\BlogPublicationController::class, 'reject'])->name('admin.blog.posts.reject');
+            Route::post('/posts/{blogPost}/schedule',        [App\Http\Controllers\Admin\BlogPublicationController::class, 'schedule'])->name('admin.blog.posts.schedule');
+            Route::post('/posts/{blogPost}/publish-now',     [App\Http\Controllers\Admin\BlogPublicationController::class, 'publishNow'])->name('admin.blog.posts.publish-now');
+            Route::post('/posts/{blogPost}/archive',         [App\Http\Controllers\Admin\BlogPublicationController::class, 'archive'])->name('admin.blog.posts.archive');
+            Route::get('/posts/{blogPost}/logs',             [App\Http\Controllers\Admin\BlogPublicationController::class, 'logs'])->name('admin.blog.posts.logs');
+        });
+
         // Phase 11 — Dashboards, Reports, Logs
         Route::get('/dashboard',                    [AdminDashboardController::class, 'index'])->name('admin.dashboard');
         Route::get('/reports',                      [AdminReportController::class, 'index'])->name('admin.reports.index');

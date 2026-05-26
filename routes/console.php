@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // Phase 12 — Scheduler
 Schedule::command('ai:run-schedules')->everyFiveMinutes()->withoutOverlapping();
 Schedule::command('system:health-check')->hourly()->withoutOverlapping();
+
+// Real Phase 2 — Blog pipeline publication
+Schedule::command('blog:publish-due')->everyMinute()->withoutOverlapping();

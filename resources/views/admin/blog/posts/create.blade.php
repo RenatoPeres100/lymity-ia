@@ -3,7 +3,7 @@
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
     <div>
         <h1 style="font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">Novo Post</h1>
-        <p style="font-size:.85rem;color:#64748b;"><a href="{{ route('admin.blog-posts.index') }}" style="color:#6b8fff;text-decoration:none;">Blog Posts</a> / Criar</p>
+        <p style="font-size:.85rem;color:#64748b;"><a href="{{ route('admin.blog.pipeline.index') }}" style="color:#6b8fff;text-decoration:none;">Blog Posts</a> / Criar</p>
     </div>
 </div>
 
@@ -15,7 +15,7 @@
 </div>
 @endif
 
-<form action="{{ route('admin.blog-posts.store') }}" method="POST">
+<form action="{{ route('admin.blog.posts.store') }}" method="POST">
     @csrf
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start;">
 
@@ -108,7 +108,7 @@
 
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button type="submit" class="btn-primary" style="width:100%;text-align:center;cursor:pointer;border:none;">Salvar Post</button>
-                <a href="{{ route('admin.blog-posts.index') }}" style="text-align:center;font-size:.875rem;color:#64748b;text-decoration:none;padding:10px;">Cancelar</a>
+                <a href="{{ route('admin.blog.pipeline.index') }}" style="text-align:center;font-size:.875rem;color:#64748b;text-decoration:none;padding:10px;">Cancelar</a>
             </div>
         </div>
 

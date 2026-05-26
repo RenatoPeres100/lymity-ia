@@ -3,20 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreBlogPostRequest;
-use App\Http\Requests\UpdateBlogPostRequest;
+use App\Models\ActivityLog;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
+use App\Services\Blog\BlogPipelineService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class BlogPostController extends Controller
 {
+    public function __construct(private BlogPipelineService $pipeline) {}
+
     public function index(): View
     {
-        $posts = BlogPost::with(['category', 'author'])
+        $posts = BlogPost::agency()
+            ->with(['category', 'author'])
             ->orderByDesc('created_at')
             ->paginate(20);
 
@@ -26,72 +28,74 @@ class BlogPostController extends Controller
     public function create(): View
     {
         $categories = BlogCategory::orderBy('name')->get();
-
         return view('admin.blog.posts.create', compact('categories'));
     }
 
-    public function store(StoreBlogPostRequest $request): RedirectResponse
+    public function store(Request $request): RedirectResponse
     {
-        $data = $request->validated();
-        $data['author_id'] = Auth::id();
-        $data['type']      = 'agency';
+        $data = $request->validate([
+            'title'              => 'required|string|max:255',
+            'slug'               => 'nullable|string|max:255',
+            'subtitle'           => 'nullable|string|max:255',
+            'excerpt'            => 'nullable|string',
+            'content'            => 'required|string',
+            'featured_image'     => 'nullable|string|max:500',
+            'category_id'        => 'nullable|integer|exists:blog_categories,id',
+            'seo_title'          => 'nullable|string|max:255',
+            'seo_description'    => 'nullable|string|max:300',
+            'focus_keyword'      => 'nullable|string|max:100',
+            'secondary_keywords' => 'nullable|string',
+        ]);
 
-        if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['title']);
-        }
+        $post = $this->pipeline->createManualDraft($data, $request->user());
 
-        $data['tags']        = $this->parseTags($data['tags'] ?? null);
-        $data['is_featured'] = $request->boolean('is_featured');
+        return redirect()->route('admin.blog.pipeline.index')
+            ->with('success', "Rascunho '{$post->title}' criado com sucesso.");
+    }
 
-        if ($data['status'] === 'published' && empty($data['published_at'])) {
-            $data['published_at'] = now();
-        }
-
-        BlogPost::create($data);
-
-        return redirect()->route('admin.blog-posts.index')
-            ->with('success', 'Post criado com sucesso!');
+    public function show(BlogPost $blogPost): View
+    {
+        $blogPost->load('category', 'author', 'aiEmployee', 'approver');
+        return view('admin.blog.posts.show', compact('blogPost'));
     }
 
     public function edit(BlogPost $blogPost): View
     {
         $categories = BlogCategory::orderBy('name')->get();
-
         return view('admin.blog.posts.edit', compact('blogPost', 'categories'));
     }
 
-    public function update(UpdateBlogPostRequest $request, BlogPost $blogPost): RedirectResponse
+    public function update(Request $request, BlogPost $blogPost): RedirectResponse
     {
-        $data = $request->validated();
+        $data = $request->validate([
+            'title'              => 'required|string|max:255',
+            'slug'               => 'nullable|string|max:255',
+            'subtitle'           => 'nullable|string|max:255',
+            'excerpt'            => 'nullable|string',
+            'content'            => 'required|string',
+            'featured_image'     => 'nullable|string|max:500',
+            'category_id'        => 'nullable|integer|exists:blog_categories,id',
+            'seo_title'          => 'nullable|string|max:255',
+            'seo_description'    => 'nullable|string|max:300',
+            'focus_keyword'      => 'nullable|string|max:100',
+            'secondary_keywords' => 'nullable|string',
+        ]);
 
         if (empty($data['slug'])) {
-            $data['slug'] = Str::slug($data['title']);
-        }
-
-        $data['tags']        = $this->parseTags($data['tags'] ?? null);
-        $data['is_featured'] = $request->boolean('is_featured');
-
-        if ($data['status'] === 'published' && !$blogPost->published_at) {
-            $data['published_at'] = now();
+            $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
         }
 
         $blogPost->update($data);
+        $this->pipeline->registerLog($blogPost, 'edited', $request->user());
 
-        return redirect()->route('admin.blog-posts.index')
-            ->with('success', 'Post atualizado com sucesso!');
+        return redirect()->route('admin.blog.posts.show', $blogPost)
+            ->with('success', 'Post atualizado com sucesso.');
     }
 
     public function destroy(BlogPost $blogPost): RedirectResponse
     {
         $blogPost->delete();
-
-        return redirect()->route('admin.blog-posts.index')
-            ->with('success', 'Post excluído com sucesso!');
-    }
-
-    private function parseTags(?string $raw): ?array
-    {
-        if (empty($raw)) return null;
-        return array_values(array_filter(array_map('trim', explode(',', $raw))));
+        return redirect()->route('admin.blog.pipeline.index')
+            ->with('success', 'Post excluído.');
     }
 }

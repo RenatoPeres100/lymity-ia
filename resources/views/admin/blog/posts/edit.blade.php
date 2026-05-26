@@ -3,7 +3,7 @@
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
     <div>
         <h1 style="font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">Editar Post</h1>
-        <p style="font-size:.85rem;color:#64748b;"><a href="{{ route('admin.blog-posts.index') }}" style="color:#6b8fff;text-decoration:none;">Blog Posts</a> / Editar</p>
+        <p style="font-size:.85rem;color:#64748b;"><a href="{{ route('admin.blog.pipeline.index') }}" style="color:#6b8fff;text-decoration:none;">Blog Posts</a> / Editar</p>
     </div>
     @if($blogPost->status === 'published')
     <a href="{{ route('blog.show', $blogPost->slug) }}" target="_blank" style="font-size:.8rem;color:#22d3ee;text-decoration:none;border:1px solid #0e4f5c;padding:7px 14px;border-radius:8px;">Ver no site ↗</a>
@@ -22,7 +22,7 @@
 </div>
 @endif
 
-<form action="{{ route('admin.blog-posts.update', $blogPost) }}" method="POST">
+<form action="{{ route('admin.blog.posts.update', $blogPost) }}" method="POST">
     @csrf @method('PUT')
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start;">
 
@@ -114,7 +114,7 @@
 
             <div style="display:flex;flex-direction:column;gap:10px;">
                 <button type="submit" class="btn-primary" style="width:100%;text-align:center;cursor:pointer;border:none;">Salvar Alterações</button>
-                <a href="{{ route('admin.blog-posts.index') }}" style="text-align:center;font-size:.875rem;color:#64748b;text-decoration:none;padding:10px;">Cancelar</a>
+                <a href="{{ route('admin.blog.pipeline.index') }}" style="text-align:center;font-size:.875rem;color:#64748b;text-decoration:none;padding:10px;">Cancelar</a>
             </div>
         </div>
 
