@@ -65,7 +65,7 @@
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm">
             <div class="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
                 <h3 class="font-semibold text-gray-900 dark:text-white text-sm">Blog — Pendentes</h3>
-                <a href="{{ route('admin.blog.posts.index') }}" class="text-xs text-indigo-600 hover:underline">Ver todos</a>
+                <a href="{{ route('admin.blog-posts.index') }}" class="text-xs text-indigo-600 hover:underline">Ver todos</a>
             </div>
             <div class="divide-y divide-gray-50 dark:divide-gray-700">
                 @forelse($blogPending as $post)
