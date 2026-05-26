@@ -6,14 +6,20 @@
 |---|---|
 | **Aprovado para operação MVP** | **SIM** |
 | **Data da auditoria** | 2026-05-26 |
-| **Ambiente** | local (VPS Hostinger KVM 2) |
+| **Ambiente** | production (VPS Hostinger KVM 2) |
+| **Domínio** | https://ia.lymity.com.br |
 | **Branch** | main |
-| **Commit atual** | 668406d — phase 15 - real AI provider integration |
+| **Commit atual** | fa08410 — final audit before real operation |
 | **PHP** | 8.3.31 |
 | **Laravel** | 13.11.2 |
+| **Web Server** | Nginx 1.24.0 + PHP-FPM 8.3 |
+| **APP_ENV** | production |
+| **APP_DEBUG** | false |
 | **AI Provider** | mock (configurável: openai/claude/gemini) |
-| **Queue** | Redis |
+| **Queue** | Redis (2 workers via Supervisor) |
 | **DB** | MySQL |
+| **SSL** | Autoassinado (temporário) — substituir após remover AAAA do DNS |
+| **Scheduler** | Cron configurado (www-data) |
 
 ---
 
@@ -98,31 +104,31 @@
 ## 6. URLs Principais
 
 ### Público
-- http://[VPS_IP]:8000/
-- http://[VPS_IP]:8000/login
-- http://[VPS_IP]:8000/sobre
-- http://[VPS_IP]:8000/servicos
-- http://[VPS_IP]:8000/blog
+- https://ia.lymity.com.br/
+- https://ia.lymity.com.br/login
+- https://ia.lymity.com.br/sobre
+- https://ia.lymity.com.br/servicos
+- https://ia.lymity.com.br/blog
 
 ### Admin
-- http://[VPS_IP]:8000/admin/dashboard
-- http://[VPS_IP]:8000/admin/ai-employees
-- http://[VPS_IP]:8000/admin/ai-logs
-- http://[VPS_IP]:8000/admin/approvals
-- http://[VPS_IP]:8000/admin/social/posts
-- http://[VPS_IP]:8000/admin/ads/campaigns
-- http://[VPS_IP]:8000/admin/reports
-- http://[VPS_IP]:8000/admin/system-health
-- http://[VPS_IP]:8000/app
+- https://ia.lymity.com.br/admin/dashboard
+- https://ia.lymity.com.br/admin/ai-employees
+- https://ia.lymity.com.br/admin/ai-logs
+- https://ia.lymity.com.br/admin/approvals
+- https://ia.lymity.com.br/admin/social/posts
+- https://ia.lymity.com.br/admin/ads/campaigns
+- https://ia.lymity.com.br/admin/reports
+- https://ia.lymity.com.br/admin/system-health
+- https://ia.lymity.com.br/app
 
 ### Cliente
-- http://[VPS_IP]:8000/client/dashboard
-- http://[VPS_IP]:8000/client/approvals
-- http://[VPS_IP]:8000/client/social/posts
-- http://[VPS_IP]:8000/client/ads
-- http://[VPS_IP]:8000/client/budgets
-- http://[VPS_IP]:8000/client/proposals
-- http://[VPS_IP]:8000/client/reports
+- https://ia.lymity.com.br/client/dashboard
+- https://ia.lymity.com.br/client/approvals
+- https://ia.lymity.com.br/client/social/posts
+- https://ia.lymity.com.br/client/ads
+- https://ia.lymity.com.br/client/budgets
+- https://ia.lymity.com.br/client/proposals
+- https://ia.lymity.com.br/client/reports
 
 ---
 
@@ -183,7 +189,52 @@ Adicionar ao crontab do servidor:
 
 ---
 
-## 10. Saída do Demo Flow (Última Execução)
+## 10. SSL — Substituir Certificado Autoassinado
+
+O domínio `ia.lymity.com.br` possui um registro AAAA (IPv6) apontando para o servidor antigo Hostinger,
+o que impede que o Let's Encrypt valide via HTTP-01. Para obter certificado gratuito válido:
+
+### Passo 1 — Remover o registro AAAA
+No painel de DNS (Hostinger hPanel ou provedor), remover o registro AAAA de `ia.lymity.com.br`.
+Manter apenas o registro A: `187.124.133.195`.
+
+Aguardar propagação do DNS (5–30 minutos) e verificar:
+```bash
+dig AAAA ia.lymity.com.br   # deve retornar vazio
+dig A    ia.lymity.com.br   # deve retornar 187.124.133.195
+```
+
+### Passo 2 — Gerar certificado Let's Encrypt
+```bash
+certbot --nginx -d ia.lymity.com.br --non-interactive --agree-tos --email renatoperes300@gmail.com
+```
+
+O certbot atualiza o Nginx automaticamente e configura a renovação automática.
+
+### Passo 3 — Verificar
+```bash
+curl -I https://ia.lymity.com.br/
+nginx -t && systemctl reload nginx
+```
+
+---
+
+## 11. Infraestrutura de Produção Configurada
+
+| Componente | Status | Detalhe |
+|---|---|---|
+| Nginx | Ativo | HTTP→HTTPS redirect, PHP-FPM via socket |
+| PHP-FPM 8.3 | Ativo | unix:/run/php/php8.3-fpm.sock |
+| Supervisor | Ativo | 2 workers lymity-worker |
+| Cron | Configurado | www-data, /usr/bin/php8.3 artisan schedule:run |
+| Redis | Ativo | Queue + Cache |
+| SSL | Autoassinado | Substituir com Let's Encrypt após remover AAAA |
+| APP_ENV | production | |
+| APP_DEBUG | false | |
+
+---
+
+## 12. Saída do Demo Flow (Última Execução)
 
 ```
 SOCIAL_POST_ID=20
