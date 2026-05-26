@@ -142,4 +142,14 @@ class AiEmployee extends Model
     {
         return $this->hasMany(AiProviderCall::class);
     }
+
+    public function agentRoutines(): HasMany
+    {
+        return $this->hasMany(AgentRoutine::class);
+    }
+
+    public function agentRoutineRuns(): HasMany
+    {
+        return $this->hasMany(AgentRoutineRun::class);
+    }
 }

@@ -8,6 +8,10 @@ return [
     'ai_copywriter'       => true,
     'ai_blog_writer'      => true,
 
+    // === FASE 5 — ROTINAS OPERACIONAIS ===
+    'agent_routines'       => true,
+    'agency_brand_context' => true,
+
     // === MÓDULOS DESATIVADOS (ocultar do fluxo operacional) ===
     'ads_module'          => false,
     'proposals_module'    => false,

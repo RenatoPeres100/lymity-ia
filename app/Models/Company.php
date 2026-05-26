@@ -87,4 +87,14 @@ class Company extends Model
     {
         return $this->hasMany(StorageIntegration::class);
     }
+
+    public function agencyBrandContext(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(AgencyBrandContext::class);
+    }
+
+    public function agentRoutines(): HasMany
+    {
+        return $this->hasMany(AgentRoutine::class);
+    }
 }

@@ -113,6 +113,27 @@
             </a>
             @endif
 
+            {{-- AGENTES IA --}}
+            @if(config('features.agent_routines'))
+            <span class="nav-section-label">Agentes IA</span>
+
+            @if(config('features.agency_brand_context'))
+            <a href="{{ route('admin.agency.brand-context.index') }}" class="nav-item {{ request()->routeIs('admin.agency.brand-context*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                Brand Context
+            </a>
+            @endif
+
+            <a href="{{ route('admin.agents.routines.index') }}" class="nav-item {{ request()->routeIs('admin.agents.routines*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Rotinas dos Agentes
+            </a>
+            @endif
+
             {{-- FUNCIONÁRIOS IA --}}
             <span class="nav-section-label">Funcionários IA</span>
 

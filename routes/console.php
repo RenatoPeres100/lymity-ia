@@ -14,3 +14,6 @@ Schedule::command('system:health-check')->hourly()->withoutOverlapping();
 
 // Real Phase 2 — Blog pipeline publication
 Schedule::command('blog:publish-due')->everyMinute()->withoutOverlapping();
+
+// Real Phase 5 — Agent routines
+Schedule::command('agents:run-due-routines')->everyMinute()->withoutOverlapping();

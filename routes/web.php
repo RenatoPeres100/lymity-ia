@@ -138,6 +138,27 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::delete('/clients/{client}/files/{externalFile}',  [AdminClientFileController::class, 'destroy'])->name('admin.clients.files.destroy');
         Route::post('/clients/{client}/folders',                 [AdminClientFileController::class, 'storeFolder'])->name('admin.clients.folders.store');
 
+        // Real Phase 5 — Agency Brand Context
+        Route::prefix('agency')->group(function () {
+            Route::get('/brand-context',  [App\Http\Controllers\Admin\AgencyBrandContextController::class, 'index'])->name('admin.agency.brand-context.index');
+            Route::post('/brand-context', [App\Http\Controllers\Admin\AgencyBrandContextController::class, 'store'])->name('admin.agency.brand-context.store');
+            Route::put('/brand-context',  [App\Http\Controllers\Admin\AgencyBrandContextController::class, 'update'])->name('admin.agency.brand-context.update');
+        });
+
+        // Real Phase 5 — Agent Routines
+        Route::prefix('agents/routines')->group(function () {
+            Route::get('/',                               [App\Http\Controllers\Admin\AgentRoutineController::class, 'index'])->name('admin.agents.routines.index');
+            Route::get('/create',                         [App\Http\Controllers\Admin\AgentRoutineController::class, 'create'])->name('admin.agents.routines.create');
+            Route::post('/',                              [App\Http\Controllers\Admin\AgentRoutineController::class, 'store'])->name('admin.agents.routines.store');
+            Route::get('/{agentRoutine}',                 [App\Http\Controllers\Admin\AgentRoutineController::class, 'show'])->name('admin.agents.routines.show');
+            Route::get('/{agentRoutine}/edit',            [App\Http\Controllers\Admin\AgentRoutineController::class, 'edit'])->name('admin.agents.routines.edit');
+            Route::put('/{agentRoutine}',                 [App\Http\Controllers\Admin\AgentRoutineController::class, 'update'])->name('admin.agents.routines.update');
+            Route::post('/{agentRoutine}/pause',          [App\Http\Controllers\Admin\AgentRoutineController::class, 'pause'])->name('admin.agents.routines.pause');
+            Route::post('/{agentRoutine}/activate',       [App\Http\Controllers\Admin\AgentRoutineController::class, 'activate'])->name('admin.agents.routines.activate');
+            Route::post('/{agentRoutine}/run-now',        [App\Http\Controllers\Admin\AgentRoutineController::class, 'runNow'])->name('admin.agents.routines.run-now');
+            Route::get('/{agentRoutine}/runs',            [App\Http\Controllers\Admin\AgentRoutineController::class, 'runs'])->name('admin.agents.routines.runs');
+        });
+
         // Real Phase 3 — Instagram / Meta Connection
         Route::prefix('social/instagram')->group(function () {
             Route::get('/',           [App\Http\Controllers\Admin\InstagramConnectionController::class, 'index'])->name('admin.social.instagram.index');
