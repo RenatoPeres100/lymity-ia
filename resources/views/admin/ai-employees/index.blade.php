@@ -2,11 +2,11 @@
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
     <div>
-        <h1 style="font-size:1.4rem;font-weight:700;color:#f1f5f9;margin-bottom:4px;">Funcionários IA</h1>
+        <h1 style="font-size:1.4rem;font-weight:700;color:#0f172a;margin-bottom:4px;">Funcionários IA</h1>
         <p style="font-size:.85rem;color:#64748b;">Agentes de inteligência artificial da plataforma.</p>
     </div>
     <div style="display:flex;align-items:center;gap:12px;">
-        <div style="font-size:.8rem;color:#64748b;background:#0f172a;border:1px solid #1e293b;padding:8px 16px;border-radius:8px;">
+        <div style="font-size:.8rem;color:#64748b;background:#f1f5f9;border:1px solid #e2e8f0;padding:8px 16px;border-radius:8px;">
             {{ $employees->where('status','active')->count() }} ativos de {{ $employees->count() }}
         </div>
         <a href="{{ route('admin.ai-employees.create') }}" style="background:#4a6cf7;color:#fff;font-size:.8rem;font-weight:600;padding:8px 18px;border-radius:8px;text-decoration:none;">+ Novo Funcionário</a>
@@ -14,7 +14,7 @@
 </div>
 
 @if(session('success'))
-<div style="background:#0f2a1a;border:1px solid #166534;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#4ade80;font-size:.875rem;">✓ {{ session('success') }}</div>
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#166534;font-size:.875rem;">✓ {{ session('success') }}</div>
 @endif
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
@@ -34,10 +34,10 @@
             <p style="font-size:.8rem;color:#94a3b8;line-height:1.6;margin-bottom:14px;">{{ mb_substr($employee->description, 0, 100) }}...</p>
             <div style="display:flex;flex-wrap:wrap;gap:5px;">
                 @foreach($employee->skills->take(3) as $skill)
-                <span style="background:#0f172a;color:#64748b;font-size:.68rem;padding:2px 8px;border-radius:10px;border:1px solid #1e293b;">{{ $skill->name }}</span>
+                <span style="background:#1e293b;color:#94a3b8;font-size:.68rem;padding:2px 8px;border-radius:10px;border:1px solid #334155;">{{ $skill->name }}</span>
                 @endforeach
                 @if($employee->skills->count() > 3)
-                <span style="background:#0f172a;color:#475569;font-size:.68rem;padding:2px 8px;border-radius:10px;border:1px solid #1e293b;">+{{ $employee->skills->count() - 3 }}</span>
+                <span style="background:#1e293b;color:#64748b;font-size:.68rem;padding:2px 8px;border-radius:10px;border:1px solid #334155;">+{{ $employee->skills->count() - 3 }}</span>
                 @endif
             </div>
         </div>

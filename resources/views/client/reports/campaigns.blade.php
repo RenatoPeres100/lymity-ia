@@ -1,9 +1,9 @@
 <x-layouts.app title="Relatório — Campanhas">
 <div class="space-y-5">
     <div class="flex items-center gap-4">
-        <a href="{{ route('client.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <a href="{{ route('client.reports.index') }}" class="text-slate-500 hover:text-slate-800 text-sm">← Relatórios</a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Campanhas</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Campanhas</h1>
             <p class="text-sm text-slate-400 mt-1">{{ $client?->name ?? 'Todos' }}</p>
         </div>
     </div>
@@ -36,11 +36,11 @@
     </div>
 
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Campanhas Recentes</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Campanhas Recentes</h3></div>
         <div class="card-body" style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Nome</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Plataforma</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Status</th>
@@ -49,8 +49,8 @@
                 </thead>
                 <tbody>
                     @forelse($data['recent'] as $c)
-                    <tr style="border-bottom:1px solid #1e293b;">
-                        <td style="padding:8px 12px;color:#e2e8f0;">{{ Str::limit($c->name, 40) }}</td>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:8px 12px;color:#334155;">{{ Str::limit($c->name, 40) }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ ucwords(str_replace('_',' ',$c->platform)) }}</td>
                         <td style="padding:8px 12px;"><span class="badge badge-{{ $c->status }}">{{ ucfirst($c->status) }}</span></td>
                         <td style="padding:8px 12px;color:#4ade80;">R$ {{ number_format($c->daily_budget,2,',','.') }}</td>

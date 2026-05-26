@@ -3,7 +3,7 @@
 
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-white">Relatório Executivo</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Relatório Executivo</h1>
             <p class="text-sm text-slate-400 mt-1">Visão completa da operação — gerado em {{ now()->format('d/m/Y H:i') }}</p>
         </div>
         <a href="{{ route('admin.reports.index') }}" class="btn btn-outline text-sm">← Central de Relatórios</a>
@@ -11,7 +11,7 @@
 
     {{-- Operação geral --}}
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white">Operação Geral</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800">Operação Geral</h3></div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;padding:16px;">
             @foreach([
                 ['label'=>'Clientes',           'value'=>$summary['clients'],              'color'=>'#38bdf8'],
@@ -30,8 +30,8 @@
     {{-- Social --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="font-semibold text-white">Social Media</h3>
-            <a href="{{ route('admin.reports.social') }}" class="text-xs text-sky-400">Relatório completo →</a>
+            <h3 class="font-semibold text-slate-800">Social Media</h3>
+            <a href="{{ route('admin.reports.social') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Relatório completo →</a>
         </div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;">
             @foreach([
@@ -51,8 +51,8 @@
     {{-- Campaigns --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="font-semibold text-white">Campanhas</h3>
-            <a href="{{ route('admin.reports.campaigns') }}" class="text-xs text-sky-400">Relatório completo →</a>
+            <h3 class="font-semibold text-slate-800">Campanhas</h3>
+            <a href="{{ route('admin.reports.campaigns') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Relatório completo →</a>
         </div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;">
             @foreach([
@@ -72,8 +72,8 @@
     {{-- SEO --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="font-semibold text-white">SEO</h3>
-            <a href="{{ route('admin.reports.seo') }}" class="text-xs text-sky-400">Relatório completo →</a>
+            <h3 class="font-semibold text-slate-800">SEO</h3>
+            <a href="{{ route('admin.reports.seo') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Relatório completo →</a>
         </div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;">
             @foreach([
@@ -93,8 +93,8 @@
     {{-- Approvals --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="font-semibold text-white">Aprovações</h3>
-            <a href="{{ route('admin.reports.approvals') }}" class="text-xs text-sky-400">Relatório completo →</a>
+            <h3 class="font-semibold text-slate-800">Aprovações</h3>
+            <a href="{{ route('admin.reports.approvals') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Relatório completo →</a>
         </div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;">
             @foreach([
@@ -114,8 +114,8 @@
     {{-- IA --}}
     <div class="card">
         <div class="card-header">
-            <h3 class="font-semibold text-white">Inteligência IA</h3>
-            <a href="{{ route('admin.reports.ai') }}" class="text-xs text-sky-400">Relatório completo →</a>
+            <h3 class="font-semibold text-slate-800">Inteligência IA</h3>
+            <a href="{{ route('admin.reports.ai') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Relatório completo →</a>
         </div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px;">
             @foreach([

@@ -1,9 +1,9 @@
 <x-layouts.app title="Relatório — SEO">
 <div class="space-y-5">
     <div class="flex items-center gap-4">
-        <a href="{{ route('client.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <a href="{{ route('client.reports.index') }}" class="text-slate-500 hover:text-slate-800 text-sm">← Relatórios</a>
         <div>
-            <h1 class="text-2xl font-bold text-white">SEO</h1>
+            <h1 class="text-2xl font-bold text-slate-900">SEO</h1>
             <p class="text-sm text-slate-400 mt-1">{{ $client?->name ?? 'Todos' }}</p>
         </div>
     </div>
@@ -23,11 +23,11 @@
     </div>
 
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Keywords Recentes</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Keywords Recentes</h3></div>
         <div class="card-body" style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Keyword</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Intenção</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Prioridade</th>
@@ -36,8 +36,8 @@
                 </thead>
                 <tbody>
                     @forelse($data['recent_keywords'] as $kw)
-                    <tr style="border-bottom:1px solid #1e293b;">
-                        <td style="padding:8px 12px;color:#e2e8f0;font-weight:500;">{{ $kw->keyword }}</td>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:8px 12px;color:#334155;font-weight:500;">{{ $kw->keyword }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ ucfirst($kw->search_intent) }}</td>
                         <td style="padding:8px 12px;"><span class="badge badge-{{ $kw->priority }}">{{ ucfirst($kw->priority) }}</span></td>
                         <td style="padding:8px 12px;"><span class="badge badge-{{ $kw->status }}">{{ ucfirst($kw->status) }}</span></td>

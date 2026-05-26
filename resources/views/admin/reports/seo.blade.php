@@ -2,9 +2,9 @@
 <div class="space-y-5">
 
     <div class="flex items-center gap-4">
-        <a href="{{ route('admin.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <a href="{{ route('admin.reports.index') }}" class="text-slate-500 hover:text-slate-800 text-sm">← Relatórios</a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Relatório SEO</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Relatório SEO</h1>
             <p class="text-sm text-slate-400 mt-1">Keywords, clusters, auditorias e blog</p>
         </div>
     </div>
@@ -39,16 +39,16 @@
     {{-- By priority --}}
     @if(count($data['by_priority']))
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Keywords por Prioridade</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Keywords por Prioridade</h3></div>
         <div class="card-body" style="padding:20px;">
             @php $max = max($data['by_priority']) ?: 1; @endphp
             @foreach($data['by_priority'] as $priority => $count)
             <div style="margin-bottom:12px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:13px;color:#e2e8f0;">{{ ucfirst($priority) }}</span>
+                    <span style="font-size:13px;color:#334155;">{{ ucfirst($priority) }}</span>
                     <span style="font-size:13px;color:#94a3b8;">{{ $count }}</span>
                 </div>
-                <div style="height:8px;background:#1e293b;border-radius:4px;overflow:hidden;">
+                <div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
                     <div style="height:100%;width:{{ round($count/$max*100) }}%;background:#38bdf8;border-radius:4px;"></div>
                 </div>
             </div>
@@ -59,11 +59,11 @@
 
     {{-- Recent keywords --}}
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Keywords Recentes</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Keywords Recentes</h3></div>
         <div class="card-body" style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Keyword</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Intenção</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Prioridade</th>
@@ -74,8 +74,8 @@
                 </thead>
                 <tbody>
                     @forelse($data['recent_keywords'] as $kw)
-                    <tr style="border-bottom:1px solid #1e293b;">
-                        <td style="padding:8px 12px;color:#e2e8f0;font-weight:500;">{{ $kw->keyword }}</td>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:8px 12px;color:#334155;font-weight:500;">{{ $kw->keyword }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ ucfirst($kw->search_intent) }}</td>
                         <td style="padding:8px 12px;"><span class="badge badge-{{ $kw->priority }}">{{ ucfirst($kw->priority) }}</span></td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ number_format($kw->volume ?? 0) }}</td>

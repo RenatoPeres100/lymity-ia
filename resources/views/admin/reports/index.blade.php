@@ -2,7 +2,7 @@
 <div class="space-y-6">
 
     <div>
-        <h1 class="text-2xl font-bold text-white">Central de Relatórios</h1>
+        <h1 class="text-2xl font-bold text-slate-900">Central de Relatórios</h1>
         <p class="text-sm text-slate-400 mt-1">Visão consolidada da operação</p>
     </div>
 
@@ -33,10 +33,10 @@
             ['icon'=>'✓', 'label'=>'Aprovações',     'desc'=>'Status, histórico, críticas',  'route'=>'admin.reports.approvals', 'color'=>'#fde047'],
             ['icon'=>'★', 'label'=>'Executivo',      'desc'=>'Resumo completo da operação',  'route'=>'admin.reports.executive', 'color'=>'#f472b6'],
         ] as $r)
-        <a href="{{ route($r['route']) }}" class="card" style="text-decoration:none;display:block;transition:border-color .2s;" onmouseover="this.style.borderColor='{{ $r['color'] }}'" onmouseout="this.style.borderColor='#334155'">
+        <a href="{{ route($r['route']) }}" class="card" style="text-decoration:none;display:block;transition:border-color .2s;" onmouseover="this.style.borderColor='{{ $r['color'] }}'" onmouseout="this.style.borderColor='#e2e8f0'">
             <div class="card-body" style="padding:20px;">
                 <div style="font-size:28px;margin-bottom:10px;color:{{ $r['color'] }};">{{ $r['icon'] }}</div>
-                <div class="font-semibold text-white text-sm">{{ $r['label'] }}</div>
+                <div class="font-semibold text-slate-800 text-sm">{{ $r['label'] }}</div>
                 <div class="text-xs text-slate-500 mt-1">{{ $r['desc'] }}</div>
             </div>
         </a>
@@ -45,7 +45,7 @@
 
     {{-- Quick links to logs --}}
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Logs do Sistema</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Logs do Sistema</h3></div>
         <div class="card-body" style="display:flex;gap:12px;flex-wrap:wrap;">
             <a href="{{ route('admin.activity-logs.index') }}" class="btn btn-outline text-sm">Todos os Logs</a>
             <a href="{{ route('admin.security-logs.index') }}" class="btn btn-outline text-sm">Logs de Segurança</a>

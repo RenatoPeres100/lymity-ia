@@ -2,7 +2,7 @@
 <div class="space-y-6">
 
     <div>
-        <h1 class="text-2xl font-bold text-white">Relatórios</h1>
+        <h1 class="text-2xl font-bold text-slate-900">Relatórios</h1>
         <p class="text-sm text-slate-400 mt-1">{{ $client?->name ?? 'Visão geral' }} — {{ now()->format('d/m/Y') }}</p>
     </div>
 
@@ -38,7 +38,7 @@
         <a href="{{ route($r['route']) }}" class="card" style="text-decoration:none;display:block;" onmouseover="this.style.borderColor='{{ $r['color'] }}'" onmouseout="this.style.borderColor='#334155'">
             <div class="card-body" style="padding:20px;">
                 <div style="font-size:28px;color:{{ $r['color'] }};margin-bottom:8px;">{{ $r['icon'] }}</div>
-                <div class="font-semibold text-white text-sm">{{ $r['label'] }}</div>
+                <div class="font-semibold text-slate-800 text-sm">{{ $r['label'] }}</div>
                 <div class="text-xs text-slate-500 mt-1">{{ $r['desc'] }}</div>
             </div>
         </a>

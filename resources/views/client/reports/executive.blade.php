@@ -2,14 +2,14 @@
 <div class="space-y-6">
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-white">Relatório Executivo</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Relatório Executivo</h1>
             <p class="text-sm text-slate-400 mt-1">{{ $client?->name ?? 'Visão geral' }} — {{ now()->format('d/m/Y H:i') }}</p>
         </div>
         <a href="{{ route('client.reports.index') }}" class="btn btn-outline text-sm">← Relatórios</a>
     </div>
 
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white">Resumo</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800">Resumo</h3></div>
         <div class="card-body" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px;">
             @php
             $cards = $client ? [
@@ -36,8 +36,8 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div class="card">
             <div class="card-header">
-                <h3 class="font-semibold text-white text-sm">Social Media</h3>
-                <a href="{{ route('client.reports.social') }}" class="text-xs text-sky-400">Ver →</a>
+                <h3 class="font-semibold text-slate-800 text-sm">Social Media</h3>
+                <a href="{{ route('client.reports.social') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Ver →</a>
             </div>
             <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;">
                 @foreach([['label'=>'Total','value'=>$social['total'],'color'=>'#38bdf8'],['label'=>'Publicados','value'=>$social['published'],'color'=>'#4ade80']] as $c)
@@ -51,8 +51,8 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="font-semibold text-white text-sm">Campanhas</h3>
-                <a href="{{ route('client.reports.campaigns') }}" class="text-xs text-sky-400">Ver →</a>
+                <h3 class="font-semibold text-slate-800 text-sm">Campanhas</h3>
+                <a href="{{ route('client.reports.campaigns') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Ver →</a>
             </div>
             <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;">
                 @foreach([['label'=>'Total','value'=>$campaigns['total'],'color'=>'#a78bfa'],['label'=>'Ativas','value'=>$campaigns['active'],'color'=>'#4ade80']] as $c)
@@ -66,8 +66,8 @@
 
         <div class="card">
             <div class="card-header">
-                <h3 class="font-semibold text-white text-sm">Aprovações</h3>
-                <a href="{{ route('client.reports.approvals') }}" class="text-xs text-sky-400">Ver →</a>
+                <h3 class="font-semibold text-slate-800 text-sm">Aprovações</h3>
+                <a href="{{ route('client.reports.approvals') }}" class="text-xs text-indigo-600 hover:text-indigo-800">Ver →</a>
             </div>
             <div class="card-body" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;">
                 @foreach([['label'=>'Pendentes','value'=>$approvals['pending'],'color'=>'#fde047'],['label'=>'Aprovadas','value'=>$approvals['approved'],'color'=>'#4ade80']] as $c)

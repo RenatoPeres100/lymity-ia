@@ -1,9 +1,9 @@
 <x-layouts.app title="Relatório — Social Media">
 <div class="space-y-5">
     <div class="flex items-center gap-4">
-        <a href="{{ route('client.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <a href="{{ route('client.reports.index') }}" class="text-slate-500 hover:text-slate-800 text-sm">← Relatórios</a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Social Media</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Social Media</h1>
             <p class="text-sm text-slate-400 mt-1">{{ $client?->name ?? 'Todos' }}</p>
         </div>
     </div>
@@ -23,11 +23,11 @@
     </div>
 
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Posts Recentes</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Posts Recentes</h3></div>
         <div class="card-body" style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Título</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Tipo</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Status</th>
@@ -36,8 +36,8 @@
                 </thead>
                 <tbody>
                     @forelse($data['recent'] as $post)
-                    <tr style="border-bottom:1px solid #1e293b;">
-                        <td style="padding:8px 12px;color:#e2e8f0;">{{ Str::limit($post->title, 45) }}</td>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:8px 12px;color:#334155;">{{ Str::limit($post->title, 45) }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ ucfirst($post->content_type) }}</td>
                         <td style="padding:8px 12px;"><span class="badge badge-{{ $post->status }}">{{ ucfirst($post->status) }}</span></td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ $post->scheduled_at?->format('d/m H:i') ?? '—' }}</td>

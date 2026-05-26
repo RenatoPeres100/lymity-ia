@@ -2,7 +2,7 @@
     <div style="padding:2rem;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
             <div>
-                <h1 style="font-size:1.8rem;font-weight:700;color:#f1f5f9;">Calendário Editorial</h1>
+                <h1 style="font-size:1.8rem;font-weight:700;color:#0f172a;">Calendário Editorial</h1>
                 <p style="color:#94a3b8;">{{ \Carbon\Carbon::createFromDate($year, $month, 1)->translatedFormat('F Y') }}</p>
             </div>
             <a href="{{ route('admin.social.calendar.create') }}" style="background:#3b82f6;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;text-decoration:none;font-size:.9rem;">+ Novo Calendário</a>
@@ -12,13 +12,13 @@
         <form method="GET" style="background:#1e293b;border:1px solid #334155;border-radius:.75rem;padding:1rem;margin-bottom:1.5rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
             @php $prev = \Carbon\Carbon::createFromDate($year, $month, 1)->subMonth(); $next = \Carbon\Carbon::createFromDate($year, $month, 1)->addMonth(); @endphp
             <a href="?month={{ $prev->month }}&year={{ $prev->year }}" style="color:#94a3b8;padding:.5rem .75rem;background:#334155;border-radius:.375rem;text-decoration:none;">← Anterior</a>
-            <select name="month" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:.5rem;border-radius:.375rem;">
+            <select name="month" style="background:#ffffff;border:1px solid #e2e8f0;color:#334155;padding:.5rem;border-radius:.375rem;">
                 @for($m=1;$m<=12;$m++)
                 <option value="{{ $m }}" @selected($m===$month)>{{ \Carbon\Carbon::createFromDate($year,$m,1)->translatedFormat('F') }}</option>
                 @endfor
             </select>
-            <input type="number" name="year" value="{{ $year }}" min="2024" max="2030" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:.5rem;border-radius:.375rem;width:80px;">
-            <select name="client_id" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:.5rem;border-radius:.375rem;">
+            <input type="number" name="year" value="{{ $year }}" min="2024" max="2030" style="background:#ffffff;border:1px solid #e2e8f0;color:#334155;padding:.5rem;border-radius:.375rem;width:80px;">
+            <select name="client_id" style="background:#ffffff;border:1px solid #e2e8f0;color:#334155;padding:.5rem;border-radius:.375rem;">
                 <option value="">Todos os clientes</option>
                 @foreach($clients as $c)
                 <option value="{{ $c->id }}" @selected($clientId==$c->id)>{{ $c->name }}</option>
@@ -53,11 +53,11 @@
         {{-- Saved Calendars --}}
         @if($savedCalendars->isNotEmpty())
         <div style="background:#1e293b;border:1px solid #334155;border-radius:.75rem;padding:1.5rem;">
-            <h3 style="color:#f1f5f9;font-weight:600;margin-bottom:1rem;">Calendários Salvos deste Mês</h3>
+            <h3 style="color:#e2e8f0;font-weight:600;margin-bottom:1rem;">Calendários Salvos deste Mês</h3>
             @foreach($savedCalendars as $cal)
             <div style="display:flex;justify-content:space-between;align-items:center;padding:.5rem 0;border-bottom:1px solid #334155;">
                 <div>
-                    <span style="color:#f1f5f9;font-size:.9rem;">{{ $cal->client?->name ?? 'Agência' }}</span>
+                    <span style="color:#e2e8f0;font-size:.9rem;">{{ $cal->client?->name ?? 'Agência' }}</span>
                     <span style="color:#64748b;font-size:.8rem;margin-left:.5rem;">{{ $cal->status }}</span>
                 </div>
                 <a href="{{ route('admin.social.calendar.show', $cal) }}" style="color:#3b82f6;font-size:.85rem;text-decoration:none;">Ver →</a>

@@ -3,7 +3,7 @@
 
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-white">Logs de Atividade</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Logs de Atividade</h1>
             <p class="text-sm text-slate-400 mt-1">Total: {{ number_format($logs->total()) }} registros</p>
         </div>
         <a href="{{ route('admin.activity-logs.export', request()->query()) }}" class="btn btn-outline text-sm">⬇ Exportar CSV</a>
@@ -77,13 +77,13 @@
                 </thead>
                 <tbody>
                     @forelse($logs as $log)
-                    <tr style="border-bottom:1px solid #1e293b;" class="hover:bg-slate-800/30">
+                    <tr style="border-bottom:1px solid #f1f5f9;" class="hover:bg-slate-50">
                         <td style="padding:8px 12px;color:#94a3b8;white-space:nowrap;">{{ $log->created_at->format('d/m/Y H:i') }}</td>
                         <td style="padding:8px 12px;">
                             @php $lvl = $log->level ?? 'info'; @endphp
                             <span class="badge badge-{{ $lvl }}">{{ ucfirst($lvl) }}</span>
                         </td>
-                        <td style="padding:8px 12px;color:#e2e8f0;font-family:monospace;font-size:12px;">{{ $log->action }}</td>
+                        <td style="padding:8px 12px;color:#334155;font-family:monospace;font-size:12px;">{{ $log->action }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ $log->module ?? '—' }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;max-width:280px;">{{ Str::limit($log->description, 80) }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ $log->client?->name ?? '—' }}</td>

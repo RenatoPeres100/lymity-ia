@@ -75,9 +75,24 @@
                         <tr>
                             <td class="px-4 py-2 text-gray-600 dark:text-gray-300">{{ $run->created_at->format('d/m/Y H:i') }}</td>
                             <td class="px-4 py-2">
-                                @php $color = $run->status_color; @endphp
-                                <span class="inline-flex items-center gap-1 text-{{ $color }}-600 text-xs font-semibold">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-{{ $color }}-500"></span>
+                                @php
+                                    $statusTextClass = match($run->status) {
+                                        'completed' => 'text-green-600',
+                                        'running'   => 'text-blue-600',
+                                        'queued'    => 'text-yellow-600',
+                                        'failed'    => 'text-red-600',
+                                        default     => 'text-gray-500',
+                                    };
+                                    $statusDotClass = match($run->status) {
+                                        'completed' => 'bg-green-500',
+                                        'running'   => 'bg-blue-500',
+                                        'queued'    => 'bg-yellow-500',
+                                        'failed'    => 'bg-red-500',
+                                        default     => 'bg-gray-400',
+                                    };
+                                @endphp
+                                <span class="inline-flex items-center gap-1 {{ $statusTextClass }} text-xs font-semibold">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $statusDotClass }}"></span>
                                     {{ $run->status_label }}
                                 </span>
                             </td>

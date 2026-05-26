@@ -70,18 +70,18 @@
 </div>
 
 @if($pending_approvals->isNotEmpty())
-<div style="background:#0f172a;border:1px solid #78350f;border-radius:14px;padding:24px;margin-bottom:28px;">
+<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:14px;padding:24px;margin-bottom:28px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-        <h3 style="font-size:.9rem;font-weight:700;color:#fbbf24;">Conteúdos aguardando decisão</h3>
-        <a href="{{ route('client.approvals.index') }}" style="font-size:.75rem;color:#6b8fff;text-decoration:none;">ver todos →</a>
+        <h3 style="font-size:.9rem;font-weight:700;color:#92400e;">Conteúdos aguardando decisão</h3>
+        <a href="{{ route('client.approvals.index') }}" style="font-size:.75rem;color:#4f46e5;text-decoration:none;">ver todos →</a>
     </div>
     @foreach($pending_approvals as $pa)
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #1e293b;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #fde68a;">
         <div>
-            <span style="font-size:.875rem;font-weight:600;color:#e2e8f0;">{{ $pa->title }}</span>
-            <div style="font-size:.72rem;color:#475569;">{{ $pa->approval_type_label }}</div>
+            <span style="font-size:.875rem;font-weight:600;color:#1e293b;">{{ $pa->title }}</span>
+            <div style="font-size:.72rem;color:#64748b;">{{ $pa->approval_type_label }}</div>
         </div>
-        <a href="{{ route('client.approvals.show', $pa->id) }}" style="background:#1e293b;color:#6b8fff;font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:6px;text-decoration:none;">Revisar</a>
+        <a href="{{ route('client.approvals.show', $pa->id) }}" style="background:#4f46e5;color:#fff;font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:6px;text-decoration:none;">Revisar</a>
     </div>
     @endforeach
 </div>

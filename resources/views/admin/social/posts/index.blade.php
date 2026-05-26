@@ -2,8 +2,8 @@
     <div style="padding:2rem;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
             <div>
-                <h1 style="font-size:1.8rem;font-weight:700;color:#f1f5f9;">Posts Sociais</h1>
-                <p style="color:#94a3b8;">{{ $posts->total() }} post(s) encontrado(s)</p>
+                <h1 style="font-size:1.8rem;font-weight:700;color:#0f172a;">Posts Sociais</h1>
+                <p style="color:#64748b;">{{ $posts->total() }} post(s) encontrado(s)</p>
             </div>
             <div style="display:flex;gap:.75rem;">
                 <a href="{{ route('admin.social.ai.generate') }}" style="background:#8b5cf6;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;text-decoration:none;font-size:.9rem;">✨ Gerar IA</a>
@@ -12,40 +12,40 @@
         </div>
 
         {{-- Filters --}}
-        <form method="GET" style="background:#1e293b;border:1px solid #334155;border-radius:.75rem;padding:1rem;margin-bottom:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
-            <select name="status" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:.5rem;border-radius:.375rem;min-width:140px;">
+        <form method="GET" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem;margin-bottom:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
+            <select name="status" style="background:#ffffff;border:1px solid #e2e8f0;color:#334155;padding:.5rem;border-radius:.375rem;min-width:140px;">
                 <option value="">Todos os status</option>
                 @foreach(['draft'=>'Rascunho','pending_approval'=>'Pendente','approved'=>'Aprovado','scheduled'=>'Agendado','published'=>'Publicado','rejected'=>'Rejeitado'] as $v=>$l)
                 <option value="{{ $v }}" @selected(request('status')===$v)>{{ $l }}</option>
                 @endforeach
             </select>
-            <select name="client_id" style="background:#0f172a;border:1px solid #334155;color:#f1f5f9;padding:.5rem;border-radius:.375rem;min-width:160px;">
+            <select name="client_id" style="background:#ffffff;border:1px solid #e2e8f0;color:#334155;padding:.5rem;border-radius:.375rem;min-width:160px;">
                 <option value="">Todos os clientes</option>
                 @foreach($clients as $c)
                 <option value="{{ $c->id }}" @selected(request('client_id')==$c->id)>{{ $c->name }}</option>
                 @endforeach
             </select>
-            <button type="submit" style="background:#3b82f6;color:#fff;padding:.5rem 1rem;border-radius:.375rem;border:none;cursor:pointer;">Filtrar</button>
-            <a href="{{ route('admin.social.posts.index') }}" style="color:#64748b;padding:.5rem;text-decoration:none;align-self:center;font-size:.85rem;">Limpar</a>
+            <button type="submit" style="background:#4f46e5;color:#fff;padding:.5rem 1rem;border-radius:.375rem;border:none;cursor:pointer;">Filtrar</button>
+            <a href="{{ route('admin.social.posts.index') }}" style="color:#4f46e5;padding:.5rem;text-decoration:none;align-self:center;font-size:.85rem;">Limpar</a>
         </form>
 
         @if(session('success'))
-        <div style="background:#10b98120;border:1px solid #10b981;color:#10b981;padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('success') }}</div>
+        <div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('success') }}</div>
         @endif
 
-        <div style="background:#1e293b;border:1px solid #334155;border-radius:.75rem;overflow:hidden;">
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;">
             <table style="width:100%;border-collapse:collapse;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;">
                         @foreach(['Título','Objetivo','Tipo','Cliente','Status','Agendado','Ações'] as $h)
-                        <th style="text-align:left;padding:.75rem 1rem;color:#94a3b8;font-size:.8rem;font-weight:600;text-transform:uppercase;">{{ $h }}</th>
+                        <th style="text-align:left;padding:.75rem 1rem;color:#64748b;font-size:.8rem;font-weight:600;text-transform:uppercase;">{{ $h }}</th>
                         @endforeach
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($posts as $post)
-                    <tr style="border-bottom:1px solid #334155;" onmouseover="this.style.background='#0f172a'" onmouseout="this.style.background='transparent'">
-                        <td style="padding:.75rem 1rem;color:#f1f5f9;font-size:.9rem;">{{ Str::limit($post->title, 35) }}</td>
+                    <tr style="border-bottom:1px solid #e2e8f0;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:.75rem 1rem;color:#0f172a;font-size:.9rem;">{{ Str::limit($post->title, 35) }}</td>
                         <td style="padding:.75rem 1rem;color:#94a3b8;font-size:.85rem;">{{ $post->objective_label }}</td>
                         <td style="padding:.75rem 1rem;color:#94a3b8;font-size:.85rem;">{{ $post->content_type_label }}</td>
                         <td style="padding:.75rem 1rem;color:#94a3b8;font-size:.85rem;">{{ $post->client?->name ?? '—' }}</td>

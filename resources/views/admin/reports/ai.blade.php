@@ -2,9 +2,9 @@
 <div class="space-y-5">
 
     <div class="flex items-center gap-4">
-        <a href="{{ route('admin.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <a href="{{ route('admin.reports.index') }}" class="text-slate-500 hover:text-slate-800 text-sm">← Relatórios</a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Relatório Inteligência IA</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Relatório Inteligência IA</h1>
             <p class="text-sm text-slate-400 mt-1">Funcionários, tarefas, memórias e agendas</p>
         </div>
     </div>
@@ -51,16 +51,16 @@
     {{-- Tasks by type --}}
     @if(count($data['by_type']))
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Tarefas por Tipo</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Tarefas por Tipo</h3></div>
         <div class="card-body" style="padding:20px;">
             @php $max = max($data['by_type']) ?: 1; @endphp
             @foreach($data['by_type'] as $type => $count)
             <div style="margin-bottom:12px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:13px;color:#e2e8f0;">{{ ucwords(str_replace('_', ' ', $type)) }}</span>
+                    <span style="font-size:13px;color:#334155;">{{ ucwords(str_replace('_', ' ', $type)) }}</span>
                     <span style="font-size:13px;color:#94a3b8;">{{ $count }}</span>
                 </div>
-                <div style="height:8px;background:#1e293b;border-radius:4px;overflow:hidden;">
+                <div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
                     <div style="height:100%;width:{{ round($count/$max*100) }}%;background:#a78bfa;border-radius:4px;"></div>
                 </div>
             </div>
@@ -72,13 +72,13 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         {{-- Recent tasks --}}
         <div class="card">
-            <div class="card-header"><h3 class="font-semibold text-white text-sm">Tarefas Recentes</h3></div>
+            <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Tarefas Recentes</h3></div>
             <div class="card-body">
                 @forelse($data['recent_tasks'] as $task)
-                <div style="padding:8px 0;border-bottom:1px solid #1e293b;">
+                <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <div>
-                            <div class="text-sm text-slate-200">{{ Str::limit($task->title, 36) }}</div>
+                            <div class="text-sm text-slate-700">{{ Str::limit($task->title, 36) }}</div>
                             <div class="text-xs text-slate-500">{{ $task->aiEmployee?->name ?? '—' }}</div>
                         </div>
                         <span class="badge badge-{{ $task->status }}">{{ ucfirst($task->status) }}</span>
@@ -92,11 +92,11 @@
 
         {{-- Recent errors --}}
         <div class="card">
-            <div class="card-header"><h3 class="font-semibold text-white text-sm">Falhas Recentes</h3></div>
+            <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Falhas Recentes</h3></div>
             <div class="card-body">
                 @forelse($data['recent_errors'] as $task)
-                <div style="padding:8px 0;border-bottom:1px solid #1e293b;">
-                    <div class="text-sm text-slate-200">{{ Str::limit($task->title, 36) }}</div>
+                <div style="padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                    <div class="text-sm text-slate-700">{{ Str::limit($task->title, 36) }}</div>
                     <div class="text-xs text-red-400 mt-1">{{ Str::limit($task->error_message ?? 'Erro desconhecido', 60) }}</div>
                 </div>
                 @empty

@@ -2,9 +2,9 @@
 <div class="space-y-5">
 
     <div class="flex items-center gap-4">
-        <a href="{{ route('admin.reports.index') }}" class="text-slate-400 hover:text-white text-sm">← Relatórios</a>
+        <a href="{{ route('admin.reports.index') }}" class="text-slate-500 hover:text-slate-800 text-sm">← Relatórios</a>
         <div>
-            <h1 class="text-2xl font-bold text-white">Relatório Social Media</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Relatório Social Media</h1>
             <p class="text-sm text-slate-400 mt-1">Todos os clientes</p>
         </div>
     </div>
@@ -26,16 +26,16 @@
     {{-- By type bars --}}
     @if(count($data['by_type']))
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Posts por Tipo</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Posts por Tipo</h3></div>
         <div class="card-body" style="padding:20px;">
             @php $max = max($data['by_type']) ?: 1; @endphp
             @foreach($data['by_type'] as $type => $count)
             <div style="margin-bottom:12px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                    <span style="font-size:13px;color:#e2e8f0;">{{ ucwords(str_replace('_', ' ', $type)) }}</span>
+                    <span style="font-size:13px;color:#334155;">{{ ucwords(str_replace('_', ' ', $type)) }}</span>
                     <span style="font-size:13px;color:#94a3b8;">{{ $count }}</span>
                 </div>
-                <div style="height:8px;background:#1e293b;border-radius:4px;overflow:hidden;">
+                <div style="height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
                     <div style="height:100%;width:{{ round($count/$max*100) }}%;background:#38bdf8;border-radius:4px;"></div>
                 </div>
             </div>
@@ -46,11 +46,11 @@
 
     {{-- Recent posts --}}
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Posts Recentes</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Posts Recentes</h3></div>
         <div class="card-body" style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Título</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Tipo</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;">Status</th>
@@ -59,8 +59,8 @@
                 </thead>
                 <tbody>
                     @forelse($data['recent'] as $post)
-                    <tr style="border-bottom:1px solid #1e293b;">
-                        <td style="padding:8px 12px;color:#e2e8f0;">{{ Str::limit($post->title, 45) }}</td>
+                    <tr style="border-bottom:1px solid #f1f5f9;">
+                        <td style="padding:8px 12px;color:#334155;">{{ Str::limit($post->title, 45) }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ ucfirst($post->content_type) }}</td>
                         <td style="padding:8px 12px;"><span class="badge badge-{{ $post->status }}">{{ ucfirst($post->status) }}</span></td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ $post->scheduled_at?->format('d/m H:i') ?? '—' }}</td>

@@ -3,7 +3,7 @@
 
     <div class="flex items-center justify-between">
         <div>
-            <h1 class="text-2xl font-bold text-white">Logs de Segurança</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Logs de Segurança</h1>
             <p class="text-sm text-slate-400 mt-1">Ações sensíveis, erros e eventos críticos</p>
         </div>
         <a href="{{ route('admin.activity-logs.export', array_merge(request()->query(), ['level'=>'critical'])) }}" class="btn btn-outline text-sm">⬇ Exportar CSV</a>
@@ -44,11 +44,11 @@
 
     {{-- Security Logs Table --}}
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Eventos Sensíveis ({{ number_format($logs->total()) }})</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Eventos Sensíveis ({{ number_format($logs->total()) }})</h3></div>
         <div class="card-body" style="overflow-x:auto;">
             <table style="width:100%;border-collapse:collapse;font-size:13px;">
                 <thead>
-                    <tr style="border-bottom:1px solid #334155;">
+                    <tr style="border-bottom:1px solid #e2e8f0;">
                         <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;white-space:nowrap;">Data</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;">Nível</th>
                         <th style="text-align:left;padding:8px 12px;color:#64748b;font-weight:600;">Ação</th>
@@ -59,13 +59,13 @@
                 </thead>
                 <tbody>
                     @forelse($logs as $log)
-                    <tr style="border-bottom:1px solid #1e293b;">
+                    <tr style="border-bottom:1px solid #f1f5f9;">
                         <td style="padding:8px 12px;color:#94a3b8;white-space:nowrap;">{{ $log->created_at->format('d/m/Y H:i') }}</td>
                         <td style="padding:8px 12px;">
                             @php $lvl = $log->level ?? 'info'; @endphp
                             <span class="badge badge-{{ $lvl }}">{{ ucfirst($lvl) }}</span>
                         </td>
-                        <td style="padding:8px 12px;color:#e2e8f0;font-family:monospace;font-size:12px;">{{ $log->action }}</td>
+                        <td style="padding:8px 12px;color:#334155;font-family:monospace;font-size:12px;">{{ $log->action }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;max-width:300px;">{{ Str::limit($log->description, 90) }}</td>
                         <td style="padding:8px 12px;color:#94a3b8;">{{ $log->user?->name ?? '—' }}</td>
                         <td style="padding:8px 12px;color:#475569;font-size:11px;">{{ $log->ip_address ?? '—' }}</td>
@@ -81,12 +81,12 @@
     {{-- Critical Approvals --}}
     @if($criticalApprovals->count())
     <div class="card">
-        <div class="card-header"><h3 class="font-semibold text-white text-sm">Aprovações Críticas Recentes</h3></div>
+        <div class="card-header"><h3 class="font-semibold text-slate-800 text-sm">Aprovações Críticas Recentes</h3></div>
         <div class="card-body">
             @foreach($criticalApprovals as $a)
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #1e293b;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;">
                 <div>
-                    <div class="text-sm font-medium text-slate-200">{{ $a->title }}</div>
+                    <div class="text-sm font-medium text-slate-700">{{ $a->title }}</div>
                     <div class="text-xs text-slate-500">{{ $a->client?->name ?? '—' }} · {{ $a->approval_type }} · {{ $a->created_at->diffForHumans() }}</div>
                 </div>
                 <span class="badge badge-{{ $a->status }}">{{ ucfirst($a->status) }}</span>
