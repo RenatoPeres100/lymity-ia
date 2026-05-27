@@ -12,8 +12,9 @@ class SocialPost extends Model
 {
     protected $fillable = [
         'client_id', 'company_id', 'created_by', 'ai_employee_id',
-        'title', 'objective', 'content_type', 'main_caption',
+        'title', 'objective', 'content_type', 'creative_format', 'main_caption',
         'creative_brief', 'hashtags', 'cta', 'status',
+        'image_url', 'public_image_url', 'external_post_id', 'publication_error',
         'scheduled_at', 'published_at', 'requires_approval',
         'approved_by', 'approved_at', 'metadata',
     ];
@@ -121,6 +122,63 @@ class SocialPost extends Model
         return $this->client?->name ?? $this->company?->name ?? 'Agência';
     }
 
+    public function isPublishing(): bool
+    {
+        return $this->status === 'publishing';
+    }
+
+    public function isPublished(): bool
+    {
+        return $this->status === 'published';
+    }
+
+    public function isFailed(): bool
+    {
+        return $this->status === 'failed';
+    }
+
+    public function isRejected(): bool
+    {
+        return $this->status === 'rejected';
+    }
+
+    public function hasPublicImage(): bool
+    {
+        return !empty($this->public_image_url) && str_starts_with($this->public_image_url, 'https://');
+    }
+
+    public function isApprovedForPublishing(): bool
+    {
+        if (!$this->requires_approval) {
+            return true;
+        }
+        return !empty($this->approved_by) && !empty($this->approved_at);
+    }
+
+    public function markPublishing(): static
+    {
+        $this->update(['status' => 'publishing']);
+        return $this;
+    }
+
+    public function markPublished(string $externalPostId = null): static
+    {
+        $this->update([
+            'status'            => 'published',
+            'published_at'      => now(),
+            'external_post_id'  => $externalPostId,
+            'publication_error' => null,
+        ]);
+        return $this;
+    }
+
+    public function markFailed(string $error): static
+    {
+        $safe = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $error);
+        $this->update(['status' => 'failed', 'publication_error' => $safe]);
+        return $this;
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
@@ -128,7 +186,9 @@ class SocialPost extends Model
             'pending_approval' => 'Aguardando aprovação',
             'approved'         => 'Aprovado',
             'scheduled'        => 'Agendado',
+            'publishing'       => 'Publicando...',
             'published'        => 'Publicado',
+            'failed'           => 'Falhou',
             'rejected'         => 'Rejeitado',
             'archived'         => 'Arquivado',
             default            => $this->status ?? '—',
@@ -141,7 +201,9 @@ class SocialPost extends Model
             'published'        => '#166534',
             'approved'         => '#1e3a5f',
             'scheduled'        => '#134e4a',
+            'publishing'       => '#1d4ed8',
             'pending_approval' => '#78350f',
+            'failed'           => '#7f1d1d',
             'rejected'         => '#7f1d1d',
             'archived'         => '#334155',
             default            => '#1e293b',

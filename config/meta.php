@@ -5,7 +5,7 @@ return [
     'app_secret' => env('META_APP_SECRET'),
     'redirect_uri' => env('META_REDIRECT_URI', 'https://ia.lymity.com.br/admin/social/instagram/callback'),
     'graph_version' => env('META_GRAPH_VERSION', 'v25.0'),
-    'instagram_publishing_enabled' => env('INSTAGRAM_PUBLISHING_ENABLED', false),
+    'instagram_publishing_enabled' => filter_var(env('INSTAGRAM_PUBLISHING_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
 
     'scopes' => [
         'pages_show_list',

@@ -19,6 +19,7 @@ class InstagramConnectionController extends Controller
         $publishingEnabled = config('meta.instagram_publishing_enabled', false);
 
         $channel = SocialChannel::where('platform', 'instagram')
+            ->whereNotNull('company_id')
             ->whereNull('client_id')
             ->first();
 
@@ -59,6 +60,7 @@ class InstagramConnectionController extends Controller
     public function disconnect(Request $request)
     {
         $channel = SocialChannel::where('platform', 'instagram')
+            ->whereNotNull('company_id')
             ->whereNull('client_id')
             ->first();
 
@@ -73,6 +75,7 @@ class InstagramConnectionController extends Controller
     public function check(Request $request)
     {
         $channel = SocialChannel::where('platform', 'instagram')
+            ->whereNotNull('company_id')
             ->whereNull('client_id')
             ->first();
 

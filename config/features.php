@@ -24,7 +24,11 @@ return [
 
     // === INSTAGRAM / META ===
     'instagram_connection'  => true,
-    'instagram_publishing'  => false,
+    'instagram_publishing'  => true,
+
+    // === PUBLISHING / COMMAND CENTER ===
+    'content_command_center' => true,
+    'publishing_queue'       => true,
 
     // === MODO DEMO ===
     'demo_mode'           => false,

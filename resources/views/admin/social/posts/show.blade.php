@@ -46,6 +46,9 @@
         @if(session('error'))
         <div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('error') }}</div>
         @endif
+        @if($errors->has('instagram'))
+        <div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ $errors->first('instagram') }}</div>
+        @endif
 
         <div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
             <div>
@@ -108,14 +111,64 @@
                         ['label'=>'Criado','value'=>$post->created_at->format('d/m/Y H:i')],
                         ['label'=>'Agendado','value'=>$post->scheduled_at?->format('d/m/Y H:i') ?? '—'],
                         ['label'=>'Publicado','value'=>$post->published_at?->format('d/m/Y H:i') ?? '—'],
+                        ['label'=>'Aprovado por','value'=>$post->approver?->name ?? '—'],
+                        ['label'=>'Aprovado em','value'=>$post->approved_at?->format('d/m/Y H:i') ?? '—'],
+                        ['label'=>'Post externo ID','value'=>$post->external_post_id ?? '—'],
                         ['label'=>'Funcionário IA','value'=>$post->aiEmployee?->name ?? '—'],
-                        ['label'=>'Aprovação','value'=>$post->requires_approval ? 'Sim' : 'Não'],
+                        ['label'=>'Aprovação obrig.','value'=>$post->requires_approval ? 'Sim' : 'Não'],
+                        ['label'=>'Formato criativo','value'=>$post->creative_format ?? '—'],
                     ] as $info)
                     <div style="display:flex;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #f1f5f9;">
                         <span style="color:#64748b;font-size:.85rem;">{{ $info['label'] }}</span>
                         <span style="color:#334155;font-size:.85rem;">{{ $info['value'] }}</span>
                     </div>
                     @endforeach
+                    @if($post->public_image_url)
+                    <div style="padding:.5rem 0;border-bottom:1px solid #f1f5f9;">
+                        <span style="color:#64748b;font-size:.85rem;">Imagem pública:</span>
+                        <a href="{{ $post->public_image_url }}" target="_blank" style="font-size:.75rem;color:#3b82f6;word-break:break-all;">{{ Str::limit($post->public_image_url, 50) }}</a>
+                    </div>
+                    @endif
+                    @if($post->publication_error)
+                    <div style="padding:.5rem 0;margin-top:.5rem;background:#fef2f2;border-radius:.375rem;padding:.75rem;">
+                        <span style="color:#dc2626;font-size:.8rem;font-weight:600;">Erro de publicação:</span>
+                        <p style="color:#dc2626;font-size:.8rem;margin-top:.25rem;">{{ $post->publication_error }}</p>
+                    </div>
+                    @endif
+                </div>
+
+                {{-- Instagram Publish Now --}}
+                @php
+                    $instagramChannel = \App\Models\SocialChannel::where('platform','instagram')->whereNotNull('company_id')->whereNull('client_id')->first();
+                    $publishingEnabled = config('meta.instagram_publishing_enabled', false);
+                    $canPublishNow = in_array($post->status, ['approved','scheduled'])
+                        && $publishingEnabled
+                        && $instagramChannel?->isConnected()
+                        && $instagramChannel?->hasValidToken()
+                        && $post->hasPublicImage()
+                        && $post->isApprovedForPublishing();
+                @endphp
+                <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
+                    <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Publicação Instagram</h3>
+                    @if($canPublishNow)
+                        <form method="POST" action="{{ route('admin.social.posts.publish-instagram-now', $post) }}"
+                              onsubmit="return confirm('Publicar este post agora no Instagram @lymity.ia?')">
+                            @csrf
+                            <button style="background:#e1306c;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;border:none;cursor:pointer;font-size:.85rem;width:100%;">
+                                Publicar agora no Instagram
+                            </button>
+                        </form>
+                    @else
+                        <p style="color:#94a3b8;font-size:.8rem;margin-bottom:.5rem;">Não é possível publicar agora. Verifique:</p>
+                        <ul style="color:#94a3b8;font-size:.8rem;padding-left:1rem;line-height:1.8;">
+                            @if(!in_array($post->status, ['approved','scheduled']))<li>Post não está aprovado/agendado (status: {{ $post->status_label }})</li>@endif
+                            @if(!$publishingEnabled)<li>INSTAGRAM_PUBLISHING_ENABLED=false</li>@endif
+                            @if(!$instagramChannel)<li>Canal @lymity.ia não configurado</li>
+                            @elseif(!$instagramChannel->isConnected())<li>Canal @lymity.ia não conectado ({{ $instagramChannel->status_label }})</li>@endif
+                            @if(!$post->hasPublicImage())<li>public_image_url ausente ou não é HTTPS</li>@endif
+                            @if($post->requires_approval && !$post->isApprovedForPublishing())<li>Aprovação pendente</li>@endif
+                        </ul>
+                    @endif
                 </div>
 
                 {{-- Brief --}}

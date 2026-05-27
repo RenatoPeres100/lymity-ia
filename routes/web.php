@@ -121,6 +121,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         // Phase 12 — System Health
         Route::get('/system-health', SystemHealthController::class)->name('admin.system-health');
 
+        // Phase 7 — Content Command Center
+        Route::get('/content-command-center', [App\Http\Controllers\Admin\ContentCommandCenterController::class, 'index'])->name('admin.content-command-center');
+
         // Phase 13 — Files & Google Drive
         Route::get('/files',                               [AdminFileController::class, 'index'])->name('admin.files.index');
         Route::get('/files/create',                        [AdminFileController::class, 'create'])->name('admin.files.create');
@@ -317,6 +320,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('/social/posts/{post}/schedule',          [AdminSocialPostController::class, 'schedule'])->name('admin.social.posts.schedule');
         Route::post('/social/posts/{post}/mark-published',     [AdminSocialPostController::class, 'markPublished'])->name('admin.social.posts.mark-published');
         Route::post('/social/posts/{post}/back-to-draft',      [AdminSocialPostController::class, 'backToDraft'])->name('admin.social.posts.back-to-draft');
+        Route::post('/social/posts/{socialPost}/publish-instagram-now', [App\Http\Controllers\Admin\SocialInstagramPublishController::class, 'publishNow'])->name('admin.social.posts.publish-instagram-now');
 
         // Calendar
         Route::get('/social/calendar',                         [AdminSocialCalendarController::class, 'index'])->name('admin.social.calendar.index');
