@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -12,9 +13,12 @@ class Client extends Model
     protected $fillable = [
         'company_id', 'name', 'legal_name', 'tax_id', 'segment',
         'website', 'instagram', 'facebook', 'linkedin', 'tiktok',
-        'google_business_profile', 'status', 'brand_voice',
-        'target_audience', 'offer_description', 'notes',
+        'youtube', 'whatsapp', 'email', 'phone',
+        'google_business_profile', 'status',
+        'brand_voice', 'target_audience', 'offer_description', 'notes',
     ];
+
+    // ── Relations ────────────────────────────────────────────────
 
     public function company(): BelongsTo
     {
@@ -24,6 +28,11 @@ class Client extends Model
     public function users(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function activeUsers(): HasMany
+    {
+        return $this->hasMany(User::class)->where('status', 'active');
     }
 
     public function brandProfile(): HasOne
@@ -51,29 +60,14 @@ class Client extends Model
         return $this->hasMany(BlogPost::class)->where('type', 'client');
     }
 
-    public function activityLogs(): HasMany
+    public function socialPosts(): HasMany
     {
-        return $this->hasMany(ActivityLog::class);
-    }
-
-    public function approvalRequests(): HasMany
-    {
-        return $this->hasMany(ApprovalRequest::class);
-    }
-
-    public function appNotifications(): HasMany
-    {
-        return $this->hasMany(AppNotification::class);
+        return $this->hasMany(SocialPost::class);
     }
 
     public function socialChannels(): HasMany
     {
         return $this->hasMany(SocialChannel::class);
-    }
-
-    public function socialPosts(): HasMany
-    {
-        return $this->hasMany(SocialPost::class);
     }
 
     public function socialCalendars(): HasMany
@@ -84,6 +78,21 @@ class Client extends Model
     public function socialContentBriefs(): HasMany
     {
         return $this->hasMany(SocialContentBrief::class);
+    }
+
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(ApprovalRequest::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function appNotifications(): HasMany
+    {
+        return $this->hasMany(AppNotification::class);
     }
 
     public function seoKeywords(): HasMany
@@ -146,13 +155,78 @@ class Client extends Model
         return $this->hasMany(StorageIntegration::class);
     }
 
+    public function aiProviderCalls(): HasMany
+    {
+        return $this->hasMany(AiProviderCall::class);
+    }
+
+    // ── Status helpers ───────────────────────────────────────────
+
     public function isActive(): bool
     {
         return $this->status === 'active';
     }
 
-    public function aiProviderCalls(): HasMany
+    public function isInactive(): bool
     {
-        return $this->hasMany(AiProviderCall::class);
+        return $this->status === 'inactive';
+    }
+
+    public function isArchived(): bool
+    {
+        return $this->status === 'archived';
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'active'   => 'Ativo',
+            'inactive' => 'Inativo',
+            'archived' => 'Arquivado',
+            default    => $this->status ?? '—',
+        };
+    }
+
+    // ── Scopes ───────────────────────────────────────────────────
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', 'active');
+    }
+
+    public function scopeInactive(Builder $query): Builder
+    {
+        return $query->where('status', 'inactive');
+    }
+
+    public function scopeArchived(Builder $query): Builder
+    {
+        return $query->where('status', 'archived');
+    }
+
+    public function scopeSearch(Builder $query, ?string $term): Builder
+    {
+        if (!$term) return $query;
+
+        return $query->where(function ($q) use ($term) {
+            $q->where('name', 'like', "%{$term}%")
+              ->orWhere('legal_name', 'like', "%{$term}%")
+              ->orWhere('segment', 'like', "%{$term}%")
+              ->orWhere('email', 'like', "%{$term}%")
+              ->orWhere('instagram', 'like', "%{$term}%");
+        });
+    }
+
+    public function scopeVisibleForUser(Builder $query, User $user): Builder
+    {
+        if ($user->isAdminGeral() || in_array($user->role, ['agencia_admin', 'agencia_operador'])) {
+            return $query;
+        }
+
+        if ($user->client_id) {
+            return $query->where('id', $user->client_id);
+        }
+
+        return $query->whereRaw('0 = 1');
     }
 }

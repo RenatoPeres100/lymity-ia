@@ -234,8 +234,19 @@ Route::middleware(['auth', 'active'])->group(function () {
         // Backwards compat alias
         Route::get('/users-list',                         [UserController::class,           'index'])->name('admin.users');
 
-        // Clients
-        Route::get('/clients',  [ClientController::class, 'index'])->name('admin.clients');
+        // Clients CRUD
+        Route::get('/clients',                         [ClientController::class, 'index'])->name('admin.clients.index');
+        Route::get('/clients/create',                  [ClientController::class, 'create'])->name('admin.clients.create');
+        Route::post('/clients',                        [ClientController::class, 'store'])->name('admin.clients.store');
+        Route::get('/clients/{client}',                [ClientController::class, 'show'])->name('admin.clients.show');
+        Route::get('/clients/{client}/edit',           [ClientController::class, 'edit'])->name('admin.clients.edit');
+        Route::put('/clients/{client}',                [ClientController::class, 'update'])->name('admin.clients.update');
+        Route::patch('/clients/{client}/disable',      [ClientController::class, 'disable'])->name('admin.clients.disable');
+        Route::patch('/clients/{client}/activate',     [ClientController::class, 'activate'])->name('admin.clients.activate');
+        Route::patch('/clients/{client}/archive',      [ClientController::class, 'archive'])->name('admin.clients.archive');
+        Route::delete('/clients/{client}',             [ClientController::class, 'destroy'])->name('admin.clients.destroy');
+        // Backwards compat alias
+        Route::get('/clients-list',                    [ClientController::class, 'index'])->name('admin.clients');
         Route::get('/settings', [SettingController::class,'index'])
             ->middleware('admin_geral')
             ->name('admin.settings');

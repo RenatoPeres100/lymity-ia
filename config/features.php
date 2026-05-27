@@ -6,6 +6,11 @@ return [
     'role_management'       => true,
     'permission_management' => true,
 
+    // === GESTÃO DE CLIENTES ===
+    'clients_management'  => true,
+    'client_user_binding' => true,
+    'client_brand_profile'=> true,
+
     // === MÓDULOS ATIVOS ===
     'blog_pipeline'       => true,
     'instagram_pipeline'  => true,

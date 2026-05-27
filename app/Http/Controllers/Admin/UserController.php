@@ -61,15 +61,17 @@ class UserController extends Controller
         return view('admin.users.index', compact('users', 'clients', 'stats'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('create', User::class);
 
-        $companies = Company::orderBy('name')->get(['id', 'name']);
-        $clients   = Client::orderBy('name')->get(['id', 'name']);
-        $roles     = $this->availableRoles(Auth::user());
+        $companies  = Company::orderBy('name')->get(['id', 'name']);
+        $clients    = Client::orderBy('name')->get(['id', 'name']);
+        $roles      = $this->availableRoles(Auth::user());
+        $prefillClientId  = $request->input('client_id');
+        $prefillUserType  = $request->input('user_type');
 
-        return view('admin.users.create', compact('companies', 'clients', 'roles'));
+        return view('admin.users.create', compact('companies', 'clients', 'roles', 'prefillClientId', 'prefillUserType'));
     }
 
     public function store(StoreUserRequest $request): RedirectResponse

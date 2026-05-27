@@ -18,10 +18,13 @@ class PermissionSeeder extends Seeder
             ['key' => 'users.reset_password',     'name' => 'Resetar senha de usuários',  'module' => 'users'],
             ['key' => 'users.manage_permissions', 'name' => 'Gerenciar permissões',       'module' => 'users'],
             // clients
-            ['key' => 'clients.view',   'name' => 'Ver clientes',    'module' => 'clients'],
-            ['key' => 'clients.create', 'name' => 'Criar clientes',  'module' => 'clients'],
-            ['key' => 'clients.update', 'name' => 'Editar clientes', 'module' => 'clients'],
-            ['key' => 'clients.delete', 'name' => 'Excluir clientes','module' => 'clients'],
+            ['key' => 'clients.view',     'name' => 'Ver clientes',       'module' => 'clients'],
+            ['key' => 'clients.create',   'name' => 'Criar clientes',     'module' => 'clients'],
+            ['key' => 'clients.update',   'name' => 'Editar clientes',    'module' => 'clients'],
+            ['key' => 'clients.disable',  'name' => 'Desativar clientes', 'module' => 'clients'],
+            ['key' => 'clients.activate', 'name' => 'Ativar clientes',    'module' => 'clients'],
+            ['key' => 'clients.archive',  'name' => 'Arquivar clientes',  'module' => 'clients'],
+            ['key' => 'clients.delete',   'name' => 'Excluir clientes',   'module' => 'clients'],
             // settings
             ['key' => 'settings.view',   'name' => 'Ver configurações',   'module' => 'settings'],
             ['key' => 'settings.update', 'name' => 'Editar configurações','module' => 'settings'],
