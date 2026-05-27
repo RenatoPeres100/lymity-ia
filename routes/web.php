@@ -42,6 +42,9 @@ use App\Http\Controllers\Admin\ClientWebsitePageController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\UserPermissionController;
+use App\Http\Controllers\Admin\UserPasswordController;
+use App\Http\Controllers\Admin\UserLogController;
 use App\Http\Controllers\Client\ApprovalController as ClientApprovalController;
 use App\Http\Controllers\Client\BlogController as ClientBlogController;
 use App\Http\Controllers\Client\BrandController as ClientBrandController;
@@ -212,8 +215,25 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/activity-logs/export',         [ActivityLogController::class, 'export'])->name('admin.activity-logs.export');
         Route::get('/security-logs',                [SecurityLogController::class, 'index'])->name('admin.security-logs.index');
 
-        // Users & Clients (Phase 1)
-        Route::get('/users',    [UserController::class,   'index'])->name('admin.users');
+        // Users CRUD (Phase User Management)
+        Route::get('/users',                              [UserController::class,           'index'])->name('admin.users.index');
+        Route::get('/users/create',                       [UserController::class,           'create'])->name('admin.users.create');
+        Route::post('/users',                             [UserController::class,           'store'])->name('admin.users.store');
+        Route::get('/users/{user}',                       [UserController::class,           'show'])->name('admin.users.show');
+        Route::get('/users/{user}/edit',                  [UserController::class,           'edit'])->name('admin.users.edit');
+        Route::put('/users/{user}',                       [UserController::class,           'update'])->name('admin.users.update');
+        Route::post('/users/{user}/activate',             [UserController::class,           'activate'])->name('admin.users.activate');
+        Route::post('/users/{user}/deactivate',           [UserController::class,           'deactivate'])->name('admin.users.deactivate');
+        Route::post('/users/{user}/block',                [UserController::class,           'block'])->name('admin.users.block');
+        Route::get('/users/{user}/permissions',           [UserPermissionController::class, 'edit'])->name('admin.users.permissions.edit');
+        Route::post('/users/{user}/permissions',          [UserPermissionController::class, 'update'])->name('admin.users.permissions.update');
+        Route::get('/users/{user}/reset-password',        [UserPasswordController::class,   'edit'])->name('admin.users.reset-password.edit');
+        Route::post('/users/{user}/reset-password',       [UserPasswordController::class,   'update'])->name('admin.users.reset-password.update');
+        Route::get('/users/{user}/logs',                  [UserLogController::class,        'show'])->name('admin.users.logs');
+        // Backwards compat alias
+        Route::get('/users-list',                         [UserController::class,           'index'])->name('admin.users');
+
+        // Clients
         Route::get('/clients',  [ClientController::class, 'index'])->name('admin.clients');
         Route::get('/settings', [SettingController::class,'index'])
             ->middleware('admin_geral')

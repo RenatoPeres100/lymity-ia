@@ -1,6 +1,11 @@
 <?php
 
 return [
+    // === GESTÃO DE USUÁRIOS ===
+    'user_management'       => true,
+    'role_management'       => true,
+    'permission_management' => true,
+
     // === MÓDULOS ATIVOS ===
     'blog_pipeline'       => true,
     'instagram_pipeline'  => true,
@@ -12,7 +17,7 @@ return [
     'agent_routines'       => true,
     'agency_brand_context' => true,
 
-    // === MÓDULOS DESATIVADOS (ocultar do fluxo operacional) ===
+    // === MÓDULOS DESATIVADOS ===
     'ads_module'          => false,
     'proposals_module'    => false,
     'budgets_module'      => false,
@@ -21,6 +26,7 @@ return [
     'sdr_module'          => false,
     'reports_fake_module' => false,
     'cases_demo_module'   => false,
+    'demo_mode'           => false,
 
     // === INSTAGRAM / META ===
     'instagram_connection'  => true,
@@ -29,7 +35,4 @@ return [
     // === PUBLISHING / COMMAND CENTER ===
     'content_command_center' => true,
     'publishing_queue'       => true,
-
-    // === MODO DEMO ===
-    'demo_mode'           => false,
 ];

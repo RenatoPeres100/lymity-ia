@@ -65,23 +65,6 @@
             </button>
         </form>
 
-        <div class="demo-credentials mt-6">
-            <div class="demo-label">Credenciais de demonstração</div>
-            <div class="demo-row">
-                <span>Admin</span>
-                <div>
-                    <div class="demo-row p-0"><span>email</span><code>admin@lymity.local</code></div>
-                    <div class="demo-row p-0"><span>senha</span><code>password</code></div>
-                </div>
-            </div>
-            <div class="demo-row mt-2">
-                <span>Cliente</span>
-                <div>
-                    <div class="demo-row p-0"><span>email</span><code>cliente@demo.local</code></div>
-                    <div class="demo-row p-0"><span>senha</span><code>password</code></div>
-                </div>
-            </div>
-        </div>
 
     </div>
 </div>

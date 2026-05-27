@@ -194,7 +194,8 @@
                 Clientes
             </a>
 
-            <a href="{{ route('admin.users') }}" class="nav-item {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+            @can('viewAny', App\Models\User::class)
+            <a href="{{ route('admin.users.index') }}" class="nav-item {{ request()->routeIs('admin.users*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                     <circle cx="9" cy="7" r="4"/>
@@ -202,6 +203,7 @@
                 </svg>
                 Usuários
             </a>
+            @endcan
 
             {{-- MÓDULOS DESATIVADOS — visíveis só se flag ativa --}}
             @if(config('features.ads_module'))
