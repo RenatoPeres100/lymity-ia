@@ -227,6 +227,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/users/{user}/block',                [UserController::class,           'block'])->name('admin.users.block');
         Route::get('/users/{user}/permissions',           [UserPermissionController::class, 'edit'])->name('admin.users.permissions.edit');
         Route::post('/users/{user}/permissions',          [UserPermissionController::class, 'update'])->name('admin.users.permissions.update');
+        Route::post('/users/{user}/permissions/reset',    [UserPermissionController::class, 'reset'])->name('admin.users.permissions.reset');
         Route::get('/users/{user}/reset-password',        [UserPasswordController::class,   'edit'])->name('admin.users.reset-password.edit');
         Route::post('/users/{user}/reset-password',       [UserPasswordController::class,   'update'])->name('admin.users.reset-password.update');
         Route::get('/users/{user}/logs',                  [UserLogController::class,        'show'])->name('admin.users.logs');

@@ -32,6 +32,9 @@ class UserManagementService
             'email_verified_at'  => now(),
         ]);
 
+        // Apply default permissions for this role
+        $this->applyRolePreset($user);
+
         $this->registerLog('user_created', $user, $actor, [
             'role'      => $user->role,
             'user_type' => $user->user_type,
@@ -71,7 +74,14 @@ class UserManagementService
         if (array_key_exists('company_id', $data)) $fill['company_id'] = $data['company_id'];
         if (array_key_exists('client_id', $data))  $fill['client_id']  = $data['client_id'];
 
+        $roleChanged = isset($data['role']) && $data['role'] !== $user->role;
+
         $user->update($fill);
+
+        // Re-apply preset when role changes
+        if ($roleChanged) {
+            $this->applyRolePreset($user->fresh());
+        }
 
         $this->registerLog('user_updated', $user, $actor, ['fields_changed' => array_keys($fill)]);
 
@@ -144,6 +154,33 @@ class UserManagementService
 
         $this->registerLog('user_permissions_updated', $user, $actor, [
             'permission_ids' => $permissionIds,
+        ]);
+
+        return $user->fresh();
+    }
+
+    public function applyRolePreset(User $user): void
+    {
+        $keys = RolePermissionPreset::forRole($user->role);
+        if (empty($keys)) {
+            return;
+        }
+
+        $ids = \App\Models\Permission::whereIn('key', $keys)->pluck('id')->toArray();
+        $user->permissions()->sync($ids);
+    }
+
+    public function resetToRolePreset(User $user, User $actor): User
+    {
+        if (!$this->canManage($actor, $user)) {
+            throw \Illuminate\Validation\ValidationException::withMessages(['user' => 'Sem permissão.']);
+        }
+
+        $this->applyRolePreset($user);
+
+        $this->registerLog('user_permissions_updated', $user, $actor, [
+            'action_detail' => 'reset_to_role_preset',
+            'role'          => $user->role,
         ]);
 
         return $user->fresh();
