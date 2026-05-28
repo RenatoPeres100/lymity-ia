@@ -19,46 +19,31 @@ class AccessScopeService
         return $user->role === 'admin_geral';
     }
 
+    /** @deprecated — all non-client users are admin_geral in the new model */
     public function isAgencyUser(User $user): bool
     {
-        return in_array($user->role, [
-            'agencia_admin', 'agencia_operador',
-            'social_media', 'gestor_trafego', 'seo',
-            'copywriter', 'designer', 'blog_writer',
-        ]);
+        return $user->isAdminGeral();
     }
 
     public function isClientUser(User $user): bool
     {
-        return in_array($user->role, ['cliente_admin', 'cliente_colaborador'])
-            || ($user->role === 'viewer' && $user->user_type === 'client');
+        return $user->isClientUser();
     }
 
     public function isAiEmployee(User $user): bool
     {
-        return $user->user_type === 'ai' || $user->role === 'ai_employee';
+        return $user->isAiEmployee();
     }
 
     public function getCompanyId(User $user): ?int
     {
         if ($this->isGlobalAdmin($user)) return null;
-
-        if ($this->isAgencyUser($user)) {
-            return $user->company_id;
-        }
-
-        if ($this->isClientUser($user) && $user->client_id) {
-            return optional($user->client)->company_id;
-        }
-
-        return null;
+        return $user->company_id;
     }
 
     public function getClientId(User $user): ?int
     {
         if ($this->isGlobalAdmin($user)) return null;
-        if ($this->isAgencyUser($user)) return null;
-
         return $user->client_id;
     }
 
@@ -67,51 +52,24 @@ class AccessScopeService
     public function canSeeCompany(User $user, ?int $companyId): bool
     {
         if ($this->isGlobalAdmin($user)) return true;
-        if ($this->isAgencyUser($user)) return $user->company_id && $user->company_id === $companyId;
-        if ($this->isClientUser($user)) {
-            return optional(optional($user->client)->company)->id === $companyId;
-        }
         return false;
     }
 
     public function canSeeClient(User $user, ?int $clientId): bool
     {
         if ($this->isGlobalAdmin($user)) return true;
-
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return false;
-            return Client::where('id', $clientId)
-                ->where('company_id', $user->company_id)
-                ->exists();
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             return $user->client_id && $user->client_id === $clientId;
         }
-
         return false;
     }
 
     public function canSeeUser(User $user, User $target): bool
     {
         if ($this->isGlobalAdmin($user)) return true;
-
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return false;
-            // Same company_id, or target belongs to client of same company
-            if ($target->company_id === $user->company_id) return true;
-            if ($target->client_id) {
-                return Client::where('id', $target->client_id)
-                    ->where('company_id', $user->company_id)
-                    ->exists();
-            }
-            return false;
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             return $user->client_id && $target->client_id === $user->client_id;
         }
-
         return false;
     }
 
@@ -120,16 +78,6 @@ class AccessScopeService
     public function scopeCompanies(User $user, Builder $query): Builder
     {
         if ($this->isGlobalAdmin($user)) return $query;
-
-        if ($this->isAgencyUser($user)) {
-            return $query->where('companies.id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user) && $user->client_id) {
-            $companyId = optional(optional($user->client)->company)->id;
-            if ($companyId) return $query->where('companies.id', $companyId);
-        }
-
         return $query->whereRaw('0 = 1');
     }
 
@@ -137,12 +85,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('id', $user->client_id);
         }
@@ -156,18 +99,7 @@ class AccessScopeService
 
         $table = $query->getModel()->getTable();
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-
-            $clientIds = Client::where('company_id', $user->company_id)->pluck('id');
-
-            return $query->where(function ($q) use ($user, $clientIds, $table) {
-                $q->where("{$table}.company_id", $user->company_id)
-                  ->orWhereIn("{$table}.client_id", $clientIds);
-            });
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where("{$table}.client_id", $user->client_id);
         }
@@ -179,12 +111,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('client_id', $user->client_id);
         }
@@ -196,12 +123,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('client_id', $user->client_id);
         }
@@ -213,12 +135,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('client_id', $user->client_id);
         }
@@ -232,13 +149,7 @@ class AccessScopeService
 
         $table = $query->getModel()->getTable();
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            $clientIds = Client::where('company_id', $user->company_id)->pluck('id');
-            return $query->whereIn("{$table}.client_id", $clientIds);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where("{$table}.client_id", $user->client_id);
         }
@@ -252,21 +163,7 @@ class AccessScopeService
 
         $table = $query->getModel()->getTable();
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            $clientIds = Client::where('company_id', $user->company_id)->pluck('id');
-            $userIds   = User::where(function ($q) use ($user, $clientIds) {
-                $q->where('company_id', $user->company_id)
-                  ->orWhereIn('client_id', $clientIds);
-            })->pluck('id');
-
-            return $query->where(function ($q) use ($table, $clientIds, $userIds) {
-                $q->whereIn("{$table}.client_id", $clientIds)
-                  ->orWhereIn("{$table}.user_id", $userIds);
-            });
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where("{$table}.client_id", $user->client_id);
         }
@@ -280,16 +177,7 @@ class AccessScopeService
 
         $table = $query->getModel()->getTable();
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            $clientIds = Client::where('company_id', $user->company_id)->pluck('id');
-            return $query->where(function ($q) use ($table, $user, $clientIds) {
-                $q->whereIn("{$table}.client_id", $clientIds)
-                  ->orWhere("{$table}.created_by", $user->id);
-            });
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where("{$table}.client_id", $user->client_id);
         }
@@ -301,12 +189,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('client_id', $user->client_id);
         }
@@ -318,12 +201,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('client_id', $user->client_id);
         }
@@ -335,12 +213,7 @@ class AccessScopeService
     {
         if ($this->isGlobalAdmin($user)) return $query;
 
-        if ($this->isAgencyUser($user)) {
-            if (!$user->company_id) return $query->whereRaw('0 = 1');
-            return $query->where('company_id', $user->company_id);
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             if (!$user->client_id) return $query->whereRaw('0 = 1');
             return $query->where('client_id', $user->client_id);
         }
@@ -348,36 +221,17 @@ class AccessScopeService
         return $query->whereRaw('0 = 1');
     }
 
-    // ── Store helpers ─────────────────────────────────────────────────────────
+    // ── Ownership ─────────────────────────────────────────────────────────────
 
-    /**
-     * Apply ownership fields (company_id, client_id) when creating a record.
-     * Prevents users from injecting arbitrary IDs via request.
-     */
     public function applyOwnershipOnCreate(User $user, array $data, string $modelClass = ''): array
     {
         if ($this->isGlobalAdmin($user)) {
             return $data;
         }
 
-        if ($this->isAgencyUser($user)) {
-            $data['company_id'] = $user->company_id;
-
-            // Validate that provided client_id belongs to same company
-            if (!empty($data['client_id'])) {
-                $valid = Client::where('id', $data['client_id'])
-                    ->where('company_id', $user->company_id)
-                    ->exists();
-                if (!$valid) unset($data['client_id']);
-            }
-
-            return $data;
-        }
-
-        if ($this->isClientUser($user)) {
+        if ($user->isClientUser()) {
             $data['client_id']  = $user->client_id;
             $data['company_id'] = optional(optional($user->client)->company)->id;
-            return $data;
         }
 
         return $data;
@@ -408,7 +262,7 @@ class AccessScopeService
                 'subject_id'   => $targetId,
             ]);
         } catch (\Throwable) {
-            // never crash on logging failure
+            // logging must never crash the app
         }
     }
 }

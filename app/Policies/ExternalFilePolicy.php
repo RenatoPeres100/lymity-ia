@@ -9,36 +9,29 @@ class ExternalFilePolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->isAdminGeral() || $user->isAgencyUser() || $user->isClientUser();
+        if ($user->isAdminGeral()) return true;
+        return $user->isClientUser() && $user->hasPermission('files.view');
     }
 
     public function view(User $user, ExternalFile $file): bool
     {
         if ($user->isAdminGeral()) return true;
-
-        if ($user->isAgencyUser()) {
-            return $user->company_id && $file->company_id === $user->company_id;
-        }
-
-        if ($user->isClientUser()) {
+        if ($user->isClientUser() && $user->hasPermission('files.view')) {
             return $user->client_id && $file->client_id === $user->client_id;
         }
-
         return false;
     }
 
     public function create(User $user): bool
     {
-        return $user->isAdminGeral() || $user->isAgencyUser() || $user->isClientUser();
+        if ($user->isAdminGeral()) return true;
+        return $user->isClientUser() && $user->hasPermission('files.create');
     }
 
     public function delete(User $user, ExternalFile $file): bool
     {
         if ($user->isAdminGeral()) return true;
-        if ($user->isAgencyUser()) {
-            return $user->company_id && $file->company_id === $user->company_id;
-        }
-        if ($user->isClientAdmin()) {
+        if ($user->isCliente()) {
             return $user->client_id && $file->client_id === $user->client_id;
         }
         return $file->uploaded_by === $user->id;

@@ -20,6 +20,9 @@ class User extends Authenticatable
 
     protected $hidden = ['password', 'remember_token'];
 
+    /** Valid human roles in the system. */
+    public const ROLES = ['admin_geral', 'cliente', 'colaborador'];
+
     protected function casts(): array
     {
         return [
@@ -28,6 +31,8 @@ class User extends Authenticatable
             'password'          => 'hashed',
         ];
     }
+
+    // ── Relationships ─────────────────────────────────────────────────────────
 
     public function company(): BelongsTo
     {
@@ -84,39 +89,39 @@ class User extends Authenticatable
         return $this->hasMany(Proposal::class, 'approved_by');
     }
 
+    public function uploadedFiles(): HasMany
+    {
+        return $this->hasMany(ExternalFile::class, 'uploaded_by');
+    }
+
+    public function aiProviderCalls(): HasMany
+    {
+        return $this->hasMany(AiProviderCall::class);
+    }
+
+    // ── Role checks ───────────────────────────────────────────────────────────
+
     public function isAdminGeral(): bool
     {
         return $this->role === 'admin_geral';
     }
 
-    public function isAgencyAdmin(): bool
+    /** Main user of a client company — can manage own environment. */
+    public function isCliente(): bool
     {
-        return $this->role === 'agencia_admin';
+        return $this->role === 'cliente';
     }
 
-    public function isAgencyUser(): bool
+    /** Team member created by a Cliente — limited permissions. */
+    public function isColaborador(): bool
     {
-        return in_array($this->role, [
-            'agencia_admin', 'agencia_operador',
-            'social_media', 'gestor_trafego', 'seo',
-            'copywriter', 'designer', 'blog_writer',
-        ]);
+        return $this->role === 'colaborador';
     }
 
-    public function isClientAdmin(): bool
-    {
-        return $this->role === 'cliente_admin';
-    }
-
+    /** Any user that belongs to the client area (cliente or colaborador). */
     public function isClientUser(): bool
     {
-        return in_array($this->role, ['cliente_admin', 'cliente_colaborador'])
-            || ($this->role === 'viewer' && $this->user_type === 'client');
-    }
-
-    public function isViewer(): bool
-    {
-        return $this->role === 'viewer';
+        return in_array($this->role, ['cliente', 'colaborador']);
     }
 
     public function isAiEmployee(): bool
@@ -129,74 +134,57 @@ class User extends Authenticatable
         return $this->status === 'active';
     }
 
+    // ── Access helpers ────────────────────────────────────────────────────────
+
     public function canAccessAdminPanel(): bool
     {
-        if (!$this->isActive()) return false;
-        if ($this->isAiEmployee()) return false;
-        if ($this->isClientUser()) return false;
-        return $this->isAdminGeral() || $this->isAgencyUser();
+        if (!$this->isActive() || $this->isAiEmployee()) return false;
+        return $this->isAdminGeral();
     }
 
     public function canAccessClientPanel(): bool
     {
-        if (!$this->isActive()) return false;
-        if ($this->isAiEmployee()) return false;
+        if (!$this->isActive() || $this->isAiEmployee()) return false;
         return $this->isClientUser() || $this->isAdminGeral();
     }
 
     public function belongsToCompany(?int $companyId): bool
     {
-        if (!$companyId) return false;
-        return $this->company_id === $companyId;
+        return $companyId && $this->company_id === $companyId;
     }
 
     public function belongsToClient(?int $clientId): bool
     {
-        if (!$clientId) return false;
-        return $this->client_id === $clientId;
+        return $clientId && $this->client_id === $clientId;
     }
+
+    // ── Permissions ───────────────────────────────────────────────────────────
 
     public function hasPermission(string $key): bool
     {
-        if ($this->isAdminGeral()) {
-            return true;
-        }
+        if ($this->isAdminGeral()) return true;
 
         return $this->permissions()->where('key', $key)->exists();
     }
 
-    public function getRoleLabelAttribute(): string
-    {
-        return match ($this->role) {
-            'admin_geral'         => 'Admin Geral',
-            'agencia_admin'       => 'Admin Agência',
-            'agencia_operador'    => 'Operador',
-            'social_media'        => 'Social Media',
-            'gestor_trafego'      => 'Gestor de Tráfego',
-            'seo'                 => 'SEO',
-            'copywriter'          => 'Copywriter',
-            'designer'            => 'Designer',
-            'cliente_admin'       => 'Admin Cliente',
-            'cliente_colaborador' => 'Colaborador',
-            'viewer'              => 'Visualizador',
-            'ai_employee'         => 'Funcionário IA',
-            default               => $this->role ?? 'Sem role',
-        };
-    }
+    // ── Scopes ────────────────────────────────────────────────────────────────
 
     public function scopeVisibleTo($query, User $user)
     {
         return app(\App\Services\Auth\AccessScopeService::class)->scopeUsers($user, $query);
     }
 
-    public function uploadedFiles(): HasMany
-    {
-        return $this->hasMany(ExternalFile::class, 'uploaded_by');
-    }
+    // ── Accessors ─────────────────────────────────────────────────────────────
 
-    public function aiProviderCalls(): HasMany
+    public function getRoleLabelAttribute(): string
     {
-        return $this->hasMany(AiProviderCall::class);
+        return match ($this->role) {
+            'admin_geral'  => 'Admin Geral',
+            'cliente'      => 'Cliente',
+            'colaborador'  => 'Colaborador',
+            'ai_employee'  => 'Funcionário IA',
+            default        => $this->role ?? '—',
+        };
     }
 
     public function getStatusLabelAttribute(): string
@@ -208,4 +196,18 @@ class User extends Authenticatable
             default    => $this->status ?? '-',
         };
     }
+
+    // ── Legacy aliases (backward compat for any remaining code) ───────────────
+
+    /** @deprecated Use isAdminGeral() */
+    public function isAgencyUser(): bool { return $this->isAdminGeral(); }
+
+    /** @deprecated Use isAdminGeral() */
+    public function isAgencyAdmin(): bool { return $this->isAdminGeral(); }
+
+    /** @deprecated Use isCliente() */
+    public function isClientAdmin(): bool { return $this->isCliente(); }
+
+    /** @deprecated Use isColaborador() */
+    public function isViewer(): bool { return $this->isColaborador(); }
 }

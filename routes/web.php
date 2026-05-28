@@ -586,6 +586,18 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::prefix('client')->middleware(['client.panel'])->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
 
+        // Team management — Cliente manages their Colaboradores
+        Route::get('/team',                             [\App\Http\Controllers\Client\TeamController::class, 'index'])->name('client.team.index');
+        Route::get('/team/create',                      [\App\Http\Controllers\Client\TeamController::class, 'create'])->name('client.team.create');
+        Route::post('/team',                            [\App\Http\Controllers\Client\TeamController::class, 'store'])->name('client.team.store');
+        Route::get('/team/{user}',                      [\App\Http\Controllers\Client\TeamController::class, 'show'])->name('client.team.show');
+        Route::get('/team/{user}/edit',                 [\App\Http\Controllers\Client\TeamController::class, 'edit'])->name('client.team.edit');
+        Route::put('/team/{user}',                      [\App\Http\Controllers\Client\TeamController::class, 'update'])->name('client.team.update');
+        Route::post('/team/{user}/activate',            [\App\Http\Controllers\Client\TeamController::class, 'activate'])->name('client.team.activate');
+        Route::post('/team/{user}/deactivate',          [\App\Http\Controllers\Client\TeamController::class, 'deactivate'])->name('client.team.deactivate');
+        Route::put('/team/{user}/permissions',          [\App\Http\Controllers\Client\TeamController::class, 'updatePermissions'])->name('client.team.permissions');
+        Route::delete('/team/{user}',                   [\App\Http\Controllers\Client\TeamController::class, 'destroy'])->name('client.team.destroy');
+
         // Phase 13 — Client Files
         Route::get('/files',                          [ClientFileController::class, 'index'])->name('client.files.index');
         Route::get('/files/create',                   [ClientFileController::class, 'create'])->name('client.files.create');

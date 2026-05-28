@@ -175,9 +175,6 @@ class DiagnoseAccessScopeCommand extends Command
 
         $userEmails = [
             'admin_global_test@lymity.local',
-            'agencia_admin_a@lymity.local',
-            'operador_a@lymity.local',
-            'agencia_admin_b@lymity.local',
             'cliente_admin_a1@lymity.local',
             'cliente_admin_b1@lymity.local',
         ];
@@ -197,20 +194,18 @@ class DiagnoseAccessScopeCommand extends Command
     private function runIsolationTests(): void
     {
         $this->newLine();
-        $this->line('── Isolation Tests ─────────────────────────────');
+        $this->line('── Isolation Tests (3-role model) ──────────────');
 
-        $adminGlobal = User::where('email', 'admin_global_test@lymity.local')->first();
-        $agencyAdminA = User::where('email', 'agencia_admin_a@lymity.local')->first();
-        $agencyAdminB = User::where('email', 'agencia_admin_b@lymity.local')->first();
-        $clientAdminA1 = User::where('email', 'cliente_admin_a1@lymity.local')->first();
-        $clientAdminB1 = User::where('email', 'cliente_admin_b1@lymity.local')->first();
+        $adminGlobal  = User::where('email', 'admin_global_test@lymity.local')->first();
+        $clienteA1    = User::where('email', 'cliente_admin_a1@lymity.local')->first();
+        $clienteB1    = User::where('email', 'cliente_admin_b1@lymity.local')->first();
 
         $clientA1 = Client::where('name', 'Cliente A1')->first();
         $clientA2 = Client::where('name', 'Cliente A2')->first();
         $clientB1 = Client::where('name', 'Cliente B1')->first();
 
         // Admin global sees all clients
-        $allCount = Client::count();
+        $allCount   = Client::count();
         $adminCount = Client::visibleTo($adminGlobal)->count();
         if ($adminCount >= $allCount) {
             $this->ok("admin_global_test vê todos os clientes ({$adminCount})");
@@ -218,99 +213,95 @@ class DiagnoseAccessScopeCommand extends Command
             $this->recordFail("admin_global_test deveria ver {$allCount} clientes, viu {$adminCount}");
         }
 
-        // Agency A sees A1 and A2, not B1
-        $agencyAClients = Client::visibleTo($agencyAdminA)->pluck('name')->toArray();
-
-        if (in_array('Cliente A1', $agencyAClients)) {
-            $this->ok('agencia_admin_a vê Cliente A1');
-        } else {
-            $this->recordFail('agencia_admin_a NÃO vê Cliente A1 (deveria ver)');
-        }
-
-        if (in_array('Cliente A2', $agencyAClients)) {
-            $this->ok('agencia_admin_a vê Cliente A2');
-        } else {
-            $this->recordFail('agencia_admin_a NÃO vê Cliente A2 (deveria ver)');
-        }
-
-        if (!in_array('Cliente B1', $agencyAClients)) {
-            $this->ok('agencia_admin_a NÃO vê Cliente B1 (correto — cross-company bloqueado)');
-        } else {
-            $this->recordFail('agencia_admin_a VÊ Cliente B1 (VIOLAÇÃO DE ESCOPO!)');
-        }
-
-        // Agency B sees B1, not A1/A2
-        $agencyBClients = Client::visibleTo($agencyAdminB)->pluck('name')->toArray();
-
-        if (in_array('Cliente B1', $agencyBClients)) {
-            $this->ok('agencia_admin_b vê Cliente B1');
-        } else {
-            $this->recordFail('agencia_admin_b NÃO vê Cliente B1 (deveria ver)');
-        }
-
-        if (!in_array('Cliente A1', $agencyBClients) && !in_array('Cliente A2', $agencyBClients)) {
-            $this->ok('agencia_admin_b NÃO vê Clientes A1/A2 (correto — cross-company bloqueado)');
-        } else {
-            $this->recordFail('agencia_admin_b VÊ Clientes de Company A (VIOLAÇÃO DE ESCOPO!)');
-        }
-
-        // Client A1 sees only A1
-        $clientA1Clients = Client::visibleTo($clientAdminA1)->pluck('name')->toArray();
-
-        if (in_array('Cliente A1', $clientA1Clients) && !in_array('Cliente A2', $clientA1Clients) && !in_array('Cliente B1', $clientA1Clients)) {
-            $this->ok('cliente_admin_a1 vê apenas Cliente A1 (correto)');
-        } else {
-            $this->recordFail('cliente_admin_a1 tem acesso incorreto a outros clientes: ' . implode(', ', $clientA1Clients));
-        }
-
-        // Client B1 sees only B1
-        $clientB1Clients = Client::visibleTo($clientAdminB1)->pluck('name')->toArray();
-
-        if (in_array('Cliente B1', $clientB1Clients) && !in_array('Cliente A1', $clientB1Clients)) {
-            $this->ok('cliente_admin_b1 vê apenas Cliente B1 (correto)');
-        } else {
-            $this->recordFail('cliente_admin_b1 tem acesso incorreto a outros clientes: ' . implode(', ', $clientB1Clients));
-        }
-
-        // ApprovalRequest isolation
-        $approvalA1 = ApprovalRequest::where('title', '[TESTE] Aprovação Cliente A1')->first();
-        $approvalB1 = ApprovalRequest::where('title', '[TESTE] Aprovação Cliente B1')->first();
-
-        if ($approvalA1 && $approvalB1) {
-            $clientAdminA1ApprovalsIds = ApprovalRequest::visibleTo($clientAdminA1)->pluck('id')->toArray();
-
-            if (in_array($approvalA1->id, $clientAdminA1ApprovalsIds)) {
-                $this->ok('cliente_admin_a1 vê aprovação A1');
-            } else {
-                $this->recordFail('cliente_admin_a1 NÃO vê aprovação A1 (deveria ver)');
-            }
-
-            if (!in_array($approvalB1->id, $clientAdminA1ApprovalsIds)) {
-                $this->ok('cliente_admin_a1 NÃO vê aprovação B1 (correto — cross-client bloqueado)');
-            } else {
-                $this->recordFail('cliente_admin_a1 VÊ aprovação B1 (VIOLAÇÃO DE ESCOPO!)');
-            }
-        }
-
-        // User model isolation
-        $userA1   = User::where('email', 'cliente_admin_a1@lymity.local')->first();
-        $adminAVisible = User::visibleTo($agencyAdminA)->pluck('email')->toArray();
-
-        if (!in_array('agencia_admin_b@lymity.local', $adminAVisible)) {
-            $this->ok('agencia_admin_a NÃO vê usuários da Company B (correto)');
-        } else {
-            $this->recordFail('agencia_admin_a VÊ usuários da Company B (VIOLAÇÃO!)');
-        }
-
         // Admin global sees all users
-        $adminGlobalUserCount = User::visibleTo($adminGlobal)->count();
-        $totalUsers           = User::count();
-
-        if ($adminGlobalUserCount >= $totalUsers) {
-            $this->ok("admin_global_test vê todos os usuários ({$adminGlobalUserCount})");
+        $totalUsers      = User::count();
+        $adminUsersCount = User::visibleTo($adminGlobal)->count();
+        if ($adminUsersCount >= $totalUsers) {
+            $this->ok("admin_global_test vê todos os usuários ({$adminUsersCount})");
         } else {
-            $this->recordFail("admin_global_test deveria ver {$totalUsers} usuários, viu {$adminGlobalUserCount}");
+            $this->recordFail("admin_global_test deveria ver {$totalUsers} usuários, viu {$adminUsersCount}");
         }
+
+        // Cliente A1 sees only own client
+        if ($clienteA1) {
+            $clienteA1Clients = Client::visibleTo($clienteA1)->pluck('name')->toArray();
+            if (in_array('Cliente A1', $clienteA1Clients) && !in_array('Cliente B1', $clienteA1Clients)) {
+                $this->ok('Cliente A1 vê apenas Cliente A1 (correto)');
+            } else {
+                $this->recordFail('Cliente A1 tem acesso incorreto: ' . implode(', ', $clienteA1Clients));
+            }
+
+            // Cross-client approval test
+            $approvalA1 = ApprovalRequest::where('title', '[TESTE] Aprovação Cliente A1')->first();
+            $approvalB1 = ApprovalRequest::where('title', '[TESTE] Aprovação Cliente B1')->first();
+
+            if ($approvalA1 && $approvalB1) {
+                $a1Approvals = ApprovalRequest::visibleTo($clienteA1)->pluck('id')->toArray();
+                if (in_array($approvalA1->id, $a1Approvals)) {
+                    $this->ok('Cliente A1 vê aprovação A1');
+                } else {
+                    $this->recordFail('Cliente A1 NÃO vê aprovação A1 (deveria ver)');
+                }
+                if (!in_array($approvalB1->id, $a1Approvals)) {
+                    $this->ok('Cliente A1 NÃO vê aprovação B1 (cross-client bloqueado)');
+                } else {
+                    $this->recordFail('Cliente A1 VÊ aprovação B1 (VIOLAÇÃO!)');
+                }
+            }
+        }
+
+        // Cliente B1 sees only own client
+        if ($clienteB1) {
+            $clienteB1Clients = Client::visibleTo($clienteB1)->pluck('name')->toArray();
+            if (in_array('Cliente B1', $clienteB1Clients) && !in_array('Cliente A1', $clienteB1Clients)) {
+                $this->ok('Cliente B1 vê apenas Cliente B1 (correto)');
+            } else {
+                $this->recordFail('Cliente B1 tem acesso incorreto: ' . implode(', ', $clienteB1Clients));
+            }
+        }
+
+        // Role verification
+        if ($adminGlobal && $adminGlobal->role === 'admin_geral') {
+            $this->ok('admin_global_test tem role admin_geral');
+        } else {
+            $this->recordFail('admin_global_test não tem role correto');
+        }
+
+        if ($clienteA1 && $clienteA1->role === 'cliente') {
+            $this->ok('cliente_admin_a1 migrado para role cliente');
+        } elseif (!$clienteA1) {
+            $this->warn('cliente_admin_a1 não encontrado — execute o seeder');
+        } else {
+            $this->recordFail("cliente_admin_a1 tem role incorreto: {$clienteA1->role}");
+        }
+
+        // Verify no legacy agency roles exist
+        $legacyCount = User::whereIn('role', [
+            'agencia_admin', 'agencia_operador', 'social_media',
+            'gestor_trafego', 'seo', 'copywriter', 'designer',
+            'blog_writer', 'cliente_admin', 'cliente_colaborador', 'viewer',
+        ])->count();
+
+        if ($legacyCount === 0) {
+            $this->ok('Nenhum usuário com role legado encontrado (migração completa)');
+        } else {
+            $this->recordFail("{$legacyCount} usuário(s) ainda com roles legados — execute a migração");
+        }
+
+        // Colaborador test
+        $colaborador = User::where('role', 'colaborador')->first();
+        if ($colaborador) {
+            $this->ok("Colaborador encontrado: {$colaborador->email}");
+            $collabClients = Client::visibleTo($colaborador)->pluck('name')->toArray();
+            if ($colaborador->client_id && count($collabClients) === 1) {
+                $this->ok('Colaborador vê apenas 1 cliente (correto)');
+            } elseif (!$colaborador->client_id) {
+                $this->ok('Colaborador sem client_id — vê nada (correto)');
+            } else {
+                $this->recordFail('Colaborador vê múltiplos clientes: ' . implode(', ', $collabClients));
+            }
+        }
+
     }
 
     private function ok(string $message): void

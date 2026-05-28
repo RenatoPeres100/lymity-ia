@@ -146,10 +146,7 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $actor = Auth::user();
-
-        if (!$actor->isAdminGeral() && $actor->role !== 'agencia_admin') {
-            abort(403, 'Sem permissão para excluir usuários.');
-        }
+        $this->authorize('delete', $user);
 
         if ($user->id === $actor->id) {
             return back()->withErrors(['error' => 'Você não pode excluir sua própria conta.']);
@@ -180,26 +177,19 @@ class UserController extends Controller
 
     private function availableRoles(User $actor): array
     {
-        $all = [
-            'admin_geral'         => 'Admin Geral',
-            'agencia_admin'       => 'Admin Agência',
-            'agencia_operador'    => 'Operador',
-            'social_media'        => 'Social Media',
-            'copywriter'          => 'Copywriter',
-            'blog_writer'         => 'Blog Writer',
-            'seo'                 => 'SEO',
-            'designer'            => 'Designer',
-            'gestor_trafego'      => 'Gestor de Tráfego',
-            'cliente_admin'       => 'Admin Cliente',
-            'cliente_colaborador' => 'Colaborador Cliente',
-            'viewer'              => 'Visualizador',
-        ];
-
         if ($actor->isAdminGeral()) {
-            return $all;
+            return [
+                'admin_geral' => 'Admin Geral',
+                'cliente'     => 'Cliente',
+                'colaborador' => 'Colaborador',
+            ];
         }
 
-        unset($all['admin_geral']);
-        return $all;
+        // Cliente can only create collaborators for their own client
+        if ($actor->isCliente()) {
+            return ['colaborador' => 'Colaborador'];
+        }
+
+        return [];
     }
 }

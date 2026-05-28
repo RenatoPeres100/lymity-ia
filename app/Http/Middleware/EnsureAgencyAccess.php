@@ -8,24 +8,23 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
+/**
+ * Legacy alias — now only admin_geral can access the admin panel.
+ * Kept for backward compatibility with any routes still referencing 'agency' middleware.
+ */
 class EnsureAgencyAccess
 {
-    private const AGENCY_ROLES = [
-        'admin_geral', 'agencia_admin', 'agencia_operador',
-        'social_media', 'gestor_trafego', 'seo', 'copywriter', 'designer', 'blog_writer',
-    ];
-
     public function __construct(private AccessScopeService $scope) {}
 
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
 
-        if (!$user || !in_array($user->role, self::AGENCY_ROLES)) {
+        if (!$user || !$user->isAdminGeral()) {
             if ($user) {
                 $this->scope->logDenied($user, 'access.denied.admin_panel', $request->path());
             }
-            abort(403, 'Acesso restrito a membros da agência.');
+            abort(403, 'Acesso restrito ao Administrador Geral.');
         }
 
         return $next($request);

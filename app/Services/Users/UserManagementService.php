@@ -199,23 +199,14 @@ class UserManagementService
 
     public function canManage(User $actor, User $target): bool
     {
-        if ($actor->isAdminGeral()) {
-            return true;
-        }
+        if ($actor->isAdminGeral()) return true;
 
-        // target is admin_geral — only another admin_geral can manage
-        if ($target->role === 'admin_geral') {
-            return false;
-        }
+        // target admin_geral — only another admin_geral can manage
+        if ($target->role === 'admin_geral') return false;
 
-        if ($actor->role === 'agencia_admin') {
-            // agency admin manages internal + client users, never admin_geral
-            return in_array($target->user_type, ['agency', 'client', 'internal']);
-        }
-
-        if ($actor->role === 'cliente_admin') {
-            // client admin only manages users of the same client
-            return $target->user_type === 'client'
+        // Cliente can manage their own collaborators
+        if ($actor->isCliente()) {
+            return $target->isColaborador()
                 && $target->client_id !== null
                 && $target->client_id === $actor->client_id;
         }
@@ -225,25 +216,14 @@ class UserManagementService
 
     public function canCreateRole(User $actor, string $role): bool
     {
-        if ($actor->isAdminGeral()) {
-            return true;
-        }
+        if ($actor->isAdminGeral()) return true;
 
-        $adminOnlyRoles = ['admin_geral'];
-        if (in_array($role, $adminOnlyRoles)) {
-            return false;
-        }
+        // Only admin_geral can create admin_geral users
+        if ($role === 'admin_geral') return false;
 
-        if ($actor->role === 'agencia_admin') {
-            return in_array($role, [
-                'agencia_operador', 'social_media', 'copywriter',
-                'blog_writer', 'seo', 'designer', 'gestor_trafego',
-                'cliente_admin', 'cliente_colaborador', 'viewer',
-            ]);
-        }
-
-        if ($actor->role === 'cliente_admin' && $actor->hasPermission('users.create')) {
-            return in_array($role, ['cliente_colaborador', 'viewer']);
+        // Cliente can create colaborador users for their own client
+        if ($actor->isCliente() && $actor->hasPermission('users.create')) {
+            return $role === 'colaborador';
         }
 
         return false;

@@ -33,7 +33,7 @@ class EnsureAdminPanelAccess
             Auth::logout();
             $request->session()->invalidate();
             return redirect()->route('login')
-                ->withErrors(['email' => 'Acesso não permitido para funcionários IA.']);
+                ->withErrors(['email' => 'Acesso não permitido.']);
         }
 
         if ($user->isClientUser()) {
@@ -42,7 +42,7 @@ class EnsureAdminPanelAccess
                 ->with('error', 'Você não tem acesso ao painel administrativo.');
         }
 
-        if (!$user->canAccessAdminPanel()) {
+        if (!$user->isAdminGeral()) {
             $this->scope->logDenied($user, 'access.denied.admin_panel', $request->path());
             return redirect()->route('login')
                 ->withErrors(['email' => 'Acesso não autorizado.']);

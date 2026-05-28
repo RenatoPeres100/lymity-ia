@@ -10,6 +10,30 @@ class RolePermissionPreset
      */
     private static array $presets = [
 
+        // admin_geral: runtime bypass, no preset needed
+        'admin_geral' => [],
+
+        // Cliente: main user of a client company
+        'cliente' => [
+            'users.view', 'users.create', 'users.disable',
+            'users.manage_permissions',
+            'approvals.view', 'approvals.approve',
+            'blog.view', 'blog.approve',
+            'social.view', 'social.approve',
+            'content.view',
+            'files.view', 'files.create',
+            'reports.view',
+        ],
+
+        // Colaborador: limited — Cliente configures which permissions to grant
+        'colaborador' => [
+            'approvals.view',
+            'blog.view',
+            'social.view',
+            'content.view',
+        ],
+
+        // ── Legacy roles kept for any seeded data still using old values ──
         'agencia_admin' => [
             'users.view', 'users.create', 'users.update', 'users.disable',
             'users.reset_password', 'users.manage_permissions',
@@ -104,6 +128,23 @@ class RolePermissionPreset
         'ai_employee' => [],
     ];
 
+    /**
+     * All permissions a Cliente can grant to a Colaborador.
+     */
+    public static array $colaboradorPermissions = [
+        'approvals.view'    => 'Ver aprovações',
+        'approvals.approve' => 'Aprovar/rejeitar conteúdo',
+        'blog.view'         => 'Ver posts de blog',
+        'blog.approve'      => 'Aprovar posts de blog',
+        'social.view'       => 'Ver posts de redes sociais',
+        'social.approve'    => 'Aprovar posts de redes sociais',
+        'reports.view'      => 'Ver relatórios',
+        'files.view'        => 'Ver arquivos',
+        'files.create'      => 'Enviar arquivos',
+        'content.view'      => 'Ver conteúdos e briefings',
+        'campaigns.view'    => 'Ver campanhas de anúncios',
+    ];
+
     public static function forRole(string $role): array
     {
         return self::$presets[$role] ?? [];
@@ -111,24 +152,28 @@ class RolePermissionPreset
 
     public static function allRoles(): array
     {
-        return array_keys(self::$presets);
+        return ['admin_geral', 'cliente', 'colaborador'];
     }
 
     public static function label(string $role): string
     {
         return match ($role) {
-            'agencia_admin'       => 'Admin Agência — acesso total operacional',
-            'agencia_operador'    => 'Operador — criação e visualização de conteúdo',
-            'social_media'        => 'Social Media — gestão completa de posts e Instagram',
-            'copywriter'          => 'Copywriter — criação de conteúdo e blog',
-            'blog_writer'         => 'Blog Writer — criação e edição de posts',
-            'seo'                 => 'SEO — gestão de palavras-chave e auditoria',
-            'designer'            => 'Designer — visualização e criação de conteúdo',
-            'gestor_trafego'      => 'Gestor de Tráfego — operação e relatórios',
-            'cliente_admin'       => 'Admin Cliente — área do cliente + gestão de colaboradores',
-            'cliente_colaborador' => 'Colaborador — visualização da área do cliente',
-            'viewer'              => 'Visualizador — acesso somente leitura',
-            'ai_employee'         => 'Funcionário IA — sem permissões de login',
+            'admin_geral'  => 'Admin Geral — acesso total ao sistema',
+            'cliente'      => 'Cliente — gerencia o próprio ambiente e colaboradores',
+            'colaborador'  => 'Colaborador — permissões definidas pelo Cliente',
+            'ai_employee'  => 'Funcionário IA — sem permissões de login',
+            // Legacy (for display only)
+            'agencia_admin'       => 'Admin Geral',
+            'agencia_operador'    => 'Admin Geral',
+            'social_media'        => 'Admin Geral',
+            'copywriter'          => 'Admin Geral',
+            'blog_writer'         => 'Admin Geral',
+            'seo'                 => 'Admin Geral',
+            'designer'            => 'Admin Geral',
+            'gestor_trafego'      => 'Admin Geral',
+            'cliente_admin'       => 'Cliente',
+            'cliente_colaborador' => 'Colaborador',
+            'viewer'              => 'Colaborador',
             default               => $role,
         };
     }

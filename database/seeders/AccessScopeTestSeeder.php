@@ -60,23 +60,10 @@ class AccessScopeTestSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'agencia_admin_a@lymity.local'],
             [
-                'name'       => 'Admin Agência A',
+                'name'       => 'Admin Geral A (migrado)',
                 'password'   => Hash::make('password123'),
-                'role'       => 'agencia_admin',
-                'user_type'  => 'agency',
-                'company_id' => $companyA->id,
-                'status'     => 'active',
-            ]
-        );
-
-        User::updateOrCreate(
-            ['email' => 'operador_a@lymity.local'],
-            [
-                'name'       => 'Operador Social A',
-                'password'   => Hash::make('password123'),
-                'role'       => 'social_media',
-                'user_type'  => 'agency',
-                'company_id' => $companyA->id,
+                'role'       => 'admin_geral',
+                'user_type'  => 'internal',
                 'status'     => 'active',
             ]
         );
@@ -84,21 +71,20 @@ class AccessScopeTestSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'agencia_admin_b@lymity.local'],
             [
-                'name'       => 'Admin Agência B',
-                'password'   => Hash::make('password123'),
-                'role'       => 'agencia_admin',
-                'user_type'  => 'agency',
-                'company_id' => $companyB->id,
-                'status'     => 'active',
+                'name'      => 'Admin Geral B (migrado)',
+                'password'  => Hash::make('password123'),
+                'role'      => 'admin_geral',
+                'user_type' => 'internal',
+                'status'    => 'active',
             ]
         );
 
         User::updateOrCreate(
             ['email' => 'cliente_admin_a1@lymity.local'],
             [
-                'name'      => 'Admin Cliente A1',
+                'name'      => 'Cliente A1',
                 'password'  => Hash::make('password123'),
-                'role'      => 'cliente_admin',
+                'role'      => 'cliente',
                 'user_type' => 'client',
                 'client_id' => $clientA1->id,
                 'status'    => 'active',
@@ -108,11 +94,23 @@ class AccessScopeTestSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'cliente_admin_b1@lymity.local'],
             [
-                'name'      => 'Admin Cliente B1',
+                'name'      => 'Cliente B1',
                 'password'  => Hash::make('password123'),
-                'role'      => 'cliente_admin',
+                'role'      => 'cliente',
                 'user_type' => 'client',
                 'client_id' => $clientB1->id,
+                'status'    => 'active',
+            ]
+        );
+
+        User::updateOrCreate(
+            ['email' => 'colaborador_a1@lymity.local'],
+            [
+                'name'      => 'Colaborador A1',
+                'password'  => Hash::make('password123'),
+                'role'      => 'colaborador',
+                'user_type' => 'client',
+                'client_id' => $clientA1->id,
                 'status'    => 'active',
             ]
         );
@@ -230,7 +228,10 @@ class AccessScopeTestSeeder extends Seeder
         );
 
         $this->command->info('AccessScopeTestSeeder: dados de teste criados com sucesso.');
-        $this->command->info('Usuários: admin_global_test@lymity.local, agencia_admin_a@lymity.local, agencia_admin_b@lymity.local, cliente_admin_a1@lymity.local, cliente_admin_b1@lymity.local');
-        $this->command->info('Senha para todos: password123');
+        $this->command->info('Usuários (senha: password123):');
+        $this->command->info('  admin_global_test@lymity.local  → Admin Geral');
+        $this->command->info('  cliente_admin_a1@lymity.local   → Cliente (Cliente A1)');
+        $this->command->info('  cliente_admin_b1@lymity.local   → Cliente (Cliente B1)');
+        $this->command->info('  colaborador_a1@lymity.local     → Colaborador (Cliente A1)');
     }
 }
