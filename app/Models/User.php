@@ -162,9 +162,35 @@ class User extends Authenticatable
 
     public function hasPermission(string $key): bool
     {
-        if ($this->isAdminGeral()) return true;
+        if (!$this->isActive()) {
+            return false;
+        }
+
+        if ($this->isAdminGeral()) {
+            return true;
+        }
 
         return $this->permissions()->where('key', $key)->exists();
+    }
+
+    public function hasAnyPermission(array $keys): bool
+    {
+        foreach ($keys as $key) {
+            if ($this->hasPermission($key)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public function hasAllPermissions(array $keys): bool
+    {
+        foreach ($keys as $key) {
+            if (!$this->hasPermission($key)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     // ── Scopes ────────────────────────────────────────────────────────────────

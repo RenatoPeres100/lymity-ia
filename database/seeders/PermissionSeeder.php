@@ -69,6 +69,56 @@ class PermissionSeeder extends Seeder
             ['key' => 'seo.view',    'name' => 'Ver SEO',    'module' => 'seo'],
             ['key' => 'seo.create',  'name' => 'Criar SEO',  'module' => 'seo'],
             ['key' => 'seo.approve', 'name' => 'Aprovar SEO','module' => 'seo'],
+
+            // ── CLIENT PANEL permissions (prefixo client.) ─────────────────
+            // client.dashboard
+            ['key' => 'client.dashboard.view',          'name' => 'Ver painel do cliente',          'module' => 'client_dashboard'],
+
+            // client.approvals
+            ['key' => 'client.approvals.view',          'name' => 'Ver aprovações (cliente)',        'module' => 'client_approvals'],
+            ['key' => 'client.approvals.approve',       'name' => 'Aprovar itens (cliente)',         'module' => 'client_approvals'],
+            ['key' => 'client.approvals.comment',       'name' => 'Comentar aprovações (cliente)',   'module' => 'client_approvals'],
+
+            // client.blog
+            ['key' => 'client.blog.view',               'name' => 'Ver blog (cliente)',              'module' => 'client_blog'],
+            ['key' => 'client.blog.create',             'name' => 'Criar posts de blog (cliente)',   'module' => 'client_blog'],
+            ['key' => 'client.blog.update',             'name' => 'Editar posts de blog (cliente)',  'module' => 'client_blog'],
+            ['key' => 'client.blog.approve',            'name' => 'Aprovar posts de blog (cliente)', 'module' => 'client_blog'],
+            ['key' => 'client.blog.schedule',           'name' => 'Agendar posts de blog (cliente)', 'module' => 'client_blog'],
+            ['key' => 'client.blog.publish',            'name' => 'Publicar blog (cliente)',         'module' => 'client_blog'],
+
+            // client.brand_context
+            ['key' => 'client.brand_context.view',      'name' => 'Ver brand context (cliente)',     'module' => 'client_brand_context'],
+            ['key' => 'client.brand_context.update',    'name' => 'Editar brand context (cliente)',  'module' => 'client_brand_context'],
+
+            // client.routines
+            ['key' => 'client.routines.view',           'name' => 'Ver rotinas (cliente)',           'module' => 'client_routines'],
+            ['key' => 'client.routines.manage',         'name' => 'Gerenciar rotinas (cliente)',     'module' => 'client_routines'],
+
+            // client.ai_employees
+            ['key' => 'client.ai_employees.view',       'name' => 'Ver funcionários IA (cliente)',   'module' => 'client_ai'],
+            ['key' => 'client.ai_employees.use',        'name' => 'Usar funcionários IA (cliente)',  'module' => 'client_ai'],
+
+            // client.ai_tasks
+            ['key' => 'client.ai_tasks.view',           'name' => 'Ver tarefas IA (cliente)',        'module' => 'client_ai'],
+            ['key' => 'client.ai_tasks.create',         'name' => 'Criar tarefas IA (cliente)',      'module' => 'client_ai'],
+
+            // client.ai_logs
+            ['key' => 'client.ai_logs.view',            'name' => 'Ver logs IA (cliente)',           'module' => 'client_ai'],
+
+            // client.files
+            ['key' => 'client.files.view',              'name' => 'Ver arquivos (cliente)',          'module' => 'client_files'],
+            ['key' => 'client.files.upload',            'name' => 'Enviar arquivos (cliente)',       'module' => 'client_files'],
+
+            // client.users
+            ['key' => 'client.users.view',              'name' => 'Ver usuários (cliente)',          'module' => 'client_users'],
+            ['key' => 'client.users.create',            'name' => 'Criar usuários (cliente)',        'module' => 'client_users'],
+            ['key' => 'client.users.update',            'name' => 'Editar usuários (cliente)',       'module' => 'client_users'],
+            ['key' => 'client.users.disable',           'name' => 'Inativar usuários (cliente)',     'module' => 'client_users'],
+            ['key' => 'client.users.reset_password',    'name' => 'Resetar senha (cliente)',         'module' => 'client_users'],
+
+            // client.app
+            ['key' => 'client.app.view',                'name' => 'Acessar App Mobile',              'module' => 'client_app'],
         ];
 
         foreach ($permissions as $perm) {

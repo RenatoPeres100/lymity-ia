@@ -670,6 +670,21 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         Route::get('/contracts',                                    [ClientContractController::class, 'index'])->name('client.contracts.index');
         Route::get('/contracts/{clientContract}',                   [ClientContractController::class, 'show'])->name('client.contracts.show');
+
+        // ── Client Permission-Gated Modules ──────────────────────────────
+        Route::get('/brand-context',     [\App\Http\Controllers\Client\ClientBrandContextController::class, 'index'])->name('client.brand-context.index');
+        Route::put('/brand-context',     [\App\Http\Controllers\Client\ClientBrandContextController::class, 'update'])->name('client.brand-context.update');
+
+        Route::get('/routines',          [\App\Http\Controllers\Client\ClientRoutineController::class, 'index'])->name('client.routines.index');
+
+        Route::get('/ai-employees',      [\App\Http\Controllers\Client\ClientAiEmployeeController::class, 'index'])->name('client.ai-employees.index');
+
+        Route::get('/ai-tasks',          [\App\Http\Controllers\Client\ClientAiTaskController::class, 'index'])->name('client.ai-tasks.index');
+
+        Route::get('/ai-logs',           [\App\Http\Controllers\Client\ClientAiLogController::class, 'index'])->name('client.ai-logs.index');
+
+        // client.users.index → alias para TeamController (equipe = usuários do cliente)
+        Route::get('/users',             [\App\Http\Controllers\Client\TeamController::class, 'index'])->name('client.users.index');
     });
 
 });

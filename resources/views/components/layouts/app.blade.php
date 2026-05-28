@@ -241,9 +241,11 @@
 
             {{-- ===================== CLIENTE ===================== --}}
             @if(auth()->user()->isClientUser())
+            @php $cu = auth()->user(); @endphp
 
             <span class="nav-section-label">Minha Conta</span>
 
+            {{-- Meu Painel — sempre visível para usuários do painel cliente --}}
             <a href="{{ route('client.dashboard') }}" class="nav-item {{ request()->routeIs('client.dashboard') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
@@ -252,7 +254,9 @@
                 Meu Painel
             </a>
 
-            @php $clientPending = auth()->user()->client_id ? \App\Models\ApprovalRequest::where('client_id', auth()->user()->client_id)->where('status','pending')->count() : 0; @endphp
+            {{-- Aprovações --}}
+            @if($cu->hasPermission('client.approvals.view') && Route::has('client.approvals.index'))
+            @php $clientPending = $cu->client_id ? \App\Models\ApprovalRequest::where('client_id', $cu->client_id)->where('status','pending')->count() : 0; @endphp
             <a href="{{ route('client.approvals.index') }}" class="nav-item {{ request()->routeIs('client.approvals*') && !request()->routeIs('client.social*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
@@ -262,26 +266,10 @@
                 <span class="ml-auto text-xs bg-amber-900 text-amber-300 px-2 py-0.5 rounded-full">{{ $clientPending }}</span>
                 @endif
             </a>
-
-            @if(config('features.instagram_pipeline'))
-            <span class="nav-section-label">Instagram</span>
-            <a href="{{ route('client.social.posts.index') }}" class="nav-item {{ request()->routeIs('client.social.posts*') ? 'active' : '' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/>
-                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-                </svg>
-                Meus Posts
-            </a>
-            <a href="{{ route('client.social.approvals.index') }}" class="nav-item {{ request()->routeIs('client.social.approvals*') ? 'active' : '' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-                </svg>
-                Aprovar Posts
-            </a>
             @endif
 
-            @if(config('features.blog_pipeline'))
-            <span class="nav-section-label">Blog</span>
+            {{-- Blog --}}
+            @if($cu->hasPermission('client.blog.view') && Route::has('client.blog.index'))
             <a href="{{ route('client.blog.index') }}" class="nav-item {{ request()->routeIs('client.blog*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -291,13 +279,81 @@
             </a>
             @endif
 
+            {{-- Brand Context --}}
+            @if($cu->hasPermission('client.brand_context.view') && Route::has('client.brand-context.index'))
+            <a href="{{ route('client.brand-context.index') }}" class="nav-item {{ request()->routeIs('client.brand-context*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+                Brand Context
+            </a>
+            @endif
+
+            {{-- Rotinas --}}
+            @if($cu->hasPermission('client.routines.view') && Route::has('client.routines.index'))
+            <a href="{{ route('client.routines.index') }}" class="nav-item {{ request()->routeIs('client.routines*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Rotinas
+            </a>
+            @endif
+
+            {{-- Funcionários IA --}}
+            @if($cu->hasPermission('client.ai_employees.view') && Route::has('client.ai-employees.index'))
+            <a href="{{ route('client.ai-employees.index') }}" class="nav-item {{ request()->routeIs('client.ai-employees*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/>
+                </svg>
+                Funcionários IA
+            </a>
+            @endif
+
+            {{-- Tarefas IA --}}
+            @if($cu->hasPermission('client.ai_tasks.view') && Route::has('client.ai-tasks.index'))
+            <a href="{{ route('client.ai-tasks.index') }}" class="nav-item {{ request()->routeIs('client.ai-tasks*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2 2 4-4"/>
+                </svg>
+                Tarefas IA
+            </a>
+            @endif
+
+            {{-- Logs IA --}}
+            @if($cu->hasPermission('client.ai_logs.view') && Route::has('client.ai-logs.index'))
+            <a href="{{ route('client.ai-logs.index') }}" class="nav-item {{ request()->routeIs('client.ai-logs*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6M8 13h8M8 17h5"/>
+                </svg>
+                Logs IA
+            </a>
+            @endif
+
+            {{-- Arquivos --}}
+            @if($cu->hasPermission('client.files.view') && Route::has('client.files.index'))
             <a href="{{ route('client.files.index') }}" class="nav-item {{ request()->routeIs('client.files*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
                 </svg>
                 Arquivos
             </a>
+            @endif
 
+            {{-- Usuários / Equipe --}}
+            @if($cu->hasPermission('client.users.view') && Route::has('client.users.index'))
+            <a href="{{ route('client.users.index') }}" class="nav-item {{ request()->routeIs('client.users*','client.team*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Usuários
+            </a>
+            @endif
+
+            {{-- App Mobile --}}
+            @if($cu->hasPermission('client.app.view') && Route::has('app.dashboard'))
             <a href="{{ route('app.dashboard') }}" class="nav-item {{ request()->routeIs('app.*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <rect x="5" y="2" width="14" height="20" rx="2"/>
@@ -305,23 +361,26 @@
                 </svg>
                 App Mobile
             </a>
-
-            {{-- Módulos cliente desativados por feature flag --}}
-            @if(config('features.ads_module'))
-            <span class="nav-section-label">Ads</span>
-            <a href="{{ route('client.ads.campaigns.index') }}" class="nav-item">Campanhas</a>
             @endif
 
-            @if(config('features.proposals_module'))
-            <a href="{{ route('client.proposals.index') }}" class="nav-item">Propostas</a>
+            {{-- Instagram (feature flag mantida) --}}
+            @if(config('features.instagram_pipeline'))
+            <span class="nav-section-label">Instagram</span>
+            <a href="{{ route('client.social.posts.index') }}" class="nav-item {{ request()->routeIs('client.social.posts*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/>
+                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+                Meus Posts
+            </a>
+            @if($cu->hasPermission('client.approvals.approve'))
+            <a href="{{ route('client.social.approvals.index') }}" class="nav-item {{ request()->routeIs('client.social.approvals*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                </svg>
+                Aprovar Posts
+            </a>
             @endif
-
-            @if(config('features.budgets_module'))
-            <a href="{{ route('client.budgets.index') }}" class="nav-item">Orçamentos</a>
-            @endif
-
-            @if(config('features.contracts_module'))
-            <a href="{{ route('client.contracts.index') }}" class="nav-item">Contratos</a>
             @endif
 
             @endif {{-- end client --}}

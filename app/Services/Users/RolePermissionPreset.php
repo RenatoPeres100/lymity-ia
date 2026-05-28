@@ -13,24 +13,42 @@ class RolePermissionPreset
         // admin_geral: runtime bypass, no preset needed
         'admin_geral' => [],
 
-        // Cliente: main user of a client company
+        // Cliente: main user of a client company — receives client.* permissions via UserPermissionPresetService
         'cliente' => [
-            'users.view', 'users.create', 'users.disable',
-            'users.manage_permissions',
-            'approvals.view', 'approvals.approve',
-            'blog.view', 'blog.approve',
-            'social.view', 'social.approve',
-            'content.view',
-            'files.view', 'files.create',
-            'reports.view',
+            'client.dashboard.view',
+            'client.approvals.view',
+            'client.approvals.approve',
+            'client.approvals.comment',
+            'client.blog.view',
+            'client.blog.create',
+            'client.blog.update',
+            'client.blog.approve',
+            'client.blog.schedule',
+            'client.brand_context.view',
+            'client.brand_context.update',
+            'client.routines.view',
+            'client.routines.manage',
+            'client.ai_employees.view',
+            'client.ai_tasks.view',
+            'client.ai_tasks.create',
+            'client.ai_logs.view',
+            'client.files.view',
+            'client.files.upload',
+            'client.users.view',
+            'client.users.create',
+            'client.users.update',
+            'client.users.disable',
+            'client.users.reset_password',
+            'client.app.view',
         ],
 
         // Colaborador: limited — Cliente configures which permissions to grant
         'colaborador' => [
-            'approvals.view',
-            'blog.view',
-            'social.view',
-            'content.view',
+            'client.dashboard.view',
+            'client.approvals.view',
+            'client.blog.view',
+            'client.files.view',
+            'client.app.view',
         ],
 
         // ── Legacy roles kept for any seeded data still using old values ──
@@ -129,20 +147,24 @@ class RolePermissionPreset
     ];
 
     /**
-     * All permissions a Cliente can grant to a Colaborador.
+     * All permissions a Cliente can grant to a Colaborador (uses client.* keys).
      */
     public static array $colaboradorPermissions = [
-        'approvals.view'    => 'Ver aprovações',
-        'approvals.approve' => 'Aprovar/rejeitar conteúdo',
-        'blog.view'         => 'Ver posts de blog',
-        'blog.approve'      => 'Aprovar posts de blog',
-        'social.view'       => 'Ver posts de redes sociais',
-        'social.approve'    => 'Aprovar posts de redes sociais',
-        'reports.view'      => 'Ver relatórios',
-        'files.view'        => 'Ver arquivos',
-        'files.create'      => 'Enviar arquivos',
-        'content.view'      => 'Ver conteúdos e briefings',
-        'campaigns.view'    => 'Ver campanhas de anúncios',
+        'client.dashboard.view'      => 'Ver painel',
+        'client.approvals.view'      => 'Ver aprovações',
+        'client.approvals.approve'   => 'Aprovar/rejeitar itens',
+        'client.approvals.comment'   => 'Comentar aprovações',
+        'client.blog.view'           => 'Ver posts de blog',
+        'client.blog.create'         => 'Criar posts de blog',
+        'client.blog.update'         => 'Editar posts de blog',
+        'client.blog.approve'        => 'Aprovar posts de blog',
+        'client.brand_context.view'  => 'Ver brand context',
+        'client.ai_employees.view'   => 'Ver funcionários IA',
+        'client.ai_tasks.view'       => 'Ver tarefas IA',
+        'client.ai_logs.view'        => 'Ver logs IA',
+        'client.files.view'          => 'Ver arquivos',
+        'client.files.upload'        => 'Enviar arquivos',
+        'client.app.view'            => 'Acessar App Mobile',
     ];
 
     public static function forRole(string $role): array
