@@ -21,7 +21,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name'       => ['required', 'string', 'max:255'],
             'email'      => ['required', 'email', Rule::unique('users', 'email')->ignore($userId)],
-            'role'       => ['required', 'string', 'in:admin_geral,cliente,colaborador,ai_employee'],,
+            'role'       => ['required', 'string', 'in:admin_geral,cliente,colaborador,ai_employee'],
             'user_type'  => ['required', 'in:internal,agency,client,ai_employee'],
             'company_id' => ['nullable', 'exists:companies,id'],
             'client_id'  => ['nullable', 'exists:clients,id'],

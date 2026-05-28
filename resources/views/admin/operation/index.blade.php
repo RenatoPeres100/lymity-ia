@@ -127,7 +127,7 @@
                         <div class="min-w-0">
                             <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ Str::limit($approval->title ?? $approval->description ?? 'Aprovação', 55) }}</p>
                             <p class="text-xs text-gray-500">
-                                {{ optional($approval->requestedBy)->name ?? '—' }} · {{ $approval->created_at->diffForHumans() }}
+                                {{ optional($approval->requester)->name ?? '—' }} · {{ $approval->created_at->diffForHumans() }}
                             </p>
                         </div>
                         <span class="ml-3 px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700">

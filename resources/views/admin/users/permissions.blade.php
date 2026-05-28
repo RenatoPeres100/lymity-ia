@@ -11,6 +11,11 @@
 @if(session('success'))
 <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#166534;font-size:.875rem;">✓ {{ session('success') }}</div>
 @endif
+@if($errors->any())
+<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#991b1b;font-size:.875rem;">
+    @foreach($errors->all() as $e)<div>• {{ $e }}</div>@endforeach
+</div>
+@endif
 
 {{-- Role preset info banner --}}
 <div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:12px;padding:16px 20px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">

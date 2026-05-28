@@ -50,7 +50,7 @@
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar nome ou e-mail..." style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;font-size:.8rem;min-width:200px;">
         <select name="role" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;font-size:.8rem;">
             <option value="">Todos os perfis</option>
-            @foreach(['admin_geral'=>'Admin Geral','agencia_admin'=>'Admin Agência','agencia_operador'=>'Operador','social_media'=>'Social Media','copywriter'=>'Copywriter','blog_writer'=>'Blog Writer','seo'=>'SEO','designer'=>'Designer','gestor_trafego'=>'Gestor de Tráfego','cliente_admin'=>'Admin Cliente','cliente_colaborador'=>'Colaborador','viewer'=>'Visualizador','ai_employee'=>'Funcionário IA'] as $val=>$label)
+            @foreach(['admin_geral'=>'Admin Geral','cliente'=>'Cliente','colaborador'=>'Colaborador','ai_employee'=>'Funcionário IA'] as $val=>$label)
             <option value="{{ $val }}" {{ request('role')===$val?'selected':'' }}>{{ $label }}</option>
             @endforeach
         </select>
@@ -184,7 +184,7 @@
                         </form>
                         @endcan
                         @endif
-                        @if((auth()->user()->isAdminGeral() || auth()->user()->role === 'agencia_admin') && $user->id !== auth()->id())
+                        @if(auth()->user()->isAdminGeral() && $user->id !== auth()->id())
                         <form method="POST" action="{{ route('admin.users.destroy', $user) }}" style="display:inline;">
                             @csrf @method('DELETE')
                             <button type="submit"

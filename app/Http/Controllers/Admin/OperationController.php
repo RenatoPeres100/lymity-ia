@@ -49,7 +49,7 @@ class OperationController extends Controller
 
         $approvalsPending = ApprovalRequest::visibleTo($user)
             ->where('status', 'pending')
-            ->with('requestedBy', 'client')
+            ->with('requester', 'client')
             ->orderByDesc('created_at')
             ->take(6)
             ->get();

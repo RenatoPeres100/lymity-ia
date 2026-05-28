@@ -5,6 +5,10 @@
     <h1 style="font-size:1.4rem;font-weight:700;color:#0f172a;margin-top:8px;">Editar Colaborador</h1>
 </div>
 
+@if(session('success'))
+<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#166534;font-size:.875rem;">✓ {{ session('success') }}</div>
+@endif
+
 <form method="POST" action="{{ route('client.team.update', $user) }}" style="max-width:640px;">
     @csrf @method('PUT')
 
@@ -40,10 +44,19 @@
         </div>
     </div>
 
-    <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;margin-bottom:20px;">
-        <h3 style="font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:6px;">Permissões</h3>
-        <p style="font-size:.8rem;color:#64748b;margin-bottom:16px;">Selecione o que este colaborador pode acessar.</p>
-        <div style="display:grid;gap:10px;">
+    <div style="display:flex;gap:12px;">
+        <button type="submit" style="background:#6366f1;color:#fff;padding:12px 28px;border-radius:8px;font-size:.875rem;font-weight:600;border:none;cursor:pointer;">Salvar Alterações</button>
+        <a href="{{ route('client.team.show', $user) }}" style="color:#64748b;padding:12px 20px;font-size:.875rem;text-decoration:none;">Cancelar</a>
+    </div>
+</form>
+
+{{-- Permissions — separate form to avoid being ignored by update() --}}
+<div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:28px;margin-top:20px;max-width:640px;">
+    <h3 style="font-size:.9rem;font-weight:700;color:#0f172a;margin-bottom:6px;">Permissões</h3>
+    <p style="font-size:.8rem;color:#64748b;margin-bottom:16px;">Selecione o que este colaborador pode acessar.</p>
+    <form method="POST" action="{{ route('client.team.permissions', $user) }}">
+        @csrf @method('PUT')
+        <div style="display:grid;gap:10px;margin-bottom:16px;">
             @foreach($availablePermissions as $key => $label)
             <label style="display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;background:#f8fafc;">
                 <input type="checkbox" name="permissions[]" value="{{ $key }}"
@@ -53,12 +66,8 @@
             </label>
             @endforeach
         </div>
-    </div>
-
-    <div style="display:flex;gap:12px;">
-        <button type="submit" style="background:#6366f1;color:#fff;padding:12px 28px;border-radius:8px;font-size:.875rem;font-weight:600;border:none;cursor:pointer;">Salvar Alterações</button>
-        <a href="{{ route('client.team.show', $user) }}" style="color:#64748b;padding:12px 20px;font-size:.875rem;text-decoration:none;">Cancelar</a>
-    </div>
-</form>
+        <button type="submit" style="background:#6366f1;color:#fff;padding:10px 24px;border-radius:8px;font-size:.875rem;font-weight:600;border:none;cursor:pointer;">Salvar Permissões</button>
+    </form>
+</div>
 
 </x-layouts.app>
