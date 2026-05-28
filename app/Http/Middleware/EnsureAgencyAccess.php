@@ -11,7 +11,7 @@ class EnsureAgencyAccess
 {
     private const AGENCY_ROLES = [
         'admin_geral', 'agencia_admin', 'agencia_operador',
-        'social_media', 'gestor_trafego', 'seo', 'copywriter', 'designer',
+        'social_media', 'gestor_trafego', 'seo', 'copywriter', 'designer', 'blog_writer',
     ];
 
     public function handle(Request $request, Closure $next): Response

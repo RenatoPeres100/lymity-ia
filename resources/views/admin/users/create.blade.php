@@ -72,6 +72,7 @@
                 <label style="display:block;font-size:.78rem;font-weight:600;color:#374151;margin-bottom:5px;">Tipo de usuário *</label>
                 <select name="user_type" id="user_type" required onchange="handleTypeChange(this.value)" style="width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:9px 12px;font-size:.85rem;color:#0f172a;">
                     <option value="internal" {{ old('user_type','internal')==='internal'?'selected':'' }}>Interno (Agência)</option>
+                    <option value="agency"   {{ old('user_type')==='agency'?'selected':'' }}>Agência</option>
                     <option value="client"   {{ old('user_type')==='client'?'selected':'' }}>Cliente</option>
                 </select>
             </div>

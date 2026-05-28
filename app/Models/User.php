@@ -91,18 +91,19 @@ class User extends Authenticatable
 
     public function isAgencyUser(): bool
     {
-        return $this->user_type === 'agency' &&
-               in_array($this->role, [
-                   'admin_geral', 'agencia_admin', 'agencia_operador',
-                   'social_media', 'gestor_trafego', 'seo',
-                   'copywriter', 'designer',
-               ]);
+        // Role-based: internal/agency user_types both represent agency staff
+        return in_array($this->role, [
+            'agencia_admin', 'agencia_operador',
+            'social_media', 'gestor_trafego', 'seo',
+            'copywriter', 'designer', 'blog_writer',
+        ]);
     }
 
     public function isClientUser(): bool
     {
-        return $this->user_type === 'client' &&
-               in_array($this->role, ['cliente_admin', 'cliente_colaborador', 'viewer']);
+        // Role-based: client roles always belong to the client area
+        return in_array($this->role, ['cliente_admin', 'cliente_colaborador'])
+            || ($this->role === 'viewer' && $this->user_type === 'client');
     }
 
     public function isAiEmployee(): bool

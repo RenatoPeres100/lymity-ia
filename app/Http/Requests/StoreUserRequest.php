@@ -19,7 +19,7 @@ class StoreUserRequest extends FormRequest
             'email'      => ['required', 'email', 'unique:users,email'],
             'password'   => ['nullable', 'string', 'min:8', 'confirmed'],
             'role'       => ['required', 'string', 'in:admin_geral,agencia_admin,agencia_operador,social_media,copywriter,blog_writer,seo,designer,gestor_trafego,cliente_admin,cliente_colaborador,viewer,ai_employee'],
-            'user_type'  => ['required', 'in:internal,client,ai_employee'],
+            'user_type'  => ['required', 'in:internal,agency,client,ai_employee'],
             'company_id' => ['nullable', 'exists:companies,id'],
             'client_id'  => ['nullable', 'exists:clients,id'],
             'job_title'  => ['nullable', 'string', 'max:255'],
