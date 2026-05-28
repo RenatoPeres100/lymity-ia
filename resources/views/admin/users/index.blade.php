@@ -184,6 +184,16 @@
                         </form>
                         @endcan
                         @endif
+                        @if((auth()->user()->isAdminGeral() || auth()->user()->role === 'agencia_admin') && $user->id !== auth()->id())
+                        <form method="POST" action="{{ route('admin.users.destroy', $user) }}" style="display:inline;">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                    onclick="return confirm('Excluir {{ addslashes($user->name) }}? Esta ação não pode ser desfeita.')"
+                                    style="background:#fff1f2;color:#be123c;border:1px solid #fda4af;padding:5px 10px;border-radius:6px;font-size:.75rem;cursor:pointer;">
+                                Excluir
+                            </button>
+                        </form>
+                        @endif
                     </div>
                 </td>
             </tr>

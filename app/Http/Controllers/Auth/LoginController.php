@@ -13,7 +13,10 @@ class LoginController extends Controller
     public function showLoginForm(): View|RedirectResponse
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            $user = Auth::user();
+            return $user->isClientUser()
+                ? redirect()->route('client.dashboard')
+                : redirect()->route('admin.dashboard');
         }
 
         return view('auth.login');
@@ -42,9 +45,14 @@ class LoginController extends Controller
 
         $request->session()->regenerate();
 
-        Auth::user()->update(['last_login_at' => now()]);
+        $user = Auth::user();
+        $user->update(['last_login_at' => now()]);
 
-        return redirect()->intended(route('dashboard'));
+        $default = $user->isClientUser()
+            ? route('client.dashboard')
+            : route('admin.dashboard');
+
+        return redirect()->intended($default);
     }
 
     public function logout(Request $request): RedirectResponse

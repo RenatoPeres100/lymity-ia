@@ -143,6 +143,41 @@ class UserController extends Controller
         return back()->with('success', "Usuário {$user->name} bloqueado.");
     }
 
+    public function destroy(User $user): RedirectResponse
+    {
+        $actor = Auth::user();
+
+        if (!$actor->isAdminGeral() && $actor->role !== 'agencia_admin') {
+            abort(403, 'Sem permissão para excluir usuários.');
+        }
+
+        if ($user->id === $actor->id) {
+            return back()->withErrors(['error' => 'Você não pode excluir sua própria conta.']);
+        }
+
+        if ($user->role === 'admin_geral' && !$actor->isAdminGeral()) {
+            abort(403, 'Apenas um Admin Geral pode excluir outro Admin Geral.');
+        }
+
+        $name = $user->name;
+
+        // Remove permissions first
+        $user->permissions()->detach();
+
+        $user->delete();
+
+        \App\Models\ActivityLog::create([
+            'user_id'     => $actor->id,
+            'action'      => 'user_deleted',
+            'module'      => 'users',
+            'level'       => 'warning',
+            'description' => "Usuário excluído: {$name}",
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "Usuário \"{$name}\" excluído com sucesso.");
+    }
+
     private function availableRoles(User $actor): array
     {
         $all = [

@@ -13,8 +13,15 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
-    public function index(): View
+    public function index(): View|\Illuminate\Http\RedirectResponse
     {
+        $user = auth()->user();
+
+        // Client users should always be in their own area
+        if ($user && $user->isClientUser()) {
+            return redirect()->route('client.dashboard');
+        }
+
         $stats = [
             'total_clients'              => Client::where('status', 'active')->count(),
             'total_users'                => User::where('status', 'active')->where('user_type', '!=', 'ai')->count(),
