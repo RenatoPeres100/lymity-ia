@@ -16,10 +16,10 @@ class ClientAiLogController extends Controller
         $logs = collect();
 
         if (class_exists(\App\Models\AiTaskLog::class)) {
-            $logs = \App\Models\AiTaskLog::whereHas('task', fn ($q) => $q->where('client_id', $user->client_id))
+            $logs = \App\Models\AiTaskLog::where('client_id', $user->client_id)
+                ->select(['id', 'ai_task_id', 'client_id', 'level', 'message', 'status', 'created_at'])
                 ->orderByDesc('created_at')
-                ->limit(100)
-                ->get();
+                ->paginate(30);
         }
 
         return view('client.ai-logs.index', compact('logs'));

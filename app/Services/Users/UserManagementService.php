@@ -162,6 +162,7 @@ class UserManagementService
         }
 
         $user->permissions()->sync($permissionIds);
+        $user->clearPermissionCache();
 
         $this->registerLog('user_permissions_updated', $user, $actor, [
             'permission_ids' => $permissionIds,
@@ -179,6 +180,7 @@ class UserManagementService
 
         $ids = \App\Models\Permission::whereIn('key', $keys)->pluck('id')->toArray();
         $user->permissions()->sync($ids);
+        $user->clearPermissionCache();
     }
 
     public function resetToRolePreset(User $user, User $actor): User

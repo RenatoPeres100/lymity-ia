@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\Client;
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Dashboard\DashboardStatsService;
 use App\Services\Users\UserManagementService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -16,7 +17,10 @@ use Illuminate\View\View;
 
 class UserController extends Controller
 {
-    public function __construct(private UserManagementService $svc) {}
+    public function __construct(
+        private UserManagementService $svc,
+        private DashboardStatsService $dashStats,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -47,14 +51,13 @@ class UserController extends Controller
         $users   = $query->paginate(20)->withQueryString();
         $clients = Client::visibleTo($actor)->orderBy('name')->get(['id', 'name']);
 
-        $stats = [
-            'total'    => User::visibleTo($actor)->count(),
-            'active'   => User::visibleTo($actor)->where('status', 'active')->count(),
-            'inactive' => User::visibleTo($actor)->whereIn('status', ['inactive', 'blocked'])->count(),
-            'internal' => User::visibleTo($actor)->where('user_type', 'internal')->orWhere(fn($q) => $q->where('user_type', 'agency'))->count(),
-            'clients'  => User::visibleTo($actor)->where('user_type', 'client')->count(),
-            'recent'   => User::visibleTo($actor)->whereNotNull('last_login_at')->orderByDesc('last_login_at')->limit(5)->get(['id', 'name', 'last_login_at']),
-        ];
+        // Single aggregated query replaces 5 separate count queries
+        $stats = $this->dashStats->getUserStats($actor);
+        $stats['recent'] = User::visibleTo($actor)
+            ->whereNotNull('last_login_at')
+            ->orderByDesc('last_login_at')
+            ->limit(5)
+            ->get(['id', 'name', 'last_login_at']);
 
         return view('admin.users.index', compact('users', 'clients', 'stats'));
     }

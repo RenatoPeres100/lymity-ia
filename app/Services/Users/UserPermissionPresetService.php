@@ -66,6 +66,7 @@ class UserPermissionPresetService
         $keys = $this->getDefaultClientPermissions();
         $ids  = Permission::whereIn('key', $keys)->pluck('id')->toArray();
         $user->permissions()->sync($ids);
+        $user->clearPermissionCache();
     }
 
     public function syncDefaultCollaboratorPermissions(User $user, array $permissionKeys = []): void
@@ -76,5 +77,6 @@ class UserPermissionPresetService
 
         $ids = Permission::whereIn('key', $permissionKeys)->pluck('id')->toArray();
         $user->permissions()->sync($ids);
+        $user->clearPermissionCache();
     }
 }

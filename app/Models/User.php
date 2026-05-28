@@ -23,6 +23,9 @@ class User extends Authenticatable
     /** Valid human roles in the system. */
     public const ROLES = ['admin_geral', 'cliente', 'colaborador'];
 
+    /** In-memory permission key cache — one DB query per request, not per hasPermission() call. */
+    protected ?array $permissionKeyCache = null;
+
     protected function casts(): array
     {
         return [
@@ -160,35 +163,54 @@ class User extends Authenticatable
 
     // ── Permissions ───────────────────────────────────────────────────────────
 
+    /**
+     * Return all permission keys for this user, cached in-memory for the request lifecycle.
+     * One DB query per request instead of one per hasPermission() call.
+     */
+    public function getPermissionKeys(): array
+    {
+        if ($this->permissionKeyCache === null) {
+            $this->permissionKeyCache = $this->permissions()->pluck('key')->all();
+        }
+        return $this->permissionKeyCache;
+    }
+
+    /** Invalidate the in-memory cache after syncing permissions. */
+    public function clearPermissionCache(): void
+    {
+        $this->permissionKeyCache = null;
+        // Also unset eager-loaded relation so next access re-queries
+        $this->unsetRelation('permissions');
+    }
+
     public function hasPermission(string $key): bool
     {
-        if (!$this->isActive()) {
-            return false;
-        }
+        if (!$this->isActive())    return false;
+        if ($this->isAdminGeral()) return true;
 
-        if ($this->isAdminGeral()) {
-            return true;
-        }
-
-        return $this->permissions()->where('key', $key)->exists();
+        return in_array($key, $this->getPermissionKeys(), true);
     }
 
     public function hasAnyPermission(array $keys): bool
     {
+        if (!$this->isActive())    return false;
+        if ($this->isAdminGeral()) return true;
+
+        $cached = $this->getPermissionKeys();
         foreach ($keys as $key) {
-            if ($this->hasPermission($key)) {
-                return true;
-            }
+            if (in_array($key, $cached, true)) return true;
         }
         return false;
     }
 
     public function hasAllPermissions(array $keys): bool
     {
+        if (!$this->isActive())    return false;
+        if ($this->isAdminGeral()) return true;
+
+        $cached = $this->getPermissionKeys();
         foreach ($keys as $key) {
-            if (!$this->hasPermission($key)) {
-                return false;
-            }
+            if (!in_array($key, $cached, true)) return false;
         }
         return true;
     }
