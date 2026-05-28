@@ -38,6 +38,9 @@
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Nível</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Mensagem</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Tarefa</th>
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Modelo</th>
+                <th style="text-align:right;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Tokens</th>
+                <th style="text-align:right;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Custo est.</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Funcionário</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Data/Hora</th>
             </tr>
@@ -55,14 +58,43 @@
                 <td style="padding:10px 16px;font-size:.8rem;color:#334155;max-width:400px;">{{ $log->message }}</td>
                 <td style="padding:10px 16px;font-size:.78rem;color:#6b8fff;">
                     @if($log->task)
-                    <a href="{{ route('admin.ai-tasks.show', $log->task) }}" style="color:#6b8fff;text-decoration:none;">{{ mb_substr($log->task->title, 0, 40) }}</a>
-                    @else—@endif
+                        <a href="{{ route('admin.ai-tasks.show', $log->task) }}" style="color:#6b8fff;text-decoration:none;">{{ mb_substr($log->task->title, 0, 40) }}</a>
+                    @elseif($log->task_type)
+                        @php
+                            $taskLabels = [
+                                'generate_brief' => 'Gerar briefing',
+                                'generate_draft' => 'Gerar artigo',
+                            ];
+                            $taskLabel = $taskLabels[$log->task_type] ?? $log->task_type;
+                            $relatedUrl = null;
+                            if ($log->related_type === 'App\Models\BlogPost' && $log->related_id) {
+                                $relatedUrl = route('admin.blog.posts.show', $log->related_id);
+                            } elseif ($log->related_type === 'App\Models\ContentBrief' && $log->related_id) {
+                                $relatedUrl = route('admin.blog.briefs.show', $log->related_id);
+                            }
+                        @endphp
+                        @if($relatedUrl)
+                            <a href="{{ $relatedUrl }}" style="color:#6b8fff;text-decoration:none;">{{ $taskLabel }} #{{ $log->related_id }}</a>
+                        @else
+                            <span style="color:#64748b;">{{ $taskLabel }}</span>
+                        @endif
+                    @else
+                        —
+                    @endif
+                </td>
+                <td style="padding:10px 16px;font-size:.72rem;color:#94a3b8;font-family:monospace;">{{ $log->model ?? '—' }}</td>
+                <td style="padding:10px 16px;font-size:.75rem;color:#475569;text-align:right;">
+                    @php $total = ($log->input_tokens ?? 0) + ($log->output_tokens ?? 0); @endphp
+                    {{ $total > 0 ? number_format($total) : '—' }}
+                </td>
+                <td style="padding:10px 16px;font-size:.75rem;color:#475569;text-align:right;">
+                    {{ $log->estimated_cost_usd ? '$'.number_format($log->estimated_cost_usd, 5) : '—' }}
                 </td>
                 <td style="padding:10px 16px;font-size:.78rem;color:#94a3b8;">{{ $log->employee?->name ?? '—' }}</td>
                 <td style="padding:10px 16px;font-size:.75rem;color:#475569;">{{ $log->created_at->format('d/m/Y H:i:s') }}</td>
             </tr>
             @empty
-            <tr><td colspan="5" style="padding:48px;text-align:center;color:#475569;font-size:.875rem;">Nenhum log registrado.</td></tr>
+            <tr><td colspan="8" style="padding:48px;text-align:center;color:#475569;font-size:.875rem;">Nenhum log registrado.</td></tr>
             @endforelse
         </tbody>
     </table>
