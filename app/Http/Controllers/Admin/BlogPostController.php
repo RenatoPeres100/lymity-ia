@@ -94,8 +94,23 @@ class BlogPostController extends Controller
 
     public function destroy(BlogPost $blogPost): RedirectResponse
     {
+        // Remove related approvals first to avoid orphan records
+        \App\Models\ApprovalRequest::where('approvable_type', BlogPost::class)
+            ->where('approvable_id', $blogPost->id)
+            ->delete();
+
+        $title = $blogPost->title;
         $blogPost->delete();
+
+        ActivityLog::create([
+            'user_id'     => auth()->id(),
+            'action'      => 'deleted',
+            'module'      => 'blog',
+            'level'       => 'warning',
+            'description' => "Post de blog excluído: {$title}",
+        ]);
+
         return redirect()->route('admin.blog.pipeline.index')
-            ->with('success', 'Post excluído.');
+            ->with('success', "Post \"{$title}\" excluído com sucesso.");
     }
 }

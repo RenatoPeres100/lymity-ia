@@ -102,8 +102,13 @@
 
             @if($post)
             <div class="card">
-                <div class="card-body text-sm">
+                <div class="card-body text-sm space-y-2">
                     <a href="{{ route('admin.blog.posts.edit', $post) }}" class="text-blue-600 hover:underline block">Editar artigo</a>
+                    <form method="POST" action="{{ route('admin.blog.posts.destroy', $post) }}"
+                          onsubmit="return confirm('Excluir permanentemente este artigo? Esta ação não pode ser desfeita.')">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="text-red-600 hover:underline text-sm">Excluir artigo</button>
+                    </form>
                 </div>
             </div>
             @endif

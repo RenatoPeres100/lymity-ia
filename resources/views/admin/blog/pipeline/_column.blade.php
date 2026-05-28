@@ -100,6 +100,15 @@
                             Ver post ↗
                         </a>
                     @endif
+
+                    <form method="POST" action="{{ route('admin.blog.posts.destroy', $post) }}"
+                          onsubmit="return confirm('Excluir permanentemente o post «{{ addslashes($post->title) }}»? Esta ação não pode ser desfeita.')">
+                        @csrf @method('DELETE')
+                        <button type="submit"
+                                class="px-2 py-1 text-xs rounded bg-red-50 text-red-600 hover:bg-red-100 border border-red-200">
+                            Excluir
+                        </button>
+                    </form>
                 </div>
             </div>
         @empty

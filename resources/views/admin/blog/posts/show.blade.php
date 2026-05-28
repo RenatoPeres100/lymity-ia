@@ -16,6 +16,14 @@
                    class="px-3 py-1.5 text-sm rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-500 hover:bg-gray-200">
                     Logs
                 </a>
+                <form method="POST" action="{{ route('admin.blog.posts.destroy', $blogPost) }}"
+                      onsubmit="return confirm('Excluir permanentemente este post? Esta ação não pode ser desfeita.')">
+                    @csrf @method('DELETE')
+                    <button type="submit"
+                            class="px-3 py-1.5 text-sm rounded-lg bg-red-50 text-red-600 hover:bg-red-100 border border-red-200">
+                        Excluir
+                    </button>
+                </form>
             </div>
         </div>
 

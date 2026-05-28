@@ -200,6 +200,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/posts/{blogPost}/publish-now',     [App\Http\Controllers\Admin\BlogPublicationController::class, 'publishNow'])->name('admin.blog.posts.publish-now');
             Route::post('/posts/{blogPost}/archive',         [App\Http\Controllers\Admin\BlogPublicationController::class, 'archive'])->name('admin.blog.posts.archive');
             Route::get('/posts/{blogPost}/logs',             [App\Http\Controllers\Admin\BlogPublicationController::class, 'logs'])->name('admin.blog.posts.logs');
+            Route::delete('/posts/{blogPost}',               [App\Http\Controllers\Admin\BlogPostController::class, 'destroy'])->name('admin.blog.posts.destroy');
 
             // === REAL PHASE — BLOG AUTOMATION (Gemini Text Only) ===
             // Automation dashboard
