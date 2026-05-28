@@ -48,6 +48,11 @@ class ContentBrief extends Model
         return $this->hasMany(BlogPost::class, 'content_brief_id');
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeContentBriefs($user, $query);
+    }
+
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {

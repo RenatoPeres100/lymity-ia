@@ -11,6 +11,7 @@ use App\Models\SocialPost;
 use App\Services\Social\SocialPostService;
 use App\Services\Social\SocialPublishingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SocialPostController extends Controller
 {
@@ -21,7 +22,8 @@ class SocialPostController extends Controller
 
     public function index(Request $request)
     {
-        $query = SocialPost::with(['client', 'aiEmployee'])->latest();
+        $user  = Auth::user();
+        $query = SocialPost::visibleTo($user)->with(['client', 'aiEmployee'])->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -34,14 +36,14 @@ class SocialPostController extends Controller
         }
 
         $posts   = $query->paginate(20)->withQueryString();
-        $clients = Client::orderBy('name')->get();
+        $clients = Client::visibleTo($user)->orderBy('name')->get();
 
         return view('admin.social.posts.index', compact('posts', 'clients'));
     }
 
     public function create()
     {
-        $clients = Client::orderBy('name')->get();
+        $clients = Client::visibleTo(Auth::user())->orderBy('name')->get();
         return view('admin.social.posts.create', compact('clients'));
     }
 
@@ -62,7 +64,7 @@ class SocialPostController extends Controller
 
     public function edit(SocialPost $post)
     {
-        $clients = Client::orderBy('name')->get();
+        $clients = Client::visibleTo(Auth::user())->orderBy('name')->get();
         return view('admin.social.posts.edit', compact('post', 'clients'));
     }
 

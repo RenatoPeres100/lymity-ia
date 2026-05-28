@@ -23,12 +23,7 @@ class UserController extends Controller
         $this->authorize('viewAny', User::class);
 
         $actor = Auth::user();
-        $query = User::with(['company', 'client'])->orderBy('name');
-
-        // client_admin only sees own client's users
-        if ($actor->role === 'cliente_admin') {
-            $query->where('client_id', $actor->client_id)->where('user_type', 'client');
-        }
+        $query = User::visibleTo($actor)->with(['company', 'client'])->orderBy('name');
 
         if ($search = $request->input('search')) {
             $query->where(fn($q) => $q->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
@@ -43,19 +38,22 @@ class UserController extends Controller
             $query->where('status', $status);
         }
         if ($clientId = $request->input('client_id')) {
-            $query->where('client_id', $clientId);
+            // Only allow filtering by clients visible to actor
+            if (app(\App\Services\Auth\AccessScopeService::class)->canSeeClient($actor, (int) $clientId)) {
+                $query->where('client_id', $clientId);
+            }
         }
 
         $users   = $query->paginate(20)->withQueryString();
-        $clients = Client::orderBy('name')->get(['id', 'name']);
+        $clients = Client::visibleTo($actor)->orderBy('name')->get(['id', 'name']);
 
         $stats = [
-            'total'    => User::count(),
-            'active'   => User::where('status', 'active')->count(),
-            'inactive' => User::whereIn('status', ['inactive', 'blocked'])->count(),
-            'internal' => User::where('user_type', 'internal')->orWhere(fn($q) => $q->where('user_type', 'agency'))->count(),
-            'clients'  => User::where('user_type', 'client')->count(),
-            'recent'   => User::whereNotNull('last_login_at')->orderByDesc('last_login_at')->limit(5)->get(['id', 'name', 'last_login_at']),
+            'total'    => User::visibleTo($actor)->count(),
+            'active'   => User::visibleTo($actor)->where('status', 'active')->count(),
+            'inactive' => User::visibleTo($actor)->whereIn('status', ['inactive', 'blocked'])->count(),
+            'internal' => User::visibleTo($actor)->where('user_type', 'internal')->orWhere(fn($q) => $q->where('user_type', 'agency'))->count(),
+            'clients'  => User::visibleTo($actor)->where('user_type', 'client')->count(),
+            'recent'   => User::visibleTo($actor)->whereNotNull('last_login_at')->orderByDesc('last_login_at')->limit(5)->get(['id', 'name', 'last_login_at']),
         ];
 
         return view('admin.users.index', compact('users', 'clients', 'stats'));
@@ -65,8 +63,9 @@ class UserController extends Controller
     {
         $this->authorize('create', User::class);
 
-        $companies  = Company::orderBy('name')->get(['id', 'name']);
-        $clients    = Client::orderBy('name')->get(['id', 'name']);
+        $actor      = Auth::user();
+        $companies  = Company::visibleTo($actor)->orderBy('name')->get(['id', 'name']);
+        $clients    = Client::visibleTo($actor)->orderBy('name')->get(['id', 'name']);
         $roles      = $this->availableRoles(Auth::user());
         $prefillClientId  = $request->input('client_id');
         $prefillUserType  = $request->input('user_type');
@@ -105,8 +104,9 @@ class UserController extends Controller
     {
         $this->authorize('update', $user);
 
-        $companies = Company::orderBy('name')->get(['id', 'name']);
-        $clients   = Client::orderBy('name')->get(['id', 'name']);
+        $actor     = Auth::user();
+        $companies = Company::visibleTo($actor)->orderBy('name')->get(['id', 'name']);
+        $clients   = Client::visibleTo($actor)->orderBy('name')->get(['id', 'name']);
         $roles     = $this->availableRoles(Auth::user());
 
         return view('admin.users.edit', compact('user', 'companies', 'clients', 'roles'));

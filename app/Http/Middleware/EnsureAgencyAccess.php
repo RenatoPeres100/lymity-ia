@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Auth\AccessScopeService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,11 +15,16 @@ class EnsureAgencyAccess
         'social_media', 'gestor_trafego', 'seo', 'copywriter', 'designer', 'blog_writer',
     ];
 
+    public function __construct(private AccessScopeService $scope) {}
+
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
 
         if (!$user || !in_array($user->role, self::AGENCY_ROLES)) {
+            if ($user) {
+                $this->scope->logDenied($user, 'access.denied.admin_panel', $request->path());
+            }
             abort(403, 'Acesso restrito a membros da agência.');
         }
 

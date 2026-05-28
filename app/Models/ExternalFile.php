@@ -45,6 +45,11 @@ class ExternalFile extends Model
         return $this->morphTo('related');
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeFiles($user, $query);
+    }
+
     public function getSourceLabelAttribute(): string
     {
         return match ($this->source) {

@@ -10,6 +10,7 @@ use App\Models\AiEmployee;
 use App\Models\Company;
 use App\Services\Agents\AgentRoutineService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AgentRoutineController extends Controller
 {
@@ -17,7 +18,9 @@ class AgentRoutineController extends Controller
 
     public function index()
     {
-        $routines = AgentRoutine::with('aiEmployee', 'company')
+        $user     = Auth::user();
+        $routines = AgentRoutine::visibleTo($user)
+            ->with('aiEmployee', 'company')
             ->latest()
             ->paginate(20);
 

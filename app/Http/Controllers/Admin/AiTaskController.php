@@ -13,6 +13,7 @@ use App\Models\Client;
 use App\Services\Ai\AiTaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class AiTaskController extends Controller
@@ -21,7 +22,8 @@ class AiTaskController extends Controller
 
     public function index(Request $request): View
     {
-        $query = AiTask::with(['employee', 'client'])->latest();
+        $user  = Auth::user();
+        $query = AiTask::visibleTo($user)->with(['employee', 'client'])->latest();
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -39,7 +41,7 @@ class AiTaskController extends Controller
     public function create(): View
     {
         $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
-        $clients   = Client::orderBy('name')->get();
+        $clients   = Client::visibleTo(Auth::user())->orderBy('name')->get();
         return view('admin.ai-tasks.create', compact('employees', 'clients'));
     }
 

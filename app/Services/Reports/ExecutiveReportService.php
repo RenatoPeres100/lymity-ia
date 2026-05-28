@@ -22,8 +22,33 @@ use App\Models\User;
 
 class ExecutiveReportService
 {
-    public function adminSummary(): array
+    public function adminSummary(?User $user = null): array
     {
+        if ($user) {
+            return [
+                'clients'              => Client::visibleTo($user)->count(),
+                'users_active'         => User::visibleTo($user)->where('status', 'active')->count(),
+                'ai_employees_active'  => AiEmployee::where('status', 'active')->count(),
+                'ai_tasks_today'       => AiTask::visibleTo($user)->whereDate('created_at', today())->count(),
+                'ai_tasks_total'       => AiTask::visibleTo($user)->count(),
+                'approvals_pending'    => ApprovalRequest::visibleTo($user)->where('status', 'pending')->count(),
+                'approvals_critical'   => ApprovalRequest::visibleTo($user)->where('status', 'pending')->where('sensitive_level', 'critical')->count(),
+                'approvals_total'      => ApprovalRequest::visibleTo($user)->count(),
+                'social_posts'         => SocialPost::visibleTo($user)->count(),
+                'campaigns'            => AdCampaign::count(),
+                'campaigns_active'     => AdCampaign::where('status', 'active')->count(),
+                'blog_posts_published' => BlogPost::visibleTo($user)->where('status', 'published')->count(),
+                'blog_posts_total'     => BlogPost::visibleTo($user)->count(),
+                'proposals'            => Proposal::count(),
+                'proposals_accepted'   => Proposal::where('status', 'accepted')->count(),
+                'budgets'              => Budget::count(),
+                'seo_keywords'         => SeoKeyword::count(),
+                'logs_total'           => ActivityLog::visibleTo($user)->count(),
+                'logs_critical'        => ActivityLog::visibleTo($user)->whereIn('level', ['error', 'critical'])->count(),
+                'logs_today'           => ActivityLog::visibleTo($user)->whereDate('created_at', today())->count(),
+            ];
+        }
+
         return [
             'clients'              => Client::count(),
             'users_active'         => User::where('status', 'active')->count(),

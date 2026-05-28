@@ -15,6 +15,11 @@ class ClientManagementService
     {
         $data = $this->normalizeData($data);
 
+        // Enforce ownership: agency users can only create under their own company
+        if (!$actor->isAdminGeral() && $actor->isAgencyUser()) {
+            $data['company_id'] = $actor->company_id;
+        }
+
         if (empty($data['company_id'])) {
             $data['company_id'] = Company::first()?->id;
         }
@@ -89,8 +94,11 @@ class ClientManagementService
 
     public function canManage(User $actor, Client $client): bool
     {
-        return $actor->isAdminGeral()
-            || in_array($actor->role, ['agencia_admin', 'agencia_operador']);
+        if ($actor->isAdminGeral()) return true;
+        if ($actor->isAgencyUser()) {
+            return $actor->company_id && $client->company_id === $actor->company_id;
+        }
+        return false;
     }
 
     public function normalizeData(array $data): array

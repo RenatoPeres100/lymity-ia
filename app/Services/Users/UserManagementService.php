@@ -17,6 +17,17 @@ class UserManagementService
             throw ValidationException::withMessages(['role' => 'Você não tem permissão para criar usuários com esse perfil.']);
         }
 
+        // Enforce ownership: agency users can only create users in their own company
+        if (!$actor->isAdminGeral() && $actor->isAgencyUser()) {
+            $data['company_id'] = $actor->company_id;
+        }
+
+        // Client admin can only create users in their own client
+        if ($actor->isClientAdmin()) {
+            $data['client_id']  = $actor->client_id;
+            $data['company_id'] = optional(optional($actor->client)->company)->id;
+        }
+
         $password = $data['password'] ?? Str::password(16);
 
         $user = User::create([

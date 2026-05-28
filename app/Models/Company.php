@@ -13,6 +13,11 @@ class Company extends Model
         'phone', 'website', 'logo', 'status',
     ];
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeCompanies($user, $query);
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class);

@@ -9,6 +9,7 @@ use App\Models\BlogPost;
 use App\Services\Blog\BlogPipelineService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class BlogPostController extends Controller
@@ -17,7 +18,9 @@ class BlogPostController extends Controller
 
     public function index(): View
     {
-        $posts = BlogPost::agency()
+        $user  = Auth::user();
+        $posts = BlogPost::visibleTo($user)
+            ->agency()
             ->with(['category', 'author'])
             ->orderByDesc('created_at')
             ->paginate(20);

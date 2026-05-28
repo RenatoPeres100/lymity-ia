@@ -33,6 +33,11 @@ class AgencyBrandContext extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeBrandContexts($user, $query);
+    }
+
     public function isComplete(): bool
     {
         return !empty($this->brand_name)

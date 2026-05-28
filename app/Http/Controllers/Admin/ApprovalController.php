@@ -20,7 +20,9 @@ class ApprovalController extends Controller
 
     public function index(Request $request): View
     {
-        $query = ApprovalRequest::with(['client', 'requester', 'aiEmployee'])
+        $user  = Auth::user();
+        $query = ApprovalRequest::visibleTo($user)
+            ->with(['client', 'requester', 'aiEmployee'])
             ->latest();
 
         if ($request->filled('status')) {
@@ -40,13 +42,13 @@ class ApprovalController extends Controller
         }
 
         $approvals = $query->paginate(20)->withQueryString();
-        $clients   = Client::where('status', 'active')->orderBy('name')->get();
+        $clients   = Client::visibleTo($user)->where('status', 'active')->orderBy('name')->get();
 
         $stats = [
-            'pending'   => ApprovalRequest::where('status', 'pending')->count(),
-            'critical'  => ApprovalRequest::where('status', 'pending')->where('sensitive_level', 'critical')->count(),
-            'overdue'   => ApprovalRequest::where('status', 'pending')->where('due_at', '<', now())->count(),
-            'approved'  => ApprovalRequest::where('status', 'approved')->whereMonth('approved_at', now()->month)->count(),
+            'pending'   => ApprovalRequest::visibleTo($user)->where('status', 'pending')->count(),
+            'critical'  => ApprovalRequest::visibleTo($user)->where('status', 'pending')->where('sensitive_level', 'critical')->count(),
+            'overdue'   => ApprovalRequest::visibleTo($user)->where('status', 'pending')->where('due_at', '<', now())->count(),
+            'approved'  => ApprovalRequest::visibleTo($user)->where('status', 'approved')->whereMonth('approved_at', now()->month)->count(),
         ];
 
         return view('admin.approvals.index', compact('approvals', 'clients', 'stats'));
@@ -54,7 +56,7 @@ class ApprovalController extends Controller
 
     public function create(): View
     {
-        $clients = Client::where('status', 'active')->orderBy('name')->get();
+        $clients = Client::visibleTo(Auth::user())->where('status', 'active')->orderBy('name')->get();
 
         return view('admin.approvals.create', compact('clients'));
     }

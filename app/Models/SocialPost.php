@@ -72,6 +72,11 @@ class SocialPost extends Model
         return $this->approvalRequests()->where('status', 'pending')->latest()->first();
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeSocialPosts($user, $query);
+    }
+
     public function scopeForClient(Builder $query, int $clientId): Builder
     {
         return $query->where('client_id', $clientId);

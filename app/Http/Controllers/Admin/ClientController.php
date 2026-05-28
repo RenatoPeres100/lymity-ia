@@ -21,7 +21,9 @@ class ClientController extends Controller
     {
         $this->authorize('viewAny', Client::class);
 
-        $query = Client::with(['company'])
+        $user  = Auth::user();
+        $query = Client::visibleTo($user)
+            ->with(['company'])
             ->withCount('users')
             ->search($request->input('search'))
             ->orderBy('name');
@@ -34,10 +36,10 @@ class ClientController extends Controller
 
         $clients  = $query->paginate(20)->withQueryString();
         $stats    = [
-            'total'    => Client::count(),
-            'active'   => Client::active()->count(),
-            'inactive' => Client::inactive()->count(),
-            'archived' => Client::archived()->count(),
+            'total'    => Client::visibleTo($user)->count(),
+            'active'   => Client::visibleTo($user)->active()->count(),
+            'inactive' => Client::visibleTo($user)->inactive()->count(),
+            'archived' => Client::visibleTo($user)->archived()->count(),
         ];
 
         return view('admin.clients.index', compact('clients', 'stats'));

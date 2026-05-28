@@ -51,6 +51,11 @@ class ActivityLog extends Model
         };
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeActivityLogs($user, $query);
+    }
+
     public function getLevelBadgeAttribute(): string
     {
         return match ($this->level) {

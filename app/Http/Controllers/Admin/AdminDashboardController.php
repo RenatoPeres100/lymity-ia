@@ -8,6 +8,7 @@ use App\Models\AiTask;
 use App\Models\ApprovalRequest;
 use App\Models\SocialPost;
 use App\Services\Reports\ExecutiveReportService;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class AdminDashboardController extends Controller
@@ -16,18 +17,23 @@ class AdminDashboardController extends Controller
 
     public function index(): View
     {
-        $summary = $this->report->adminSummary();
+        $user    = Auth::user();
+        $summary = $this->report->adminSummary($user);
 
-        $recentApprovals = ApprovalRequest::with(['client', 'requester'])
+        $recentApprovals = ApprovalRequest::visibleTo($user)
+            ->with(['client', 'requester'])
             ->orderByDesc('created_at')->limit(5)->get();
 
-        $recentTasks = AiTask::with('aiEmployee')
+        $recentTasks = AiTask::visibleTo($user)
+            ->with('aiEmployee')
             ->orderByDesc('created_at')->limit(5)->get();
 
-        $criticalLogs = ActivityLog::whereIn('level', ['error', 'critical'])
+        $criticalLogs = ActivityLog::visibleTo($user)
+            ->whereIn('level', ['error', 'critical'])
             ->orderByDesc('created_at')->limit(5)->get();
 
-        $scheduledPosts = SocialPost::whereNotNull('scheduled_at')
+        $scheduledPosts = SocialPost::visibleTo($user)
+            ->whereNotNull('scheduled_at')
             ->orderBy('scheduled_at')->limit(5)->get();
 
         return view('admin.dashboard', compact(

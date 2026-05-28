@@ -119,7 +119,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // ─── Admin — Agency ───────────────────────────────────
-    Route::prefix('admin')->middleware('agency')->group(function () {
+    Route::prefix('admin')->middleware(['admin.panel'])->group(function () {
 
         // Phase 12 — System Health
         Route::get('/system-health', SystemHealthController::class)->name('admin.system-health');
@@ -583,7 +583,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     });
 
     // ─── Client Area ──────────────────────────────────────
-    Route::prefix('client')->middleware('client_access')->group(function () {
+    Route::prefix('client')->middleware(['client.panel'])->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
 
         // Phase 13 — Client Files
@@ -663,7 +663,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 });
 
 // Phase 10 — Mobile PWA App
-Route::prefix('app')->name('app.')->middleware(['auth', 'active', 'client_access'])->group(function () {
+Route::prefix('app')->name('app.')->middleware(['auth', 'active', 'client.panel'])->group(function () {
 
     Route::get('/',                                              AppDashboardController::class)->name('dashboard');
     Route::get('/calendar',                                      AppCalendarController::class)->name('calendar');

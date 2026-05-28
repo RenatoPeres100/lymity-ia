@@ -6,23 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ApprovalResource;
 use App\Models\ApprovalRequest;
 use App\Services\Approval\ApprovalService;
+use App\Services\Auth\AccessScopeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ApprovalController extends Controller
 {
-    public function __construct(private ApprovalService $approvalService) {}
+    public function __construct(
+        private ApprovalService $approvalService,
+        private AccessScopeService $scope,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $user  = $request->user();
-        $query = ApprovalRequest::with(['client', 'requester']);
-
-        if (!$user->isAdminGeral()) {
-            $query->where('client_id', $user->client_id);
-        }
-
-        $approvals = $query->orderByDesc('created_at')->paginate(20);
+        $user      = $request->user();
+        $approvals = ApprovalRequest::visibleTo($user)
+            ->with(['client', 'requester'])
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
         return response()->json([
             'data' => ApprovalResource::collection($approvals->items()),
@@ -85,7 +86,8 @@ class ApprovalController extends Controller
     private function authorizeAccess(Request $request, ApprovalRequest $approvalRequest): void
     {
         $user = $request->user();
-        if (!$user->isAdminGeral() && $approvalRequest->client_id !== $user->client_id) {
+        if (!$this->scope->canSeeClient($user, $approvalRequest->client_id)) {
+            $this->scope->logDenied($user, 'access.denied.cross_client', request()->path(), 'ApprovalRequest', $approvalRequest->id);
             abort(403, 'Acesso não autorizado.');
         }
     }

@@ -73,6 +73,11 @@ class BlogPost extends Model
 
     // ── Scopes ─────────────────────────────────────────────────────────────────
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeBlogPosts($user, $query);
+    }
+
     public function scopeAgency(Builder $query): Builder
     {
         return $query->where('type', 'agency');

@@ -9,19 +9,23 @@ use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 class ActivityLogController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = ActivityLog::with(['user', 'client', 'aiEmployee'])->orderByDesc('created_at');
+        $user  = Auth::user();
+        $query = ActivityLog::visibleTo($user)
+            ->with(['user', 'client', 'aiEmployee'])
+            ->orderByDesc('created_at');
 
         $query = $this->applyFilters($query, $request);
 
-        $logs    = $query->paginate(50)->withQueryString();
-        $clients = Client::orderBy('name')->get();
-        $users   = User::where('user_type', '!=', 'ai')->orderBy('name')->get();
+        $logs      = $query->paginate(50)->withQueryString();
+        $clients   = Client::visibleTo($user)->orderBy('name')->get();
+        $users     = User::visibleTo($user)->where('user_type', '!=', 'ai')->orderBy('name')->get();
         $employees = AiEmployee::orderBy('name')->get();
 
         return view('admin.activity-logs.index', compact('logs', 'clients', 'users', 'employees'));
@@ -29,7 +33,10 @@ class ActivityLogController extends Controller
 
     public function export(Request $request): Response
     {
-        $query = ActivityLog::with(['user', 'client', 'aiEmployee'])->orderByDesc('created_at');
+        $user  = Auth::user();
+        $query = ActivityLog::visibleTo($user)
+            ->with(['user', 'client', 'aiEmployee'])
+            ->orderByDesc('created_at');
         $query = $this->applyFilters($query, $request);
 
         $logs = $query->limit(5000)->get();

@@ -189,6 +189,11 @@ class Client extends Model
 
     // ── Scopes ───────────────────────────────────────────────────
 
+    public function scopeVisibleTo($query, User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeClients($user, $query);
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');

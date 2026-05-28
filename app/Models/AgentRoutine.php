@@ -58,6 +58,13 @@ class AgentRoutine extends Model
         return $this->hasMany(AgentRoutineRun::class);
     }
 
+    // ── Scopes ─────────────────────────────────────────────────────────────────
+
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeAgentRoutines($user, $query);
+    }
+
     // ── Helpers ────────────────────────────────────────────────────────────────
 
     public function isActive(): bool

@@ -7,12 +7,15 @@ use App\Models\ContentBrief;
 use App\Services\Blog\BlogBriefGenerationService;
 use App\Services\Blog\BlogDraftGenerationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ContentBriefController extends Controller
 {
     public function index()
     {
-        $briefs = ContentBrief::with('generatedByAgent', 'approvedBy')
+        $user   = Auth::user();
+        $briefs = ContentBrief::visibleTo($user)
+            ->with('generatedByAgent', 'approvedBy')
             ->orderByDesc('id')
             ->paginate(20);
 

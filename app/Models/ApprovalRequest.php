@@ -66,6 +66,11 @@ class ApprovalRequest extends Model
         return $this->hasMany(ApprovalComment::class)->orderBy('created_at', 'asc');
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeApprovals($user, $query);
+    }
+
     public function isPending(): bool
     {
         return $this->status === 'pending';

@@ -13,13 +13,9 @@ class SocialPostController extends Controller
     public function index(Request $request): JsonResponse
     {
         $user  = $request->user();
-        $query = SocialPost::query();
-
-        if (!$user->isAdminGeral()) {
-            $query->where('client_id', $user->client_id);
-        }
-
-        $posts = $query->orderByDesc('created_at')->paginate(20);
+        $posts = SocialPost::visibleTo($user)
+            ->orderByDesc('created_at')
+            ->paginate(20);
 
         return response()->json([
             'data' => SocialPostResource::collection($posts->items()),

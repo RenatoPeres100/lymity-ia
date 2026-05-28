@@ -89,9 +89,13 @@ class User extends Authenticatable
         return $this->role === 'admin_geral';
     }
 
+    public function isAgencyAdmin(): bool
+    {
+        return $this->role === 'agencia_admin';
+    }
+
     public function isAgencyUser(): bool
     {
-        // Role-based: internal/agency user_types both represent agency staff
         return in_array($this->role, [
             'agencia_admin', 'agencia_operador',
             'social_media', 'gestor_trafego', 'seo',
@@ -99,11 +103,20 @@ class User extends Authenticatable
         ]);
     }
 
+    public function isClientAdmin(): bool
+    {
+        return $this->role === 'cliente_admin';
+    }
+
     public function isClientUser(): bool
     {
-        // Role-based: client roles always belong to the client area
         return in_array($this->role, ['cliente_admin', 'cliente_colaborador'])
             || ($this->role === 'viewer' && $this->user_type === 'client');
+    }
+
+    public function isViewer(): bool
+    {
+        return $this->role === 'viewer';
     }
 
     public function isAiEmployee(): bool
@@ -114,6 +127,33 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->status === 'active';
+    }
+
+    public function canAccessAdminPanel(): bool
+    {
+        if (!$this->isActive()) return false;
+        if ($this->isAiEmployee()) return false;
+        if ($this->isClientUser()) return false;
+        return $this->isAdminGeral() || $this->isAgencyUser();
+    }
+
+    public function canAccessClientPanel(): bool
+    {
+        if (!$this->isActive()) return false;
+        if ($this->isAiEmployee()) return false;
+        return $this->isClientUser() || $this->isAdminGeral();
+    }
+
+    public function belongsToCompany(?int $companyId): bool
+    {
+        if (!$companyId) return false;
+        return $this->company_id === $companyId;
+    }
+
+    public function belongsToClient(?int $clientId): bool
+    {
+        if (!$clientId) return false;
+        return $this->client_id === $clientId;
     }
 
     public function hasPermission(string $key): bool
@@ -142,6 +182,11 @@ class User extends Authenticatable
             'ai_employee'         => 'Funcionário IA',
             default               => $this->role ?? 'Sem role',
         };
+    }
+
+    public function scopeVisibleTo($query, User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeUsers($user, $query);
     }
 
     public function uploadedFiles(): HasMany

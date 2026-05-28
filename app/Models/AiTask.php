@@ -76,6 +76,11 @@ class AiTask extends Model
         return $this->approvalRequests()->where('status', 'pending')->latest()->first();
     }
 
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        return app(\App\Services\Auth\AccessScopeService::class)->scopeAiTasks($user, $query);
+    }
+
     public function getEffectiveTaskType(): string
     {
         return $this->task_type ?? $this->type ?? 'general';
