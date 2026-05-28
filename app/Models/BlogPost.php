@@ -10,19 +10,23 @@ class BlogPost extends Model
 {
     protected $fillable = [
         'title', 'slug', 'subtitle', 'excerpt', 'content', 'featured_image',
-        'category_id', 'author_id', 'ai_employee_id', 'client_id', 'type', 'status',
+        'category_id', 'author_id', 'ai_employee_id', 'client_id', 'company_id', 'type', 'status',
         'seo_title', 'seo_description', 'focus_keyword', 'secondary_keywords',
         'tags', 'is_featured',
         'published_at', 'scheduled_at', 'publication_error',
         'approved_by', 'approved_at',
+        'content_brief_id', 'generated_by_agent_id', 'approved_by_user_id',
+        'revision_notes', 'ai_metadata',
     ];
 
     protected $casts = [
-        'published_at'  => 'datetime',
-        'scheduled_at'  => 'datetime',
-        'approved_at'   => 'datetime',
-        'tags'          => 'array',
-        'is_featured'   => 'boolean',
+        'published_at'      => 'datetime',
+        'scheduled_at'      => 'datetime',
+        'approved_at'       => 'datetime',
+        'tags'              => 'array',
+        'is_featured'       => 'boolean',
+        'secondary_keywords'=> 'array',
+        'ai_metadata'       => 'array',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────
@@ -42,14 +46,29 @@ class BlogPost extends Model
         return $this->belongsTo(AiEmployee::class, 'ai_employee_id');
     }
 
+    public function generatedByAgent(): BelongsTo
+    {
+        return $this->belongsTo(AiEmployee::class, 'generated_by_agent_id');
+    }
+
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
     }
 
+    public function approvedByUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by_user_id');
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function contentBrief(): BelongsTo
+    {
+        return $this->belongsTo(ContentBrief::class, 'content_brief_id');
     }
 
     // ── Scopes ─────────────────────────────────────────────────────────────────

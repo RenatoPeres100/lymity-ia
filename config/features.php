@@ -13,7 +13,7 @@ return [
 
     // === MÓDULOS ATIVOS ===
     'blog_pipeline'       => true,
-    'instagram_pipeline'  => true,
+    'instagram_pipeline'  => false,
     'ai_social_media'     => true,
     'ai_copywriter'       => true,
     'ai_blog_writer'      => true,
@@ -21,6 +21,12 @@ return [
     // === FASE 5 — ROTINAS OPERACIONAIS ===
     'agent_routines'       => true,
     'agency_brand_context' => true,
+
+    // === BLOG AUTOMATION — REAL PHASE ===
+    'blog_text_pipeline'  => true,
+    'blog_image_pipeline' => false,
+    'ai_blog_planner'     => true,
+    'ai_cover_image'      => false,
 
     // === MÓDULOS DESATIVADOS ===
     'ads_module'          => false,
@@ -34,8 +40,8 @@ return [
     'demo_mode'           => false,
 
     // === INSTAGRAM / META ===
-    'instagram_connection'  => true,
-    'instagram_publishing'  => true,
+    'instagram_connection'  => false,
+    'instagram_publishing'  => false,
 
     // === PUBLISHING / COMMAND CENTER ===
     'content_command_center' => true,

@@ -262,6 +262,92 @@ class BlogPipelineService
         return $post->fresh();
     }
 
+    // ── Phase aliases (approvePost / rejectPost / schedulePost / publishPost) ──
+
+    public function approvePost(BlogPost $post, User $user): BlogPost
+    {
+        abort_unless($post->canBeApproved(), 422, "Post com status '{$post->status}' não pode ser aprovado.");
+
+        $post->update([
+            'status'             => 'approved',
+            'approved_by'        => $user->id,
+            'approved_by_user_id'=> $user->id,
+            'approved_at'        => now(),
+            'revision_notes'     => null,
+        ]);
+
+        ApprovalRequest::where('approvable_type', BlogPost::class)
+            ->where('approvable_id', $post->id)
+            ->where('status', 'pending')
+            ->update([
+                'status'      => 'approved',
+                'approved_by' => $user->id,
+                'approved_at' => now(),
+            ]);
+
+        $this->registerLog($post, 'approved', $user);
+        return $post->fresh();
+    }
+
+    public function rejectPost(BlogPost $post, User $user, ?string $reason = null): BlogPost
+    {
+        $post->update([
+            'status'         => 'rejected',
+            'revision_notes' => $reason,
+        ]);
+
+        ApprovalRequest::where('approvable_type', BlogPost::class)
+            ->where('approvable_id', $post->id)
+            ->where('status', 'pending')
+            ->update([
+                'status'      => 'rejected',
+                'rejected_by' => $user->id,
+                'rejected_at' => now(),
+            ]);
+
+        $this->registerLog($post, 'rejected', $user, ['reason' => $reason]);
+        return $post->fresh();
+    }
+
+    public function schedulePost(BlogPost $post, Carbon|string $scheduledAt, User $user): BlogPost
+    {
+        $at = $scheduledAt instanceof Carbon ? $scheduledAt : Carbon::parse($scheduledAt);
+        abort_unless($post->canBeScheduled(), 422, "Apenas posts aprovados podem ser agendados.");
+
+        $post->update([
+            'status'       => 'scheduled',
+            'scheduled_at' => $at,
+        ]);
+
+        $this->registerLog($post, 'scheduled', $user, ['scheduled_at' => $at->toIso8601String()]);
+        return $post->fresh();
+    }
+
+    public function publishPost(BlogPost $post, ?User $user = null): BlogPost
+    {
+        return $this->publish($post, $user);
+    }
+
+    public function publishDuePosts(): array
+    {
+        $due = BlogPost::agency()->dueForPublishing()->get();
+        $published = 0;
+        $failed = 0;
+
+        foreach ($due as $post) {
+            try {
+                $this->publish($post);
+                $post->refresh();
+                $post->isPublished() ? $published++ : $failed++;
+            } catch (\Throwable $e) {
+                $this->failPublication($post, $e->getMessage());
+                $failed++;
+            }
+        }
+
+        return ['published' => $published, 'failed' => $failed];
+    }
+
     // ── Logging ────────────────────────────────────────────────────────────────
 
     public function registerLog(BlogPost $post, string $action, ?User $user = null, array $metadata = []): void

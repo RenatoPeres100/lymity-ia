@@ -7,9 +7,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AiTaskLog extends Model
 {
-    protected $fillable = ['ai_task_id', 'ai_employee_id', 'client_id', 'level', 'message', 'context'];
+    protected $fillable = [
+        'ai_task_id', 'ai_employee_id', 'client_id', 'level', 'message', 'context',
+        'task_type', 'status', 'provider', 'model',
+        'input_tokens', 'output_tokens', 'estimated_cost_usd',
+        'started_at', 'finished_at', 'payload_snapshot', 'error_message',
+        'related_type', 'related_id',
+    ];
 
-    protected $casts = ['context' => 'array'];
+    protected $casts = [
+        'context'          => 'array',
+        'payload_snapshot' => 'array',
+        'started_at'       => 'datetime',
+        'finished_at'      => 'datetime',
+    ];
 
     public function task(): BelongsTo
     {

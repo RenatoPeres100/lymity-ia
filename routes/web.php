@@ -183,10 +183,10 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::prefix('blog')->group(function () {
             // Pipeline view
             Route::get('/pipeline',              [App\Http\Controllers\Admin\BlogPipelineController::class, 'index'])->name('admin.blog.pipeline.index');
-            // AI generation
+            // AI generation (legacy)
             Route::get('/pipeline/generate-ai',  [App\Http\Controllers\Admin\BlogAiController::class, 'create'])->name('admin.blog.pipeline.generate-ai');
             Route::post('/pipeline/generate-ai', [App\Http\Controllers\Admin\BlogAiController::class, 'store'])->name('admin.blog.pipeline.generate-ai.store');
-            // Manual post creation (use existing BlogPostController; new routes with pipeline redirect)
+            // Manual post creation
             Route::get('/posts/create-pipeline',  [App\Http\Controllers\Admin\BlogPostController::class, 'create'])->name('admin.blog.posts.create');
             Route::post('/posts',                  [App\Http\Controllers\Admin\BlogPostController::class, 'store'])->name('admin.blog.posts.store');
             Route::get('/posts/{blogPost}',        [App\Http\Controllers\Admin\BlogPostController::class, 'show'])->name('admin.blog.posts.show');
@@ -200,6 +200,34 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/posts/{blogPost}/publish-now',     [App\Http\Controllers\Admin\BlogPublicationController::class, 'publishNow'])->name('admin.blog.posts.publish-now');
             Route::post('/posts/{blogPost}/archive',         [App\Http\Controllers\Admin\BlogPublicationController::class, 'archive'])->name('admin.blog.posts.archive');
             Route::get('/posts/{blogPost}/logs',             [App\Http\Controllers\Admin\BlogPublicationController::class, 'logs'])->name('admin.blog.posts.logs');
+
+            // === REAL PHASE — BLOG AUTOMATION (Gemini Text Only) ===
+            // Automation dashboard
+            Route::get('/automation',              [App\Http\Controllers\Admin\BlogAutomationController::class, 'index'])->name('admin.blog.automation.index');
+            Route::post('/automation/generate-brief', [App\Http\Controllers\Admin\BlogAutomationController::class, 'generateBrief'])->name('admin.blog.automation.generate-brief');
+            Route::post('/automation/generate-draft/{contentBrief}', [App\Http\Controllers\Admin\BlogAutomationController::class, 'generateDraft'])->name('admin.blog.automation.generate-draft');
+
+            // Content Briefs
+            Route::get('/briefs',                     [App\Http\Controllers\Admin\ContentBriefController::class, 'index'])->name('admin.blog.briefs.index');
+            Route::get('/briefs/create',              [App\Http\Controllers\Admin\ContentBriefController::class, 'create'])->name('admin.blog.briefs.create');
+            Route::post('/briefs',                    [App\Http\Controllers\Admin\ContentBriefController::class, 'store'])->name('admin.blog.briefs.store');
+            Route::post('/briefs/generate-ai',        [App\Http\Controllers\Admin\ContentBriefController::class, 'generateAi'])->name('admin.blog.briefs.generate-ai');
+            Route::get('/briefs/{contentBrief}',      [App\Http\Controllers\Admin\ContentBriefController::class, 'show'])->name('admin.blog.briefs.show');
+            Route::get('/briefs/{contentBrief}/edit', [App\Http\Controllers\Admin\ContentBriefController::class, 'edit'])->name('admin.blog.briefs.edit');
+            Route::put('/briefs/{contentBrief}',      [App\Http\Controllers\Admin\ContentBriefController::class, 'update'])->name('admin.blog.briefs.update');
+            Route::post('/briefs/{contentBrief}/approve',       [App\Http\Controllers\Admin\ContentBriefController::class, 'approve'])->name('admin.blog.briefs.approve');
+            Route::post('/briefs/{contentBrief}/generate-draft',[App\Http\Controllers\Admin\ContentBriefController::class, 'generateDraft'])->name('admin.blog.briefs.generate-draft');
+            Route::post('/briefs/{contentBrief}/archive',       [App\Http\Controllers\Admin\ContentBriefController::class, 'archive'])->name('admin.blog.briefs.archive');
+
+            // Approvals
+            Route::get('/approvals',                            [App\Http\Controllers\Admin\BlogApprovalController::class, 'index'])->name('admin.blog.approvals.index');
+            Route::get('/approvals/{approvalRequest}',          [App\Http\Controllers\Admin\BlogApprovalController::class, 'show'])->name('admin.blog.approvals.show');
+            Route::post('/approvals/{approvalRequest}/approve', [App\Http\Controllers\Admin\BlogApprovalController::class, 'approve'])->name('admin.blog.approvals.approve');
+            Route::post('/approvals/{approvalRequest}/reject',  [App\Http\Controllers\Admin\BlogApprovalController::class, 'reject'])->name('admin.blog.approvals.reject');
+            Route::post('/schedule/{blogPost}',                 [App\Http\Controllers\Admin\BlogApprovalController::class, 'schedulePost'])->name('admin.blog.posts.schedule-new');
+
+            // AI Logs
+            Route::get('/ai-logs', [App\Http\Controllers\Admin\BlogAiLogController::class, 'index'])->name('admin.blog.ai-logs.index');
         });
 
         // Phase 11 — Dashboards, Reports, Logs
