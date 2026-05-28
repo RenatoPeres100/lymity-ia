@@ -123,9 +123,9 @@
                         @endif
 
                         @if($blogPost->canBeScheduled())
-                            <button onclick="openScheduleModal({{ $blogPost->id }})"
+                            <button onclick="openScheduleModal({{ $blogPost->id }}, '{{ $blogPost->scheduled_at ? $blogPost->scheduled_at->format('Y-m-d H:i:s') : '' }}')"
                                     class="w-full px-3 py-2 text-xs rounded-lg bg-purple-100 text-purple-800 hover:bg-purple-200 text-left font-medium">
-                                Agendar publicação
+                                {{ $blogPost->isScheduled() ? 'Editar agendamento' : 'Agendar publicação' }}
                             </button>
                             <form method="POST" action="{{ route('admin.blog.posts.publish-now', $blogPost) }}">
                                 @csrf

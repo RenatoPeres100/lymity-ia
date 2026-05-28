@@ -85,16 +85,29 @@
             </div>
             @endif
 
-            @if($approvalRequest->status === 'approved' && $post && $post->isApproved())
+            @if($post && $post->canBeScheduled())
             <div class="card border-blue-200">
-                <div class="card-header bg-blue-50"><h3 class="font-semibold text-blue-900 text-sm">Agendar Publicação</h3></div>
+                <div class="card-header bg-blue-50">
+                    <h3 class="font-semibold text-blue-900 text-sm">
+                        {{ $post->isScheduled() ? 'Editar Agendamento' : 'Agendar Publicação' }}
+                    </h3>
+                    @if($post->isScheduled())
+                    <p class="text-xs text-blue-600 mt-0.5">
+                        Atual: {{ $post->scheduled_at->format('d/m/Y H:i') }}
+                    </p>
+                    @endif
+                </div>
                 <div class="card-body">
                     <form method="POST" action="{{ route('admin.blog.posts.schedule-new', $post) }}">
                         @csrf
-                        <label class="form-label text-xs">Data e hora de publicação</label>
+                        <label class="form-label text-xs">Nova data e hora</label>
                         <input type="datetime-local" name="scheduled_at" class="form-input mb-3"
-                            min="{{ now()->addMinute()->format('Y-m-d\TH:i') }}" required>
-                        <button type="submit" class="btn-primary w-full">Agendar</button>
+                            min="{{ now()->addMinute()->format('Y-m-d\TH:i') }}"
+                            value="{{ $post->scheduled_at ? $post->scheduled_at->format('Y-m-d\TH:i') : '' }}"
+                            required>
+                        <button type="submit" class="btn-primary w-full">
+                            {{ $post->isScheduled() ? 'Salvar Agendamento' : 'Agendar' }}
+                        </button>
                     </form>
                 </div>
             </div>

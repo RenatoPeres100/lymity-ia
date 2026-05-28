@@ -140,7 +140,7 @@ class BlogPost extends Model
 
     public function canBeScheduled(): bool
     {
-        return $this->status === 'approved';
+        return in_array($this->status, ['approved', 'scheduled']);
     }
 
     public function canBePublished(): bool

@@ -67,9 +67,9 @@
                     @endif
 
                     @if($post->canBeScheduled())
-                        <button onclick="openScheduleModal({{ $post->id }})"
+                        <button onclick="openScheduleModal({{ $post->id }}, '{{ $post->scheduled_at ? $post->scheduled_at->format('Y-m-d H:i:s') : '' }}')"
                                 class="px-2 py-1 text-xs rounded bg-purple-100 text-purple-800 hover:bg-purple-200">
-                            Agendar
+                            {{ $post->isScheduled() ? 'Reagendar' : 'Agendar' }}
                         </button>
                         <form method="POST" action="{{ route('admin.blog.posts.publish-now', $post) }}">
                             @csrf
