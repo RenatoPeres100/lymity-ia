@@ -8,12 +8,14 @@ return [
     'gemini_api_key'             => env('GEMINI_API_KEY'),
     'gemini_text_model'          => env('GEMINI_TEXT_MODEL', 'gemini-2.5-flash'),
     'gemini_text_fallback_model' => env('GEMINI_TEXT_FALLBACK_MODEL', 'gemini-2.5-flash-lite'),
+    'gemini_image_model'         => env('GEMINI_IMAGE_MODEL', 'imagen-3.0-generate-002'),
 
     // === FEATURE TOGGLES ===
-    'enable_grounding'     => filter_var(env('AI_ENABLE_GROUNDING', false), FILTER_VALIDATE_BOOLEAN),
-    'enable_context_cache' => filter_var(env('AI_ENABLE_CONTEXT_CACHE', false), FILTER_VALIDATE_BOOLEAN),
-    'require_approval'     => filter_var(env('AI_REQUIRE_APPROVAL', true), FILTER_VALIDATE_BOOLEAN),
-    'text_only_mode'       => filter_var(env('AI_TEXT_ONLY_MODE', true), FILTER_VALIDATE_BOOLEAN),
+    'enable_grounding'        => filter_var(env('AI_ENABLE_GROUNDING', false), FILTER_VALIDATE_BOOLEAN),
+    'enable_context_cache'    => filter_var(env('AI_ENABLE_CONTEXT_CACHE', false), FILTER_VALIDATE_BOOLEAN),
+    'require_approval'        => filter_var(env('AI_REQUIRE_APPROVAL', true), FILTER_VALIDATE_BOOLEAN),
+    'text_only_mode'          => filter_var(env('AI_TEXT_ONLY_MODE', false), FILTER_VALIDATE_BOOLEAN),
+    'image_generation_enabled'=> filter_var(env('AI_IMAGE_GENERATION_ENABLED', true), FILTER_VALIDATE_BOOLEAN),
 
     // === COST & LIMITS ===
     'daily_request_limit' => (int)   env('AI_DAILY_REQUEST_LIMIT', 20),

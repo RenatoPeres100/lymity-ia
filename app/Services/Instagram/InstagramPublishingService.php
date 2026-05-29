@@ -159,6 +159,48 @@ class InstagramPublishingService
         return $response->json();
     }
 
+    public function getContainerStatus(SocialChannel $channel, string $creationId): array
+    {
+        return $this->getPublishStatus($channel, $creationId);
+    }
+
+    public function waitUntilContainerFinished(SocialChannel $channel, string $creationId, int $maxAttempts = 10): array
+    {
+        for ($i = 0; $i < $maxAttempts; $i++) {
+            $status = $this->getContainerStatus($channel, $creationId);
+            $code   = $status['status_code'] ?? null;
+
+            if ($code === 'FINISHED') {
+                return $status;
+            }
+
+            if ($code === 'ERROR') {
+                throw new \RuntimeException("Container de mídia retornou ERROR. Container ID: {$creationId}");
+            }
+
+            if ($i < $maxAttempts - 1) {
+                sleep(3);
+            }
+        }
+
+        throw new \RuntimeException("Container de mídia não ficou FINISHED após {$maxAttempts} tentativas.");
+    }
+
+    public function getPublishedMedia(SocialChannel $channel, string $mediaId): array
+    {
+        $response = Http::get("{$this->graphBase}/{$mediaId}", [
+            'fields'       => 'id,permalink,caption,media_type,timestamp',
+            'access_token' => $channel->access_token,
+        ]);
+
+        if ($response->failed()) {
+            Log::warning("[InstagramPublishingService] Could not fetch media {$mediaId}: HTTP {$response->status()}");
+            return ['id' => $mediaId];
+        }
+
+        return $response->json();
+    }
+
     // ── High-level publish ─────────────────────────────────────────────────────
 
     public function publishSingleImage(SocialChannel $channel, SocialPost $post): array
@@ -177,23 +219,52 @@ class InstagramPublishingService
         $post->markPublishing();
         $this->logActivity('social_post_marked_publishing', null, ['post_id' => $post->id]);
 
-        $container = $this->createMediaContainer($channel, $imageUrl, $caption);
-        $published = $this->publishContainer($channel, $container['id']);
+        // Step 1: Create container
+        $container    = $this->createMediaContainer($channel, $imageUrl, $caption);
+        $containerId  = $container['id'];
 
+        // Save container ID
+        $post->update(['instagram_container_id' => $containerId]);
+
+        $this->logActivity('instagram_container_created', null, [
+            'channel_id'   => $channel->id,
+            'post_id'      => $post->id,
+            'container_id' => $containerId,
+        ]);
+
+        // Step 2: Wait for FINISHED
+        $this->waitUntilContainerFinished($channel, $containerId);
+
+        // Step 3: Publish container
+        $published  = $this->publishContainer($channel, $containerId);
         $externalId = $published['id'] ?? null;
-        $post->markPublished($externalId);
+
+        // Step 4: Fetch permalink
+        $permalink = null;
+        if ($externalId) {
+            try {
+                $media     = $this->getPublishedMedia($channel, $externalId);
+                $permalink = $media['permalink'] ?? null;
+            } catch (\Throwable $e) {
+                Log::warning("[InstagramPublishingService] Could not fetch permalink for {$externalId}: {$e->getMessage()}");
+            }
+        }
+
+        $post->markPublished($externalId, $permalink);
 
         $this->logActivity('instagram_publish_success', null, [
-            'channel_id'     => $channel->id,
-            'post_id'        => $post->id,
-            'external_post_id' => $externalId,
+            'channel_id'      => $channel->id,
+            'post_id'         => $post->id,
+            'external_post_id'=> $externalId,
+            'permalink'       => $permalink,
         ]);
         $this->logActivity('social_post_published', null, [
-            'post_id'        => $post->id,
-            'external_post_id' => $externalId,
+            'post_id'         => $post->id,
+            'external_post_id'=> $externalId,
+            'permalink'       => $permalink,
         ]);
 
-        return $published;
+        return array_merge($published, ['permalink' => $permalink]);
     }
 
     public function publishCarousel(SocialChannel $channel, SocialPost $post): array

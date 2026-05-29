@@ -8,6 +8,7 @@
     <meta name="description" content="{{ $metaDescription }}">
     @endif
     <meta name="robots" content="index, follow">
+    <meta name="facebook-domain-verification" content="isy19z27c9i9svci3588334wihi20c" />
     <link rel="canonical" href="{{ url()->current() }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>

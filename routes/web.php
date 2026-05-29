@@ -373,6 +373,8 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         // Posts
         Route::get('/social/posts',                            [AdminSocialPostController::class, 'index'])->name('admin.social.posts.index');
+        Route::get('/social/posts/ai-create',                  [App\Http\Controllers\Admin\SocialPostAiController::class, 'create'])->name('admin.social.posts.ai-create');
+        Route::post('/social/posts/ai-create',                 [App\Http\Controllers\Admin\SocialPostAiController::class, 'store'])->name('admin.social.posts.ai-create.store');
         Route::get('/social/posts/create',                     [AdminSocialPostController::class, 'create'])->name('admin.social.posts.create');
         Route::post('/social/posts',                           [AdminSocialPostController::class, 'store'])->name('admin.social.posts.store');
         Route::get('/social/posts/{post}',                     [AdminSocialPostController::class, 'show'])->name('admin.social.posts.show');
@@ -386,6 +388,12 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/social/posts/{post}/mark-published',     [AdminSocialPostController::class, 'markPublished'])->name('admin.social.posts.mark-published');
         Route::post('/social/posts/{post}/back-to-draft',      [AdminSocialPostController::class, 'backToDraft'])->name('admin.social.posts.back-to-draft');
         Route::post('/social/posts/{socialPost}/publish-instagram-now', [App\Http\Controllers\Admin\SocialInstagramPublishController::class, 'publishNow'])->name('admin.social.posts.publish-instagram-now');
+        // AI actions on posts
+        Route::post('/social/posts/{post}/generate-caption',   [App\Http\Controllers\Admin\SocialPostAiController::class, 'generateCaption'])->name('admin.social.posts.generate-caption');
+        Route::post('/social/posts/{post}/generate-image',     [App\Http\Controllers\Admin\SocialPostAiController::class, 'generateImage'])->name('admin.social.posts.generate-image');
+        Route::post('/social/posts/{post}/validate-image',     [App\Http\Controllers\Admin\SocialPostAiController::class, 'validateImage'])->name('admin.social.posts.validate-image');
+        Route::post('/social/posts/{post}/replace-image-url',  [App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUrl'])->name('admin.social.posts.replace-image-url');
+        Route::post('/social/posts/{post}/replace-image-upload',[App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUpload'])->name('admin.social.posts.replace-image-upload');
 
         // Calendar
         Route::get('/social/calendar',                         [AdminSocialCalendarController::class, 'index'])->name('admin.social.calendar.index');

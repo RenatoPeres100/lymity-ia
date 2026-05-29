@@ -15,16 +15,20 @@ class SocialPost extends Model
         'title', 'objective', 'content_type', 'creative_format', 'main_caption',
         'creative_brief', 'hashtags', 'cta', 'status',
         'image_url', 'public_image_url', 'external_post_id', 'publication_error',
+        'image_prompt', 'image_path', 'image_status', 'image_provider',
+        'image_metadata', 'image_validation_status', 'image_validation_error',
+        'instagram_container_id', 'permalink',
         'scheduled_at', 'published_at', 'requires_approval',
         'approved_by', 'approved_at', 'metadata',
     ];
 
     protected $casts = [
-        'requires_approval' => 'boolean',
-        'scheduled_at'      => 'datetime',
-        'published_at'      => 'datetime',
-        'approved_at'       => 'datetime',
-        'metadata'          => 'array',
+        'requires_approval'  => 'boolean',
+        'scheduled_at'       => 'datetime',
+        'published_at'       => 'datetime',
+        'approved_at'        => 'datetime',
+        'metadata'           => 'array',
+        'image_metadata'     => 'array',
     ];
 
     public function client(): BelongsTo
@@ -112,12 +116,19 @@ class SocialPost extends Model
         return $query->where('status', 'published');
     }
 
+    public function scopeFailed(Builder $query): Builder
+    {
+        return $query->where('status', 'failed');
+    }
+
     public function scopeDueForPublishing(Builder $query): Builder
     {
         return $query->whereIn('status', ['approved', 'scheduled'])
             ->where('scheduled_at', '<=', now())
+            ->whereNotNull('approved_by')
             ->whereNotNull('public_image_url')
-            ->where('public_image_url', 'like', 'https://%');
+            ->where('public_image_url', 'like', 'https://%')
+            ->where('image_validation_status', 'valid');
     }
 
     public function isDraft(): bool
@@ -138,11 +149,6 @@ class SocialPost extends Model
     public function canBeScheduled(): bool
     {
         return $this->status === 'approved';
-    }
-
-    public function canBePublished(): bool
-    {
-        return in_array($this->status, ['approved', 'scheduled']) && $this->hasPublicImage();
     }
 
     public function isApproved(): bool
@@ -185,9 +191,40 @@ class SocialPost extends Model
         return $this->status === 'rejected';
     }
 
+    public function canBeEdited(): bool
+    {
+        return in_array($this->status, ['draft', 'pending_approval', 'rejected', 'failed']);
+    }
+
+    public function canBeSubmittedForApproval(): bool
+    {
+        return in_array($this->status, ['draft', 'rejected'])
+            && !empty(trim($this->main_caption ?? ''))
+            && $this->hasValidImage();
+    }
+
     public function hasPublicImage(): bool
     {
         return !empty($this->public_image_url) && str_starts_with($this->public_image_url, 'https://');
+    }
+
+    public function hasValidImage(): bool
+    {
+        return $this->hasPublicImage() && $this->image_validation_status === 'valid';
+    }
+
+    public function isAgencyPost(): bool
+    {
+        return is_null($this->client_id);
+    }
+
+    public function canBePublished(): bool
+    {
+        return in_array($this->status, ['approved', 'scheduled'])
+            && !empty($this->approved_by)
+            && !empty($this->approved_at)
+            && $this->hasValidImage()
+            && !empty(trim($this->main_caption ?? ''));
     }
 
     public function isApprovedForPublishing(): bool
@@ -204,12 +241,13 @@ class SocialPost extends Model
         return $this;
     }
 
-    public function markPublished(string $externalPostId = null): static
+    public function markPublished(string $externalPostId = null, ?string $permalink = null): static
     {
         $this->update([
             'status'            => 'published',
             'published_at'      => now(),
             'external_post_id'  => $externalPostId,
+            'permalink'         => $permalink ?? $this->permalink,
             'publication_error' => null,
         ]);
         return $this;

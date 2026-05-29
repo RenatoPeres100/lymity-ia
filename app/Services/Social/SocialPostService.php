@@ -3,23 +3,117 @@
 namespace App\Services\Social;
 
 use App\Models\ActivityLog;
+use App\Models\AiEmployee;
 use App\Models\ApprovalRequest;
+use App\Models\Company;
 use App\Models\SocialPost;
 use App\Models\SocialPostVariant;
 use App\Models\User;
+use App\Services\AI\AIProviderManager;
 use App\Services\Approval\ApprovalService;
+use App\Services\Brand\BrandContextService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class SocialPostService
 {
-    public function __construct(private ApprovalService $approvalService) {}
+    public function __construct(
+        private ApprovalService  $approvalService,
+        private ?AIProviderManager  $providerManager = null,
+        private ?BrandContextService $brandContext    = null,
+        private ?SocialImageService  $imageService    = null,
+    ) {}
 
     public function createDraft(array $data, User $user): SocialPost
     {
         $data['status'] = 'draft';
+
+        // Agency posts always have company_id from first company if not provided
+        if (empty($data['company_id'])) {
+            $data['company_id'] = Company::first()?->id;
+        }
+
         return $this->create($data, $user);
+    }
+
+    public function generateCaptionWithGemini(SocialPost $post, User $user): SocialPost
+    {
+        $pm = $this->providerManager ?? app(AIProviderManager::class);
+        $bc = $this->brandContext    ?? app(BrandContextService::class);
+
+        $provider = $pm->provider();
+        if (!$provider->isConfigured()) {
+            throw new \RuntimeException('Gemini não configurado. Verifique GEMINI_API_KEY e AI_PROVIDER=google no .env.');
+        }
+
+        $brandCtx = $bc->getCompactContext();
+
+        $objective   = $post->objective_label;
+        $contentType = $post->content_type_label;
+        $brief       = $post->creative_brief ?? $post->title;
+        $audience    = $post->metadata['target_audience'] ?? 'empreendedores e gestores digitais';
+        $tone        = $post->metadata['tone'] ?? 'profissional e inspirador';
+        $cta         = $post->metadata['desired_cta'] ?? $post->cta ?? '';
+
+        $systemPrompt = <<<PROMPT
+Você é o Social Media IA da Lymity — agência de inteligência artificial aplicada ao crescimento de negócios digitais.
+
+Sua função é criar legendas excepcionais para Instagram que geram engajamento real, comunicam autoridade e convertem.
+
+Contexto da marca:
+{$brandCtx}
+
+Regras:
+- Tom: {$tone}
+- Objetivo: {$objective}
+- Formato: {$contentType}
+- Público: {$audience}
+- Retorne JSON válido com as chaves: main_caption, hashtags, cta
+- main_caption: texto completo da legenda (até 2.200 chars), emojis estratégicos, quebras de linha naturais
+- hashtags: string com 5-10 hashtags relevantes separadas por espaço
+- cta: chamada para ação clara e direta (1 linha)
+- Nunca invente dados, métricas ou fatos sem base
+- Não use linguagem genérica — seja específico ao universo de IA e crescimento digital
+PROMPT;
+
+        $userMessage = "Crie uma legenda para Instagram sobre o seguinte tema:\n\n{$brief}";
+        if ($cta) $userMessage .= "\n\nCTA desejado: {$cta}";
+
+        $response = $provider->generateText([
+            'system_prompt' => $systemPrompt,
+            'user_message'  => $userMessage,
+            'json_mode'     => true,
+            'max_tokens'    => 1500,
+            'temperature'   => 0.75,
+        ]);
+
+        if (!$response->success) {
+            $this->logActivity($post, 'social_caption_generation_failed', $user, ['error' => $response->error_message]);
+            throw new \RuntimeException("Falha ao gerar legenda: {$response->error_message}");
+        }
+
+        $json = $response->json ?? [];
+
+        $post->update([
+            'main_caption' => $json['main_caption'] ?? $response->text,
+            'hashtags'     => $json['hashtags'] ?? null,
+            'cta'          => $json['cta'] ?? null,
+        ]);
+
+        $this->logActivity($post, 'social_caption_generated', $user, [
+            'provider' => $response->provider,
+            'model'    => $response->model,
+        ]);
+
+        return $post->fresh();
+    }
+
+    public function generateImageWithGemini(SocialPost $post, User $user): SocialPost
+    {
+        $imgSvc = $this->imageService ?? app(SocialImageService::class);
+        return $imgSvc->generateWithGemini($post, $user);
     }
 
     public function submitForApproval(SocialPost $post, User $user): SocialPost

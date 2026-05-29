@@ -74,9 +74,16 @@ class PublishDueSocialPostsCommand extends Command
                 continue;
             }
 
-            // Guard: public image
+            // Guard: public image + validation
             if (!$post->hasPublicImage()) {
                 $reason = "Post #{$post->id} sem public_image_url válida (HTTPS).";
+                $this->warn("  SKIP #{$post->id} — {$reason}");
+                $publisher->blockPublish($post, $reason, $channel);
+                continue;
+            }
+
+            if ($post->image_validation_status !== 'valid') {
+                $reason = "Post #{$post->id} imagem não validada (image_validation_status=" . ($post->image_validation_status ?? 'null') . ").";
                 $this->warn("  SKIP #{$post->id} — {$reason}");
                 $publisher->blockPublish($post, $reason, $channel);
                 continue;
@@ -96,7 +103,7 @@ class PublishDueSocialPostsCommand extends Command
                 $this->info("  PUBLISHING #{$post->id} — {$post->title}");
                 $publisher->publishSingleImage($channel, $post);
                 $post->refresh();
-                $this->info("  PUBLISHED #{$post->id} external_id={$post->external_post_id}");
+                $this->info("  PUBLISHED #{$post->id} external_id={$post->external_post_id} permalink=" . ($post->permalink ?? 'none'));
                 $published++;
             } catch (\Throwable $e) {
                 $this->error("  FAILED #{$post->id} — {$e->getMessage()}");
