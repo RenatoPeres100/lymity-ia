@@ -81,7 +81,7 @@ class InstagramDiagnosePublishingCommand extends Command
             $this->line("  facebook_page_id: " . ($channel->facebook_page_id ?? 'ausente'));
 
             if ($channel->token_expires_at) {
-                $expired = $channel->token_expires_at->isPast();
+                $expired     = $channel->token_expires_at->isPast();
                 $expiresLabel = $channel->token_expires_at->format('d/m/Y H:i');
                 $this->check("Token válido (expira {$expiresLabel})", !$expired);
                 if ($expired) {
@@ -119,11 +119,40 @@ class InstagramDiagnosePublishingCommand extends Command
         // ── SCHEDULER ────────────────────────────────────────────────────────
         $this->info('── Scheduler / Cron ────────────────────────────────');
 
-        $crontab = shell_exec('crontab -l 2>/dev/null');
-        $cronOk  = $crontab && str_contains($crontab, 'schedule:run');
-        $this->check('Cron schedule:run detectado', $cronOk);
-        if (!$cronOk) {
-            $this->warn("  → Adicione ao crontab:");
+        $whoami  = trim((string) shell_exec('whoami 2>/dev/null'));
+        $this->line("  Usuário verificado: {$whoami}");
+
+        $crontab = shell_exec('crontab -l 2>/dev/null') ?? '';
+
+        // Accept common variations of schedule:run
+        $cronPatterns = [
+            'schedule:run',
+        ];
+        $cronFound    = false;
+        $cronLine     = null;
+
+        foreach (explode("\n", $crontab) as $line) {
+            $trimmed = trim($line);
+            if ($trimmed === '' || str_starts_with($trimmed, '#')) {
+                continue;
+            }
+            foreach ($cronPatterns as $pattern) {
+                if (str_contains($trimmed, $pattern)) {
+                    $cronFound = true;
+                    $cronLine  = $trimmed;
+                    break 2;
+                }
+            }
+        }
+
+        if ($cronFound) {
+            $this->check('Cron schedule:run detectado', true);
+            // Show line but redact any potential secrets
+            $safeLine = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $cronLine ?? '');
+            $this->line("  Linha: {$safeLine}");
+        } else {
+            $this->check('Cron schedule:run não detectado', false);
+            $this->warn("  → Adicione ao crontab do usuário {$whoami}:");
             $this->warn("  * * * * * cd /var/www/lymity-ia && php artisan schedule:run >> /dev/null 2>&1");
         }
 

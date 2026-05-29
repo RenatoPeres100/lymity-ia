@@ -15,7 +15,7 @@ class InstagramConnectionController extends Controller
 
     public function index()
     {
-        $configured  = $this->auth->isConfigured();
+        $configured        = $this->auth->isConfigured();
         $publishingEnabled = config('meta.instagram_publishing_enabled', false);
 
         $channel = SocialChannel::where('platform', 'instagram')
@@ -23,29 +23,36 @@ class InstagramConnectionController extends Controller
             ->whereNull('client_id')
             ->first();
 
+        $diagnostics = $this->buildDiagnostics($configured);
+
         $this->log('instagram_connection_viewed', request()->user());
 
         return view('admin.social.instagram.index', compact(
-            'configured', 'publishingEnabled', 'channel'
+            'configured', 'publishingEnabled', 'channel', 'diagnostics'
         ));
     }
 
-    public function connect()
+    public function connect(Request $request)
     {
         if (!$this->auth->isConfigured()) {
             return redirect()->route('admin.social.instagram.index')
                 ->withErrors(['meta' => 'Meta não configurado. Defina META_APP_ID, META_APP_SECRET e META_REDIRECT_URI no .env.']);
         }
 
-        $this->log('instagram_connect_started', request()->user());
-
-        return redirect()->away($this->auth->getAuthorizationUrl());
+        try {
+            $url = $this->auth->getAuthorizationUrl($request->user());
+            $this->log('instagram_connect_started', $request->user());
+            return redirect()->away($url);
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.social.instagram.index')
+                ->withErrors(['meta' => 'Erro ao iniciar conexão: ' . $e->getMessage()]);
+        }
     }
 
     public function callback(Request $request)
     {
         try {
-            $channel = $this->auth->handleCallback($request->all(), $request->user());
+            $channel = $this->auth->handleCallback($request->query(), $request->user());
 
             return redirect()->route('admin.social.instagram.index')
                 ->with('success', "Instagram conectado com sucesso! Conta: {$channel->account_name}");
@@ -53,7 +60,7 @@ class InstagramConnectionController extends Controller
             $this->log('instagram_connection_failed', $request->user(), ['error' => $e->getMessage()]);
 
             return redirect()->route('admin.social.instagram.index')
-                ->withErrors(['meta' => 'Falha ao conectar: ' . $e->getMessage()]);
+                ->withErrors(['meta' => $e->getMessage()]);
         }
     }
 
@@ -69,19 +76,29 @@ class InstagramConnectionController extends Controller
         }
 
         return redirect()->route('admin.social.instagram.index')
-            ->with('success', 'Instagram desconectado.');
+            ->with('success', 'Instagram desconectado com sucesso.');
     }
 
     public function check(Request $request)
     {
+        $company = Company::first();
         $channel = SocialChannel::where('platform', 'instagram')
             ->whereNotNull('company_id')
             ->whereNull('client_id')
             ->first();
 
         if (!$channel) {
+            // Ensure the channel exists as disconnected so the user can connect
+            $channel = SocialChannel::create([
+                'company_id'   => $company?->id,
+                'platform'     => 'instagram',
+                'account_name' => '@lymity.ia',
+                'account_url'  => 'https://instagram.com/lymity.ia',
+                'status'       => 'disconnected',
+            ]);
+
             return redirect()->route('admin.social.instagram.index')
-                ->withErrors(['meta' => 'Nenhum canal Instagram configurado.']);
+                ->with('success', 'Canal @lymity.ia criado. Clique em "Conectar Instagram" para vincular.');
         }
 
         $this->auth->refreshConnectionStatus($channel);
@@ -89,6 +106,29 @@ class InstagramConnectionController extends Controller
 
         return redirect()->route('admin.social.instagram.index')
             ->with('success', 'Status da conexão verificado.');
+    }
+
+    // ── Private helpers ────────────────────────────────────────────────────────
+
+    private function buildDiagnostics(bool $configured): array
+    {
+        $redirectUri    = config('meta.redirect_uri', '');
+        $expectedUri    = 'https://ia.lymity.com.br/admin/social/instagram/callback';
+        $scopes         = array_merge(
+            config('meta.facebook_scopes', []),
+            config('meta.instagram_scopes', [])
+        );
+
+        return [
+            'app_id_set'        => !empty(config('meta.app_id')),
+            'app_secret_set'    => !empty(config('meta.app_secret')),
+            'auth_mode'         => config('meta.auth_mode', 'facebook_login'),
+            'graph_version'     => config('meta.graph_version', 'v25.0'),
+            'redirect_uri'      => $redirectUri,
+            'redirect_uri_ok'   => $redirectUri === $expectedUri,
+            'scopes'            => $scopes,
+            'publishing_enabled'=> config('meta.instagram_publishing_enabled', false),
+        ];
     }
 
     private function log(string $action, $user, array $metadata = []): void

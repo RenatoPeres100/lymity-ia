@@ -258,6 +258,54 @@ php artisan config:cache
 
 ---
 
+### "URL bloqueada pela Meta" ao conectar
+
+**Sintoma:** Durante o fluxo OAuth, a Meta retorna erro de URL bloqueada e redireciona de volta com `error=access_denied` ou similar.
+
+**Causas e soluções:**
+
+1. Acesse [developers.facebook.com](https://developers.facebook.com/apps) → seu App → **Facebook Login → Configurações**.
+2. Em **Valid OAuth Redirect URIs**, adicione exatamente:
+   ```
+   https://ia.lymity.com.br/admin/social/instagram/callback
+   ```
+   - Sem barra final.
+   - Sem query string.
+   - Deve ser HTTPS.
+3. Em **App Domains**, adicione:
+   ```
+   ia.lymity.com.br
+   ```
+4. Confirme que estão **ON**: Client OAuth Login, Web OAuth Login, Use Strict Mode for Redirect URIs, Enforce HTTPS.
+5. Salve e tente conectar novamente.
+
+---
+
+### "Estado OAuth inválido ou expirado" ao voltar do Meta
+
+**Sintoma:** Após autorizar no Meta, o sistema retorna com `error=Estado OAuth inválido ou expirado`.
+
+**Causas:** O state OAuth é um token único salvo na tabela `instagram_oauth_states` com validade de 15 minutos. Expira ou fica inválido se:
+- O fluxo demorou mais de 15 minutos.
+- O navegador ou cookie mudou (aba incógnita, limpeza de cookies).
+- A URL de callback foi aberta manualmente.
+
+**Solução:**
+```bash
+php artisan config:clear
+php artisan optimize:clear
+```
+1. Acesse `/admin/social/instagram`.
+2. Clique em **Conectar Instagram** — um novo state será gerado e salvo no banco.
+3. Conclua a autorização dentro de 15 minutos sem trocar de aba/navegador.
+
+**Diagnóstico:**
+```bash
+php artisan instagram:diagnose-oauth
+```
+
+---
+
 ## Ativando INSTAGRAM_PUBLISHING_ENABLED=true
 
 1. Valide a conexão OAuth completamente

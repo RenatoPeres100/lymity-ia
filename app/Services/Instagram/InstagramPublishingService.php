@@ -27,6 +27,7 @@ class InstagramPublishingService
         if (!config('meta.instagram_publishing_enabled', false)) return false;
         if (!$channel->isConnected() || !$channel->hasValidToken())  return false;
         if (empty($channel->instagram_user_id))                       return false;
+        if (empty($channel->facebook_page_id))                        return false;
 
         if ($post !== null) {
             if (!in_array($post->status, ['approved', 'scheduled']))  return false;
@@ -44,14 +45,18 @@ class InstagramPublishingService
     {
         abort_unless(
             config('meta.instagram_publishing_enabled', false), 403,
-            'Publicação no Instagram desabilitada. Configure INSTAGRAM_PUBLISHING_ENABLED=true após validar a conexão.'
+            'Publicação Instagram desabilitada no .env. Configure INSTAGRAM_PUBLISHING_ENABLED=true após validar a conexão.'
         );
         abort_unless($channel->isConnected(), 422,
-            'Canal Instagram não conectado. Conecte primeiro em /admin/social/instagram.');
-        abort_unless($channel->hasValidToken(), 422,
-            'Token do canal expirado ou inválido. Reconecte o Instagram.');
+            'Canal Instagram ainda não conectado. Acesse /admin/social/instagram e clique em Conectar Instagram.');
+        abort_unless(!empty($channel->getRawOriginal('access_token')), 422,
+            'Token de acesso ausente. Reconecte o canal Instagram em /admin/social/instagram.');
+        abort_unless(!$channel->isExpired(), 422,
+            'Token expirado. Reconecte o canal Instagram em /admin/social/instagram.');
         abort_unless(!empty($channel->instagram_user_id), 422,
-            'ID de usuário Instagram ausente. Reconecte o canal.');
+            'Instagram User ID ausente. Reconecte o canal Instagram para obter o ID.');
+        abort_unless(!empty($channel->facebook_page_id), 422,
+            'Facebook Page ID ausente. Reconecte o canal Instagram para obter o ID da página.');
     }
 
     public function validatePost(SocialPost $post): void

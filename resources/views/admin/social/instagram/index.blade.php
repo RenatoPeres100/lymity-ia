@@ -2,18 +2,20 @@
 
     <div class="max-w-3xl mx-auto space-y-6">
 
+        {{-- Header --}}
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-xl font-bold text-gray-900 dark:text-white">Conexão Instagram</h1>
-                <p class="text-sm text-gray-500 mt-0.5">Perfil oficial: <strong>@lymity.ia</strong> — {{ config('meta.redirect_uri') }}</p>
+                <p class="text-sm text-gray-500 mt-0.5">Perfil oficial: <strong>@lymity.ia</strong></p>
             </div>
         </div>
 
+        {{-- Alerts --}}
         @if(session('success'))
             <div class="p-3 rounded-lg bg-green-50 border border-green-200 text-green-800 text-sm">{{ session('success') }}</div>
         @endif
         @if($errors->any())
-            <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">
+            <div class="p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm space-y-1">
                 @foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach
             </div>
         @endif
@@ -27,13 +29,13 @@
                     </svg>
                     <div>
                         <h3 class="font-semibold text-amber-800 dark:text-amber-200">Meta/Instagram não configurado</h3>
-                        <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">Configure as variáveis abaixo no <code class="bg-amber-100 dark:bg-amber-900 px-1 rounded">.env</code> do servidor e depois reinicie o cache:</p>
+                        <p class="text-sm text-amber-700 dark:text-amber-300 mt-1">Configure as variáveis abaixo no <code class="bg-amber-100 dark:bg-amber-900 px-1 rounded">.env</code> do servidor:</p>
                         <pre class="mt-2 text-xs bg-amber-100 dark:bg-amber-900 rounded p-3 text-amber-900 dark:text-amber-100">META_APP_ID=seu_app_id
 META_APP_SECRET=seu_app_secret
 META_REDIRECT_URI=https://ia.lymity.com.br/admin/social/instagram/callback
 META_GRAPH_VERSION=v25.0
 INSTAGRAM_PUBLISHING_ENABLED=false</pre>
-                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">Após editar: <code class="bg-amber-100 dark:bg-amber-900 px-1 rounded">php artisan config:cache</code></p>
+                        <p class="text-xs text-amber-600 dark:text-amber-400 mt-2">Após editar: <code class="bg-amber-100 dark:bg-amber-900 px-1 rounded">php artisan config:clear && php artisan optimize:clear</code></p>
                     </div>
                 </div>
             </div>
@@ -91,18 +93,22 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                     <a href="{{ $channel->account_url }}" target="_blank" class="ml-2 text-indigo-600 hover:underline">{{ $channel->account_url }}</a>
                 </div>
                 @endif
-                @if($channel->instagram_user_id)
                 <div>
                     <span class="text-gray-500">Instagram User ID:</span>
-                    <span class="ml-2 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $channel->instagram_user_id }}</span>
+                    @if($channel->instagram_user_id)
+                        <span class="ml-2 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $channel->instagram_user_id }}</span>
+                    @else
+                        <span class="ml-2 text-red-500 text-xs">ausente — reconecte</span>
+                    @endif
                 </div>
-                @endif
-                @if($channel->facebook_page_id)
                 <div>
                     <span class="text-gray-500">Facebook Page ID:</span>
-                    <span class="ml-2 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $channel->facebook_page_id }}</span>
+                    @if($channel->facebook_page_id)
+                        <span class="ml-2 font-mono text-xs text-gray-700 dark:text-gray-300">{{ $channel->facebook_page_id }}</span>
+                    @else
+                        <span class="ml-2 text-red-500 text-xs">ausente — reconecte</span>
+                    @endif
                 </div>
-                @endif
                 @if($channel->token_expires_at)
                 <div>
                     <span class="text-gray-500">Token expira em:</span>
@@ -126,7 +132,6 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 @endif
             </div>
 
-            {{-- Permissions --}}
             @if($channel->permissions && count($channel->permissions) > 0)
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Permissões concedidas</p>
@@ -172,6 +177,67 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
             </div>
         </div>
 
+        {{-- Diagnostic block --}}
+        <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Diagnóstico de Configuração</h3>
+            <div class="space-y-2 text-sm font-mono">
+                @php
+                    $diag = $diagnostics;
+                    $ok   = '<span class="text-green-600 font-semibold">[OK]</span>';
+                    $err  = '<span class="text-red-600 font-semibold">[ERRO]</span>';
+                @endphp
+
+                <div>{!! $diag['app_id_set'] ? $ok : $err !!} META_APP_ID configurado</div>
+                <div>{!! $diag['app_secret_set'] ? $ok : $err !!} META_APP_SECRET configurado (valor oculto)</div>
+                <div class="text-gray-600 dark:text-gray-400">META_AUTH_MODE = {{ $diag['auth_mode'] }}</div>
+                <div class="text-gray-600 dark:text-gray-400">META_GRAPH_VERSION = {{ $diag['graph_version'] }}</div>
+                <div class="{{ $diag['redirect_uri_ok'] ? 'text-green-700' : 'text-red-700' }}">
+                    {!! $diag['redirect_uri_ok'] ? $ok : $err !!} META_REDIRECT_URI = {{ $diag['redirect_uri'] ?: '(não definido)' }}
+                </div>
+                @if(!$diag['redirect_uri_ok'])
+                <div class="text-amber-700 pl-6 text-xs">Esperado: https://ia.lymity.com.br/admin/social/instagram/callback</div>
+                @endif
+                <div class="text-gray-600 dark:text-gray-400">INSTAGRAM_PUBLISHING_ENABLED = {{ $diag['publishing_enabled'] ? 'true' : 'false' }}</div>
+                @if(!empty($diag['scopes']))
+                <div class="text-gray-600 dark:text-gray-400">Scopes: {{ implode(', ', $diag['scopes']) }}</div>
+                @endif
+            </div>
+        </div>
+
+        {{-- Meta App configuration instructions --}}
+        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-5">
+            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-3">Configuração necessária no Meta Developers</h3>
+            <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                No painel <a href="https://developers.facebook.com/apps" target="_blank" class="underline">developers.facebook.com</a>, abra seu app e configure:
+            </p>
+            <div class="space-y-3 text-sm">
+                <div>
+                    <p class="font-semibold text-blue-800 dark:text-blue-200">App Domains</p>
+                    <code class="block mt-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded px-3 py-1.5 text-xs">ia.lymity.com.br</code>
+                </div>
+                <div>
+                    <p class="font-semibold text-blue-800 dark:text-blue-200">Valid OAuth Redirect URIs <span class="text-xs font-normal text-blue-600">(exatamente este valor)</span></p>
+                    <code class="block mt-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded px-3 py-1.5 text-xs">https://ia.lymity.com.br/admin/social/instagram/callback</code>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    @foreach([
+                        'Client OAuth Login'           => 'ON',
+                        'Web OAuth Login'              => 'ON',
+                        'Use Strict Mode for Redirects'=> 'ON',
+                        'Enforce HTTPS'                => 'ON',
+                    ] as $setting => $value)
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>
+                        <span class="text-blue-700 dark:text-blue-300">{{ $setting }}: <strong>{{ $value }}</strong></span>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="text-xs text-blue-600 dark:text-blue-400 pt-1 border-t border-blue-200 dark:border-blue-700">
+                    Atenção: a Redirect URI deve ser idêntica — sem barra final, sem query string, obrigatoriamente HTTPS.
+                </div>
+            </div>
+        </div>
+
         {{-- Checklist --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Checklist de Configuração</h3>
@@ -180,13 +246,13 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                     ['label' => 'Conta Instagram é profissional (Business ou Creator)', 'done' => null],
                     ['label' => 'Instagram está vinculado a uma Página do Facebook', 'done' => null],
                     ['label' => 'App criado em Meta Developers (developers.facebook.com)', 'done' => null],
-                    ['label' => 'Redirect URI configurada no app Meta: ' . config('meta.redirect_uri'), 'done' => null],
-                    ['label' => 'Permissões adicionadas no app: pages_show_list, instagram_basic, instagram_content_publish', 'done' => null],
-                    ['label' => 'META_APP_ID configurado no .env', 'done' => !empty(config('meta.app_id'))],
-                    ['label' => 'META_APP_SECRET configurado no .env', 'done' => !empty(config('meta.app_secret'))],
-                    ['label' => 'META_REDIRECT_URI configurado no .env', 'done' => !empty(config('meta.redirect_uri'))],
-                    ['label' => 'INSTAGRAM_PUBLISHING_ENABLED=false (manter até validar conexão)', 'done' => !config('meta.instagram_publishing_enabled', false)],
-                    ['label' => 'Canal Instagram conectado com sucesso', 'done' => $channel?->isConnected()],
+                    ['label' => 'App Domain configurado: ia.lymity.com.br', 'done' => null],
+                    ['label' => 'Valid OAuth Redirect URI: https://ia.lymity.com.br/admin/social/instagram/callback', 'done' => $diagnostics['redirect_uri_ok']],
+                    ['label' => 'META_APP_ID configurado no .env', 'done' => $diagnostics['app_id_set']],
+                    ['label' => 'META_APP_SECRET configurado no .env', 'done' => $diagnostics['app_secret_set']],
+                    ['label' => 'INSTAGRAM_PUBLISHING_ENABLED=false (manter até validar conexão)', 'done' => !$diagnostics['publishing_enabled']],
+                    ['label' => 'Canal Instagram conectado com instagram_user_id preenchido', 'done' => $channel?->isConnected() && !empty($channel?->instagram_user_id)],
+                    ['label' => 'Canal Instagram conectado com facebook_page_id preenchido', 'done' => $channel?->isConnected() && !empty($channel?->facebook_page_id)],
                 ];
             @endphp
             <ul class="space-y-2">
@@ -211,7 +277,7 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
         @if(!$publishingEnabled)
         <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 p-4 text-sm text-blue-700 dark:text-blue-300">
             <strong>Publicação desabilitada</strong> — <code>INSTAGRAM_PUBLISHING_ENABLED=false</code>.
-            Ative apenas após validar a conexão e os testes. Para ativar: altere para <code>INSTAGRAM_PUBLISHING_ENABLED=true</code> no <code>.env</code> e rode <code>php artisan config:cache</code>.
+            Ative somente após validar a conexão e os testes. Para ativar: altere para <code>INSTAGRAM_PUBLISHING_ENABLED=true</code> no <code>.env</code> e rode <code>php artisan config:clear</code>.
         </div>
         @endif
 

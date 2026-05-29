@@ -48,7 +48,7 @@ php artisan config:cache
 3. Authorize the app on Facebook/Instagram (grant all required permissions).
 4. Callback returns to `/admin/social/instagram/callback`.
 5. The system:
-   - Validates the OAuth `state` against the session (CSRF protection).
+   - Validates the OAuth `state` via **database** (`instagram_oauth_states` table, expires in 15 min) with session fallback.
    - Exchanges the short-lived code for a long-lived token (~60 days).
    - Fetches the Facebook Pages linked to the account.
    - Finds the Instagram Business Account linked to a Page.
@@ -80,10 +80,59 @@ Then posts with `approved` or `scheduled` status can be published via
 | Token storage | `encrypted` cast on `access_token` / `refresh_token` in `SocialChannel` |
 | Token serialization | `hidden` array on model prevents tokens from appearing in JSON/arrays |
 | Log redaction | `preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', ...)` in all services |
-| OAuth CSRF | `state` parameter stored in session, validated on callback |
+| OAuth CSRF | `state` (64 chars) stored in `instagram_oauth_states` DB table (SHA-256 hash), expires 15 min; session used as fallback only |
 | Publish guard | `INSTAGRAM_PUBLISHING_ENABLED` checked first before any API call |
 
 Tokens are **never shown** in any view, log, or API response.
+
+---
+
+## Troubleshooting: "URL bloqueada pela Meta"
+
+The Meta callback URL is blocked when the redirect URI does not match exactly.
+
+Steps to fix:
+
+1. Open your app at [developers.facebook.com](https://developers.facebook.com/apps).
+2. Go to **Facebook Login → Settings**.
+3. Under **Valid OAuth Redirect URIs** add exactly:
+   ```
+   https://ia.lymity.com.br/admin/social/instagram/callback
+   ```
+   - No trailing slash.
+   - No query string.
+   - Must be HTTPS.
+4. Under **App Domains** add:
+   ```
+   ia.lymity.com.br
+   ```
+5. Ensure **Client OAuth Login: ON**, **Web OAuth Login: ON**, **Use Strict Mode for Redirect URIs: ON**, **Enforce HTTPS: ON**.
+6. Save and try connecting again.
+
+---
+
+## Troubleshooting: "Estado OAuth inválido ou expirado"
+
+The OAuth state is a one-time security token that expires in 15 minutes and is stored in the `instagram_oauth_states` database table.
+
+Common causes:
+
+- The OAuth flow took more than 15 minutes.
+- The browser session changed (different tab, incognito, cookie cleared).
+- The callback URL was opened manually instead of via Meta redirect.
+
+Fix:
+
+1. Run `php artisan config:clear && php artisan optimize:clear`.
+2. Return to `/admin/social/instagram`.
+3. Click **Conectar Instagram** again — a new state is generated.
+4. Complete the authorization within 15 minutes without changing browser/tab.
+
+Diagnostic:
+
+```bash
+php artisan instagram:diagnose-oauth
+```
 
 ---
 
@@ -97,8 +146,10 @@ Tokens are **never shown** in any view, log, or API response.
 | `app/Services/Instagram/InstagramPublishingService.php` | Media containers, publishing, error handling |
 | `app/Http/Controllers/Admin/InstagramConnectionController.php` | Admin routes handler |
 | `app/Models/SocialChannel.php` | Channel model with encrypted tokens and status helpers |
+| `app/Models/InstagramOAuthState.php` | OAuth state persistence model |
+| `database/migrations/2026_05_29_200000_create_instagram_oauth_states_table.php` | `instagram_oauth_states` table |
 | `database/migrations/2026_05_26_130153_add_instagram_fields_to_social_channels_table.php` | Schema for instagram_user_id, facebook_page_id, permissions, etc. |
-| `resources/views/admin/social/instagram/index.blade.php` | Connection management UI |
+| `resources/views/admin/social/instagram/index.blade.php` | Connection management UI with diagnostics |
 
 ---
 
