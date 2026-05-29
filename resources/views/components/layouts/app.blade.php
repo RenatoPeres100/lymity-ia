@@ -95,13 +95,25 @@
             </a>
 
             @if(config('features.instagram_connection') || config('features.instagram_pipeline'))
+            @php
+                $igChannel = \App\Models\SocialChannel::where('platform', 'instagram')
+                    ->whereNotNull('company_id')
+                    ->whereNull('client_id')
+                    ->first();
+                $igConnected = $igChannel && $igChannel->status === 'connected';
+            @endphp
             <a href="{{ route('admin.social.instagram.index') }}" class="nav-item {{ request()->routeIs('admin.social.instagram*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M17 2H7C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5z"/>
                     <circle cx="12" cy="12" r="4"/>
                     <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
                 </svg>
-                Instagram
+                Conexão Instagram
+                @if($igConnected)
+                    <span title="Conectado" class="ml-auto w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+                @else
+                    <span title="Desconectado" class="ml-auto w-2 h-2 rounded-full bg-red-400 shrink-0 animate-pulse"></span>
+                @endif
             </a>
             @endif
 
