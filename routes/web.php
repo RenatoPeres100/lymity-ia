@@ -95,6 +95,9 @@ Route::get('/plataforma',       [PublicSiteController::class, 'plataforma'])->na
 Route::get('/funcionarios-ia',  [PublicSiteController::class, 'funcionariosIa'])->name('funcionarios-ia');
 Route::get('/cases',            [PublicSiteController::class, 'cases'])->name('cases');
 
+Route::get('/politica-de-privacidade', [PublicSiteController::class, 'politicaPrivacidade'])->name('politica-privacidade');
+Route::get('/termos-de-servico',       [PublicSiteController::class, 'termosDeServico'])->name('termos-servico');
+
 // ─── Blog ─────────────────────────────────────────────────
 Route::get('/blog',             [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}',      [BlogController::class, 'show'])->name('blog.show');

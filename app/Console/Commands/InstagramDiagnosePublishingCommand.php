@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\SocialChannel;
+use App\Models\SocialPost;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+
+class InstagramDiagnosePublishingCommand extends Command
+{
+    protected $signature   = 'instagram:diagnose-publishing';
+    protected $description = 'Diagnóstico completo do pipeline de publicação Instagram @lymity.ia.';
+
+    public function handle(): int
+    {
+        $this->info('');
+        $this->info('=== INSTAGRAM PUBLISHING DIAGNOSE ===');
+        $this->info('Canal oficial: @lymity.ia');
+        $this->info('');
+
+        $ok = true;
+
+        // ── META CONFIG ───────────────────────────────────────────────────────
+        $this->info('── Configuração Meta ───────────────────────────────');
+        $ok &= $this->check('META_APP_ID configurado',      !empty(config('meta.app_id')));
+        $ok &= $this->check('META_APP_SECRET configurado',  !empty(config('meta.app_secret')));
+        $ok &= $this->check('META_GRAPH_VERSION configurado', !empty(config('meta.graph_version')));
+
+        $redirectUri = config('meta.redirect_uri');
+        $this->line("  META_REDIRECT_URI={$redirectUri}");
+        $ok &= $this->check(
+            'META_REDIRECT_URI correto',
+            $redirectUri === 'https://ia.lymity.com.br/admin/social/instagram/callback'
+        );
+
+        $authMode = config('meta.auth_mode', 'facebook_login');
+        $this->line("  META_AUTH_MODE={$authMode}");
+
+        $graphVersion = config('meta.graph_version', 'v25.0');
+        $this->line("  META_GRAPH_VERSION={$graphVersion}");
+
+        $publishingEnabled = config('meta.instagram_publishing_enabled', false);
+        $this->line("  INSTAGRAM_PUBLISHING_ENABLED=" . ($publishingEnabled ? 'true' : 'false'));
+
+        if (!$publishingEnabled) {
+            $this->warn("  → Configure INSTAGRAM_PUBLISHING_ENABLED=true no .env para habilitar publicação.");
+        }
+
+        $this->info('');
+
+        // ── FEATURES ─────────────────────────────────────────────────────────
+        $this->info('── Feature Flags ───────────────────────────────────');
+        $this->check('social_media_module=true',   config('features.social_media_module', false));
+        $this->check('instagram_pipeline=true',    config('features.instagram_pipeline', false));
+        $this->check('instagram_connection=true',  config('features.instagram_connection', false));
+        $this->check('instagram_publishing=true',  config('features.instagram_publishing', false));
+        $this->check('publishing_queue=true',      config('features.publishing_queue', false));
+        $this->info('');
+
+        // ── CANAL @lymity.ia ─────────────────────────────────────────────────
+        $this->info('── Canal @lymity.ia ────────────────────────────────');
+
+        $channel = SocialChannel::where('platform', 'instagram')
+            ->whereNotNull('company_id')
+            ->whereNull('client_id')
+            ->first();
+
+        if (!$this->check('Canal @lymity.ia existe', $channel !== null)) {
+            $this->warn("  → Crie o canal em /admin/social/instagram e conecte.");
+            $ok = false;
+        } else {
+            $this->line("  Canal ID: {$channel->id}");
+            $this->line("  Status: {$channel->status}");
+            $this->line("  account_name: " . ($channel->account_name ?? 'não definido'));
+            $this->check('Canal status=connected', $channel->status === 'connected');
+            $this->check('instagram_user_id preenchido', !empty($channel->instagram_user_id));
+            $this->check('facebook_page_id preenchido', !empty($channel->facebook_page_id));
+
+            $this->line("  instagram_user_id: " . ($channel->instagram_user_id ?? 'ausente'));
+            $this->line("  facebook_page_id: " . ($channel->facebook_page_id ?? 'ausente'));
+
+            if ($channel->token_expires_at) {
+                $expired = $channel->token_expires_at->isPast();
+                $expiresLabel = $channel->token_expires_at->format('d/m/Y H:i');
+                $this->check("Token válido (expira {$expiresLabel})", !$expired);
+                if ($expired) {
+                    $this->warn("  → Token expirado. Reconecte em /admin/social/instagram.");
+                }
+            } else {
+                $this->warn("  token_expires_at: não definido.");
+            }
+
+            if ($channel->permissions) {
+                $this->line("  Permissões: " . (is_array($channel->permissions) ? implode(', ', $channel->permissions) : $channel->permissions));
+            }
+
+            if ($channel->last_checked_at) {
+                $this->line("  Último check: " . $channel->last_checked_at->format('d/m/Y H:i'));
+            }
+
+            if ($channel->last_error) {
+                $safe = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $channel->last_error);
+                $this->error("  Último erro: {$safe}");
+            }
+        }
+
+        $this->info('');
+
+        // ── COMMANDS ─────────────────────────────────────────────────────────
+        $this->info('── Commands ────────────────────────────────────────');
+
+        $commands = Artisan::all();
+        $this->check('social:publish-due registrado',           isset($commands['social:publish-due']));
+        $this->check('content:run-publishing-cycle registrado', isset($commands['content:run-publishing-cycle']));
+        $this->check('blog:publish-due registrado',             isset($commands['blog:publish-due']));
+        $this->info('');
+
+        // ── SCHEDULER ────────────────────────────────────────────────────────
+        $this->info('── Scheduler / Cron ────────────────────────────────');
+
+        $crontab = shell_exec('crontab -l 2>/dev/null');
+        $cronOk  = $crontab && str_contains($crontab, 'schedule:run');
+        $this->check('Cron schedule:run detectado', $cronOk);
+        if (!$cronOk) {
+            $this->warn("  → Adicione ao crontab:");
+            $this->warn("  * * * * * cd /var/www/lymity-ia && php artisan schedule:run >> /dev/null 2>&1");
+        }
+
+        $this->info('');
+
+        // ── SOCIAL POSTS ─────────────────────────────────────────────────────
+        $this->info('── Posts Sociais ───────────────────────────────────');
+
+        $scheduledCount = SocialPost::whereNull('client_id')
+            ->where('status', 'scheduled')
+            ->count();
+        $this->line("  Posts scheduled (agência): {$scheduledCount}");
+
+        $dueCount = SocialPost::whereNull('client_id')
+            ->where('status', 'scheduled')
+            ->where('scheduled_at', '<=', now())
+            ->count();
+        $this->line("  Posts due agora: {$dueCount}");
+
+        $withImageCount = SocialPost::whereNull('client_id')
+            ->whereNotNull('public_image_url')
+            ->where('public_image_url', 'like', 'https://%')
+            ->count();
+        $this->line("  Posts com public_image_url válida: {$withImageCount}");
+
+        $recentErrors = SocialPost::whereNull('client_id')
+            ->where('status', 'failed')
+            ->whereNotNull('publication_error')
+            ->latest('updated_at')
+            ->limit(3)
+            ->get();
+
+        if ($recentErrors->isNotEmpty()) {
+            $this->warn("  Últimos erros de publicação:");
+            foreach ($recentErrors as $p) {
+                $safe = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $p->publication_error ?? '');
+                $this->warn("    #{$p->id} ({$p->title}): {$safe}");
+            }
+        }
+
+        $this->info('');
+        $this->info('=== FIM DO DIAGNÓSTICO ===');
+        $this->info('');
+
+        if (!$publishingEnabled) {
+            $this->warn('[PUBLISHING DESABILITADO] INSTAGRAM_PUBLISHING_ENABLED=false');
+            $this->warn('Após conectar e validar o canal, defina INSTAGRAM_PUBLISHING_ENABLED=true no .env e rode:');
+            $this->warn('  php artisan config:clear && php artisan optimize:clear');
+        }
+
+        return self::SUCCESS;
+    }
+
+    private function check(string $label, bool $result): bool
+    {
+        if ($result) {
+            $this->line("  <fg=green>[OK]</> {$label}");
+        } else {
+            $this->line("  <fg=red>[ERROR]</> {$label}");
+        }
+        return $result;
+    }
+}

@@ -17,3 +17,6 @@ Schedule::command('blog:publish-due')->everyMinute()->withoutOverlapping();
 
 // Real Phase 5 — Agent routines
 Schedule::command('agents:run-due-routines')->everyMinute()->withoutOverlapping();
+
+// Real Phase Social — Instagram publishing
+Schedule::command('social:publish-due')->everyMinute()->withoutOverlapping();

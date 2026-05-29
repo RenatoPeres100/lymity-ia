@@ -13,10 +13,15 @@ return [
 
     // === MÓDULOS ATIVOS ===
     'blog_pipeline'       => true,
-    'instagram_pipeline'  => false,
+    'instagram_pipeline'  => true,
     'ai_social_media'     => true,
     'ai_copywriter'       => true,
     'ai_blog_writer'      => true,
+
+    // === SOCIAL MEDIA ===
+    'social_media_module'   => true,
+    'social_post_creation'  => true,
+    'social_approval_flow'  => true,
 
     // === FASE 5 — ROTINAS OPERACIONAIS ===
     'agent_routines'       => true,
@@ -40,8 +45,8 @@ return [
     'demo_mode'           => false,
 
     // === INSTAGRAM / META ===
-    'instagram_connection'  => false,
-    'instagram_publishing'  => false,
+    'instagram_connection'  => true,
+    'instagram_publishing'  => true,
 
     // === PUBLISHING / COMMAND CENTER ===
     'content_command_center' => true,

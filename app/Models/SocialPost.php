@@ -87,9 +87,19 @@ class SocialPost extends Model
         return $query->whereNull('client_id');
     }
 
+    public function scopeAgency(Builder $query): Builder
+    {
+        return $query->whereNull('client_id');
+    }
+
     public function scopePendingApproval(Builder $query): Builder
     {
         return $query->where('status', 'pending_approval');
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('status', 'approved');
     }
 
     public function scopeScheduled(Builder $query): Builder
@@ -102,9 +112,37 @@ class SocialPost extends Model
         return $query->where('status', 'published');
     }
 
+    public function scopeDueForPublishing(Builder $query): Builder
+    {
+        return $query->whereIn('status', ['approved', 'scheduled'])
+            ->where('scheduled_at', '<=', now())
+            ->whereNotNull('public_image_url')
+            ->where('public_image_url', 'like', 'https://%');
+    }
+
+    public function isDraft(): bool
+    {
+        return $this->status === 'draft';
+    }
+
     public function isPendingApproval(): bool
     {
         return $this->status === 'pending_approval';
+    }
+
+    public function canBeApproved(): bool
+    {
+        return in_array($this->status, ['pending_approval', 'draft']);
+    }
+
+    public function canBeScheduled(): bool
+    {
+        return $this->status === 'approved';
+    }
+
+    public function canBePublished(): bool
+    {
+        return in_array($this->status, ['approved', 'scheduled']) && $this->hasPublicImage();
     }
 
     public function isApproved(): bool

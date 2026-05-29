@@ -35,6 +35,9 @@ class UserPermissionPresetService
             'client.users.disable',
             'client.users.reset_password',
             'client.app.view',
+            'client.social.view',
+            'client.social.approve',
+            'client.social.comment',
         ];
     }
 
@@ -51,11 +54,20 @@ class UserPermissionPresetService
         if ($function === 'aprovador') {
             $base[] = 'client.approvals.approve';
             $base[] = 'client.approvals.comment';
+            $base[] = 'client.social.view';
+            $base[] = 'client.social.approve';
+            $base[] = 'client.social.comment';
         }
 
         if (in_array($function, ['editor', 'copywriter', 'blog_writer'])) {
             $base[] = 'client.blog.create';
             $base[] = 'client.blog.update';
+        }
+
+        if (in_array($function, ['social_media', 'social media'])) {
+            $base[] = 'client.social.view';
+            $base[] = 'client.social.create';
+            $base[] = 'client.social.comment';
         }
 
         return array_unique($base);

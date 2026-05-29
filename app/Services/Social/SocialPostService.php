@@ -8,11 +8,86 @@ use App\Models\SocialPost;
 use App\Models\SocialPostVariant;
 use App\Models\User;
 use App\Services\Approval\ApprovalService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Throwable;
 
 class SocialPostService
 {
     public function __construct(private ApprovalService $approvalService) {}
+
+    public function createDraft(array $data, User $user): SocialPost
+    {
+        $data['status'] = 'draft';
+        return $this->create($data, $user);
+    }
+
+    public function submitForApproval(SocialPost $post, User $user): SocialPost
+    {
+        return $this->sendToApproval($post, $user);
+    }
+
+    public function schedule(SocialPost $post, Carbon|string $scheduledAt, User $user): SocialPost
+    {
+        if ($post->status !== 'approved') {
+            throw new \RuntimeException("Post #{$post->id} precisa estar aprovado para ser agendado. Status atual: {$post->status}");
+        }
+
+        $at = $scheduledAt instanceof Carbon ? $scheduledAt : Carbon::parse($scheduledAt);
+
+        $post->update([
+            'status'       => 'scheduled',
+            'scheduled_at' => $at,
+        ]);
+
+        $this->logActivity($post, 'social_post_scheduled', $user);
+
+        return $post->fresh();
+    }
+
+    public function publishNow(SocialPost $post, User $user): SocialPost
+    {
+        if (!in_array($post->status, ['approved', 'scheduled'])) {
+            throw new \RuntimeException("Post #{$post->id} precisa estar aprovado ou agendado para publicar. Status: {$post->status}");
+        }
+
+        $this->logActivity($post, 'social_post_publish_now_clicked', $user);
+
+        return $post->fresh();
+    }
+
+    public function markPublishing(SocialPost $post): SocialPost
+    {
+        $post->update(['status' => 'publishing']);
+        $this->logActivity($post, 'social_post_publishing', null);
+        return $post->fresh();
+    }
+
+    public function markPublished(SocialPost $post, array $result = []): SocialPost
+    {
+        $post->update([
+            'status'            => 'published',
+            'published_at'      => now(),
+            'external_post_id'  => $result['id'] ?? $post->external_post_id,
+            'publication_error' => null,
+        ]);
+        $this->logActivity($post, 'social_post_published', null);
+        return $post->fresh();
+    }
+
+    public function markFailed(SocialPost $post, Throwable|string $error): SocialPost
+    {
+        $message = $error instanceof Throwable ? $error->getMessage() : $error;
+        $safe    = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $message);
+        $post->update(['status' => 'failed', 'publication_error' => $safe]);
+        $this->logActivity($post, 'social_post_failed', null);
+        return $post->fresh();
+    }
+
+    public function registerLog(SocialPost $post, string $action, ?User $user = null, array $metadata = []): void
+    {
+        $this->logActivity($post, $action, $user, $metadata);
+    }
 
     public function create(array $data, ?User $user = null): SocialPost
     {
@@ -157,22 +232,26 @@ class SocialPostService
         };
     }
 
-    private function logActivity(SocialPost $post, string $action, ?User $user): void
+    private function logActivity(SocialPost $post, string $action, ?User $user, array $extra = []): void
     {
         if (!class_exists(ActivityLog::class)) {
             return;
         }
 
-        ActivityLog::create([
-            'user_id'     => $user?->id ?? Auth::id(),
-            'client_id'   => $post->client_id,
-            'action'      => $action,
-            'module'      => 'social_media',
-            'description' => "SocialPost #{$post->id} — {$post->title}",
-            'metadata'    => [
-                'social_post_id' => $post->id,
-                'status'         => $post->status,
-            ],
-        ]);
+        try {
+            ActivityLog::create([
+                'user_id'     => $user?->id ?? Auth::id(),
+                'client_id'   => $post->client_id,
+                'action'      => $action,
+                'module'      => 'social_media',
+                'description' => "SocialPost #{$post->id} — {$post->title}",
+                'metadata'    => array_merge([
+                    'social_post_id' => $post->id,
+                    'status'         => $post->status,
+                ], $extra),
+            ]);
+        } catch (\Throwable) {
+            // Never break service flow due to log failure
+        }
     }
 }

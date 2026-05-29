@@ -42,13 +42,22 @@ class PermissionSeeder extends Seeder
             ['key' => 'blog.approve', 'name' => 'Aprovar posts',   'module' => 'blog'],
             ['key' => 'blog.publish', 'name' => 'Publicar posts',  'module' => 'blog'],
             // social
-            ['key' => 'social.view',     'name' => 'Ver social',          'module' => 'social'],
-            ['key' => 'social.create',   'name' => 'Criar posts sociais', 'module' => 'social'],
-            ['key' => 'social.approve',  'name' => 'Aprovar posts',       'module' => 'social'],
-            ['key' => 'social.schedule', 'name' => 'Agendar posts',       'module' => 'social'],
+            ['key' => 'social.view',     'name' => 'Ver social',           'module' => 'social'],
+            ['key' => 'social.create',   'name' => 'Criar posts sociais',  'module' => 'social'],
+            ['key' => 'social.update',   'name' => 'Editar posts sociais', 'module' => 'social'],
+            ['key' => 'social.approve',  'name' => 'Aprovar posts',        'module' => 'social'],
+            ['key' => 'social.schedule', 'name' => 'Agendar posts',        'module' => 'social'],
+            ['key' => 'social.publish',  'name' => 'Publicar posts sociais','module' => 'social'],
+            ['key' => 'social.archive',  'name' => 'Arquivar posts sociais','module' => 'social'],
             // instagram
-            ['key' => 'instagram.connect', 'name' => 'Conectar Instagram', 'module' => 'instagram'],
-            ['key' => 'instagram.publish', 'name' => 'Publicar Instagram', 'module' => 'instagram'],
+            ['key' => 'instagram.view',       'name' => 'Ver Instagram',         'module' => 'instagram'],
+            ['key' => 'instagram.connect',    'name' => 'Conectar Instagram',    'module' => 'instagram'],
+            ['key' => 'instagram.disconnect', 'name' => 'Desconectar Instagram', 'module' => 'instagram'],
+            ['key' => 'instagram.check',      'name' => 'Verificar Instagram',   'module' => 'instagram'],
+            ['key' => 'instagram.publish',    'name' => 'Publicar Instagram',    'module' => 'instagram'],
+            // publishing queue
+            ['key' => 'publishing_queue.view',   'name' => 'Ver fila de publicação',       'module' => 'publishing_queue'],
+            ['key' => 'publishing_queue.manage', 'name' => 'Gerenciar fila de publicação', 'module' => 'publishing_queue'],
             // content
             ['key' => 'content.view',    'name' => 'Ver conteúdo',      'module' => 'content'],
             ['key' => 'content.create',  'name' => 'Criar conteúdo',    'module' => 'content'],
@@ -119,6 +128,13 @@ class PermissionSeeder extends Seeder
 
             // client.app
             ['key' => 'client.app.view',                'name' => 'Acessar App Mobile',              'module' => 'client_app'],
+
+            // client.social
+            ['key' => 'client.social.view',     'name' => 'Ver Social Media (cliente)',    'module' => 'client_social'],
+            ['key' => 'client.social.create',   'name' => 'Criar posts sociais (cliente)', 'module' => 'client_social'],
+            ['key' => 'client.social.approve',  'name' => 'Aprovar posts (cliente)',       'module' => 'client_social'],
+            ['key' => 'client.social.schedule', 'name' => 'Agendar posts (cliente)',       'module' => 'client_social'],
+            ['key' => 'client.social.comment',  'name' => 'Comentar posts (cliente)',      'module' => 'client_social'],
         ];
 
         foreach ($permissions as $perm) {

@@ -43,4 +43,14 @@ class PublicSiteController extends Controller
 
         return view('site.cases', compact('cases'));
     }
+
+    public function politicaPrivacidade(): View
+    {
+        return view('site.politica-de-privacidade');
+    }
+
+    public function termosDeServico(): View
+    {
+        return view('site.termos-de-servico');
+    }
 }

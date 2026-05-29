@@ -75,34 +75,16 @@
             </a>
             @endif
 
-            @if(config('features.instagram_connection'))
-            <a href="{{ route('admin.social.instagram.index') }}" class="nav-item {{ request()->routeIs('admin.social.instagram*') ? 'active' : '' }}">
+            @if(config('features.social_media_module') || config('features.instagram_pipeline'))
+            <span class="nav-section-label">Social Media</span>
+
+            <a href="{{ route('admin.social.posts.index') }}" class="nav-item {{ request()->routeIs('admin.social.posts*','admin.social.ai*','admin.social.briefs*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <rect x="2" y="2" width="20" height="20" rx="5"/>
                     <circle cx="12" cy="12" r="4"/>
                     <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
                 </svg>
-                Conexão Instagram
-            </a>
-            @endif
-
-            @if(config('features.instagram_pipeline'))
-            <a href="{{ route('admin.social.posts.index') }}" class="nav-item {{ request()->routeIs('admin.social.posts*','admin.social.ai*') ? 'active' : '' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <rect x="2" y="2" width="20" height="20" rx="5"/>
-                    <circle cx="12" cy="12" r="4"/>
-                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
-                </svg>
-                Posts Instagram
-            </a>
-
-            <a href="{{ route('admin.publishing-queue') }}" class="nav-item {{ request()->routeIs('admin.publishing-queue*') ? 'active' : '' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
-                    <line x1="8" y1="18" x2="21" y2="18"/>
-                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
-                </svg>
-                Fila de Publicação
+                Posts Sociais
             </a>
 
             <a href="{{ route('admin.social.calendar.index') }}" class="nav-item {{ request()->routeIs('admin.social.calendar*') ? 'active' : '' }}">
@@ -111,6 +93,28 @@
                 </svg>
                 Calendário
             </a>
+
+            @if(config('features.instagram_connection') || config('features.instagram_pipeline'))
+            <a href="{{ route('admin.social.instagram.index') }}" class="nav-item {{ request()->routeIs('admin.social.instagram*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M17 2H7C4.24 2 2 4.24 2 7v10c0 2.76 2.24 5 5 5h10c2.76 0 5-2.24 5-5V7c0-2.76-2.24-5-5-5z"/>
+                    <circle cx="12" cy="12" r="4"/>
+                    <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+                </svg>
+                Instagram
+            </a>
+            @endif
+
+            @if(config('features.publishing_queue'))
+            <a href="{{ route('admin.publishing-queue') }}" class="nav-item {{ request()->routeIs('admin.publishing-queue*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                Fila de Publicação
+            </a>
+            @endif
             @endif
 
             {{-- AGENTES IA --}}

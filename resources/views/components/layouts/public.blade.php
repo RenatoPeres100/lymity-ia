@@ -345,7 +345,13 @@
 
         <div class="pub-footer-bottom">
             <span>© {{ date('Y') }} Lymity AI Agency. Todos os direitos reservados.</span>
-            <span class="pub-footer-badge">✦ Powered by Claude AI</span>
+            <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+                <a href="{{ route('politica-privacidade') }}" style="color:#475569;font-size:0.78rem;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#475569'">Política de Privacidade</a>
+                <span style="color:#334155;">·</span>
+                <a href="{{ route('termos-servico') }}" style="color:#475569;font-size:0.78rem;text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#475569'">Termos de Serviço</a>
+                <span style="color:#334155;">·</span>
+                <span class="pub-footer-badge">✦ Powered by Claude AI</span>
+            </div>
         </div>
     </div>
 </footer>
