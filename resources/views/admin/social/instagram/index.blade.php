@@ -190,6 +190,14 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 <div>{!! $diag['app_id_set'] ? $ok : $err !!} META_APP_ID configurado</div>
                 <div>{!! $diag['app_secret_set'] ? $ok : $err !!} META_APP_SECRET configurado (valor oculto)</div>
                 <div class="text-gray-600 dark:text-gray-400">META_AUTH_MODE = {{ $diag['auth_mode'] }}</div>
+                @php
+                    $isLegacyMode = $diag['auth_mode'] === 'facebook_login';
+                    $legacyScopesDetected = !empty(array_intersect($diag['scopes'] ?? [], ['instagram_basic','instagram_content_publish','pages_show_list','pages_read_engagement']));
+                    $businessScopesOk = in_array('instagram_business_basic', $diag['scopes'] ?? []) && in_array('instagram_business_content_publish', $diag['scopes'] ?? []);
+                @endphp
+                @if($isLegacyMode)
+                <div class="text-amber-700 dark:text-amber-400 pl-2 text-xs">⚠ auth_mode legado — pode gerar Invalid Scopes. Atualize para facebook_business_login.</div>
+                @endif
                 <div class="text-gray-600 dark:text-gray-400">META_GRAPH_VERSION = {{ $diag['graph_version'] }}</div>
                 <div class="{{ $diag['redirect_uri_ok'] ? 'text-green-700' : 'text-red-700' }}">
                     {!! $diag['redirect_uri_ok'] ? $ok : $err !!} META_REDIRECT_URI = {{ $diag['redirect_uri'] ?: '(não definido)' }}
@@ -199,7 +207,26 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 @endif
                 <div class="text-gray-600 dark:text-gray-400">INSTAGRAM_PUBLISHING_ENABLED = {{ $diag['publishing_enabled'] ? 'true' : 'false' }}</div>
                 @if(!empty($diag['scopes']))
-                <div class="text-gray-600 dark:text-gray-400">Scopes: {{ implode(', ', $diag['scopes']) }}</div>
+                <div class="{{ $businessScopesOk ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
+                    {!! $businessScopesOk ? $ok : $err !!} Scopes: {{ implode(', ', $diag['scopes']) }}
+                </div>
+                @if($legacyScopesDetected)
+                <div class="text-red-700 dark:text-red-400 pl-6 text-xs font-semibold">
+                    Escopos antigos detectados. Atualize .env para:<br>
+                    META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
+                </div>
+                @elseif($businessScopesOk)
+                <div class="text-green-700 dark:text-green-400 pl-6 text-xs">Escopos business configurados corretamente.</div>
+                @endif
+                @endif
+
+                {{-- Invalid Scopes warning --}}
+                @if($channel && str_contains(strtolower($channel->last_error ?? ''), 'escopo') || str_contains(strtolower($channel->last_error ?? ''), 'scope'))
+                <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded text-xs text-red-700 dark:text-red-300">
+                    <strong>Escopos recusados pela Meta.</strong> Se aparecer Invalid Scopes, confirme se o app Meta aprovado usa as permissões
+                    <code>instagram_business_basic</code> e <code>instagram_business_content_publish</code>.
+                    Atualize META_FACEBOOK_SCOPES no .env e rode <code>php artisan optimize:clear</code>.
+                </div>
                 @endif
             </div>
         </div>
@@ -235,6 +262,18 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 <div class="text-xs text-blue-600 dark:text-blue-400 pt-1 border-t border-blue-200 dark:border-blue-700">
                     Atenção: a Redirect URI deve ser idêntica — sem barra final, sem query string, obrigatoriamente HTTPS.
                 </div>
+                <div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                    <p class="font-semibold text-blue-800 dark:text-blue-200">Permissões obrigatórias no app Meta</p>
+                    <div class="mt-1 space-y-1 text-xs text-blue-700 dark:text-blue-300">
+                        <div><code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">instagram_business_basic</code> — acesso à conta Instagram Business</div>
+                        <div><code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">instagram_business_content_publish</code> — publicação de conteúdo</div>
+                    </div>
+                    <p class="mt-2 text-xs text-amber-700 dark:text-amber-400">
+                        Se aparecer <strong>Invalid Scopes</strong>, confirme se o app Meta aprovado usa as permissões
+                        <code>instagram_business_basic</code> e <code>instagram_business_content_publish</code>.
+                        Escopos antigos (<code>instagram_basic</code>, <code>instagram_content_publish</code>) não são mais aceitos.
+                    </p>
+                </div>
             </div>
         </div>
 
@@ -242,6 +281,9 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
             <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Checklist de Configuração</h3>
             @php
+                $scopesOk = in_array('instagram_business_basic', $diagnostics['scopes'] ?? [])
+                    && in_array('instagram_business_content_publish', $diagnostics['scopes'] ?? []);
+
                 $checks = [
                     ['label' => 'Conta Instagram é profissional (Business ou Creator)', 'done' => null],
                     ['label' => 'Instagram está vinculado a uma Página do Facebook', 'done' => null],
@@ -250,6 +292,7 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                     ['label' => 'Valid OAuth Redirect URI: https://ia.lymity.com.br/admin/social/instagram/callback', 'done' => $diagnostics['redirect_uri_ok']],
                     ['label' => 'META_APP_ID configurado no .env', 'done' => $diagnostics['app_id_set']],
                     ['label' => 'META_APP_SECRET configurado no .env', 'done' => $diagnostics['app_secret_set']],
+                    ['label' => 'Escopos business: instagram_business_basic, instagram_business_content_publish', 'done' => $scopesOk],
                     ['label' => 'INSTAGRAM_PUBLISHING_ENABLED=false (manter até validar conexão)', 'done' => !$diagnostics['publishing_enabled']],
                     ['label' => 'Canal Instagram conectado com instagram_user_id preenchido', 'done' => $channel?->isConnected() && !empty($channel?->instagram_user_id)],
                     ['label' => 'Canal Instagram conectado com facebook_page_id preenchido', 'done' => $channel?->isConnected() && !empty($channel?->facebook_page_id)],

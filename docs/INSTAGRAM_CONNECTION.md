@@ -17,7 +17,8 @@ remains disabled until the connection is validated (`INSTAGRAM_PUBLISHING_ENABLE
 3. A **Meta App** exists at developers.facebook.com with:
    - Type: Business
    - Redirect URI configured: `https://ia.lymity.com.br/admin/social/instagram/callback`
-   - Permissions added: `pages_show_list`, `pages_read_engagement`, `instagram_basic`, `instagram_content_publish`
+   - Permissions added: `instagram_business_basic`, `instagram_business_content_publish`
+   - (Escopos legados `instagram_basic`, `instagram_content_publish` não são mais aceitos em apps publicados)
 
 ---
 
@@ -183,6 +184,8 @@ php artisan tinker
 
 - [ ] META_APP_ID configured
 - [ ] META_APP_SECRET configured
+- [ ] META_AUTH_MODE=facebook_business_login
+- [ ] META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
 - [ ] META_REDIRECT_URI configured and matches Meta App settings
 - [ ] Instagram account is Business/Creator
 - [ ] Instagram linked to a Facebook Page
@@ -190,3 +193,25 @@ php artisan tinker
 - [ ] Channel shows `connected` status
 - [ ] instagram_user_id populated in DB
 - [ ] `INSTAGRAM_PUBLISHING_ENABLED=true` (only after above steps validated)
+
+---
+
+## Correção de Invalid Scopes
+
+**Erro:** `Invalid Scopes: instagram_basic, instagram_content_publish`
+
+**Causa:** Sistema solicitando escopos antigos ou incompatíveis com o app Meta publicado.
+
+**Correção no `.env`:**
+```env
+META_AUTH_MODE=facebook_business_login
+META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
+META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
+```
+
+Depois rodar:
+```bash
+php artisan optimize:clear
+php artisan config:clear
+php artisan cache:clear
+```

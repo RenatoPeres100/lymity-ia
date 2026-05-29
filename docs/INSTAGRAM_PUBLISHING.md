@@ -40,11 +40,10 @@ INSTAGRAM_PUBLISHING_ENABLED=false
    ```
    https://ia.lymity.com.br/admin/social/instagram/callback
    ```
-6. Adicione as permissões:
-   - `pages_show_list`
-   - `pages_read_engagement`
-   - `instagram_basic`
-   - `instagram_content_publish`
+6. Adicione as permissões (obrigatórias para apps publicados):
+   - `instagram_business_basic`
+   - `instagram_business_content_publish`
+   - (Escopos antigos `instagram_basic`, `instagram_content_publish` geram Invalid Scopes em apps publicados)
 7. Configure o `.env` do servidor com as credenciais
 
 ---
@@ -323,3 +322,25 @@ php artisan instagram:diagnose-oauth
 - Erros da API Meta que contenham tokens são sanitizados: `EAA[...]` → `[TOKEN_REDACTED]`
 - Somente `admin_geral` e `agencia_admin` podem conectar/desconectar e publicar manualmente
 - O scheduler publica somente posts `approved + scheduled`, nunca `draft` ou `pending_approval`
+
+---
+
+## Correção de Invalid Scopes
+
+**Erro:** `Invalid Scopes: instagram_basic, instagram_content_publish`
+
+**Causa:** Sistema solicitando escopos antigos ou incompatíveis com o app Meta publicado.
+
+**Correção no `.env`:**
+```env
+META_AUTH_MODE=facebook_business_login
+META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
+META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
+```
+
+Depois rodar:
+```bash
+php artisan optimize:clear
+php artisan config:clear
+php artisan cache:clear
+```

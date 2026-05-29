@@ -34,8 +34,35 @@ class InstagramDiagnosePublishingCommand extends Command
             $redirectUri === 'https://ia.lymity.com.br/admin/social/instagram/callback'
         );
 
-        $authMode = config('meta.auth_mode', 'facebook_login');
+        $authMode = config('meta.auth_mode', 'facebook_business_login');
         $this->line("  META_AUTH_MODE={$authMode}");
+        if ($authMode === 'facebook_login') {
+            $this->warn("  [WARNING] facebook_login legado — pode gerar Invalid Scopes. Migre para facebook_business_login.");
+        }
+
+        // Scope audit
+        $legacyScopes   = ['instagram_basic', 'instagram_content_publish'];
+        $businessScopes = ['instagram_business_basic', 'instagram_business_content_publish'];
+        $allScopes      = array_unique(array_merge(
+            config('meta.facebook_scopes', []),
+            config('meta.instagram_scopes', [])
+        ));
+        $foundLegacy    = array_intersect($allScopes, $legacyScopes);
+        $foundBusiness  = array_intersect($allScopes, $businessScopes);
+
+        if (!empty($foundLegacy)) {
+            $this->error("  [ERROR] Escopos antigos detectados: " . implode(', ', $foundLegacy));
+            $this->error("  Atualize META_FACEBOOK_SCOPES e META_INSTAGRAM_SCOPES para:");
+            $this->error("  instagram_business_basic,instagram_business_content_publish");
+        } else {
+            $this->line("  <fg=green>[OK]</> Nenhum escopo antigo detectado.");
+        }
+
+        if (count($foundBusiness) === count($businessScopes)) {
+            $this->line("  <fg=green>[OK]</> Escopos business configurados: " . implode(', ', $foundBusiness));
+        } else {
+            $this->error("  [ERROR] Escopos business ausentes. Configure: instagram_business_basic,instagram_business_content_publish");
+        }
 
         $graphVersion = config('meta.graph_version', 'v25.0');
         $this->line("  META_GRAPH_VERSION={$graphVersion}");

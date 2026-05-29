@@ -39,10 +39,33 @@ class MetaInstagramAuthService
             throw new \RuntimeException('Meta não configurado. Configure META_APP_ID, META_APP_SECRET e META_REDIRECT_URI no .env.');
         }
 
+        $authMode    = config('meta.auth_mode', 'facebook_business_login');
         $state       = Str::random(64);
         $stateHash   = hash('sha256', $state);
         $redirectUri = config('meta.redirect_uri');
-        $scopes      = config('meta.facebook_scopes', []);
+
+        // Select scopes and endpoint based on auth_mode
+        switch ($authMode) {
+            case 'instagram_business_login':
+                $endpoint = 'https://www.instagram.com/oauth/authorize';
+                $scopes   = config('meta.instagram_scopes', ['instagram_business_basic', 'instagram_business_content_publish']);
+                break;
+
+            case 'facebook_login':
+                // Legacy mode — still supported but generates a warning
+                $endpoint = 'https://www.facebook.com/' . $this->graphVersion . '/dialog/oauth';
+                $scopes   = config('meta.facebook_scopes', ['instagram_business_basic', 'instagram_business_content_publish']);
+                Log::warning('[MetaInstagramAuthService] AUTH_MODE=facebook_login (legado). '
+                    . 'Este modo pode gerar Invalid Scopes se usar instagram_basic/instagram_content_publish. '
+                    . 'Considere migrar para facebook_business_login.');
+                break;
+
+            case 'facebook_business_login':
+            default:
+                $endpoint = 'https://www.facebook.com/' . $this->graphVersion . '/dialog/oauth';
+                $scopes   = config('meta.facebook_scopes', ['instagram_business_basic', 'instagram_business_content_publish']);
+                break;
+        }
 
         // Persist state in database — primary validation mechanism
         InstagramOAuthState::create([
@@ -51,7 +74,7 @@ class MetaInstagramAuthService
             'provider'     => 'meta',
             'redirect_uri' => $redirectUri,
             'scopes'       => $scopes,
-            'auth_mode'    => config('meta.auth_mode', 'facebook_login'),
+            'auth_mode'    => $authMode,
             'ip_address'   => request()->ip(),
             'user_agent'   => substr((string) request()->userAgent(), 0, 500),
             'expires_at'   => now()->addMinutes(15),
@@ -62,10 +85,12 @@ class MetaInstagramAuthService
 
         $this->logActivity('instagram_oauth_started', $user, [
             'redirect_uri' => $redirectUri,
-            'auth_mode'    => config('meta.auth_mode', 'facebook_login'),
+            'auth_mode'    => $authMode,
+            'endpoint'     => $endpoint,
+            'scopes'       => implode(',', $scopes),
         ]);
 
-        return 'https://www.facebook.com/' . $this->graphVersion . '/dialog/oauth?' . http_build_query([
+        return $endpoint . '?' . http_build_query([
             'client_id'     => config('meta.app_id'),
             'redirect_uri'  => $redirectUri,
             'scope'         => implode(',', $scopes),
@@ -102,9 +127,25 @@ class MetaInstagramAuthService
             }
 
             if (stripos($errorCode . $errorDesc, 'invalid_scope') !== false
-                || stripos($errorDesc, 'scope') !== false) {
+                || stripos($errorDesc, 'scope') !== false
+                || stripos($errorDesc, 'Invalid Scopes') !== false) {
+                $invalidScopesMsg = 'Escopos inválidos recusados pela Meta. Atualize o .env para usar instagram_business_basic e instagram_business_content_publish.';
+
+                $this->logActivity('instagram_oauth_invalid_scopes', $user, [
+                    'error'       => $errorCode,
+                    'description' => $errorDesc,
+                    'auth_mode'   => config('meta.auth_mode'),
+                    'scopes'      => implode(',', config('meta.facebook_scopes', [])),
+                ]);
+
+                if ($channel) {
+                    $channel->update(['last_error' => $invalidScopesMsg]);
+                }
+
                 throw new \RuntimeException(
-                    'Escopos recusados pela Meta. Verifique se as permissões estão adicionadas e aprovadas no App Review do Meta Developers.'
+                    'Escopos recusados pela Meta. O sistema estava pedindo permissões antigas. '
+                    . 'Atualize META_FACEBOOK_SCOPES para instagram_business_basic,instagram_business_content_publish '
+                    . 'e rode php artisan optimize:clear.'
                 );
             }
 

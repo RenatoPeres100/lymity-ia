@@ -10,20 +10,20 @@ App Meta: **aceito/publicado**
 
 O app Meta foi aceito e publicado. O fluxo de OAuth via Facebook Login está ativo.
 Permissões configuradas:
-- `pages_show_list`, `pages_read_engagement`, `instagram_basic`, `instagram_content_publish`
 - `instagram_business_basic`, `instagram_business_content_publish`
+- (Escopos antigos `instagram_basic`, `instagram_content_publish` geram Invalid Scopes em apps publicados)
 
 ---
 
 ## Variáveis de ambiente necessárias
 
 ```env
-META_AUTH_MODE=facebook_login
+META_AUTH_MODE=facebook_business_login
 META_APP_ID=<valor_real>
 META_APP_SECRET=<valor_real>
 META_REDIRECT_URI=https://ia.lymity.com.br/admin/social/instagram/callback
 META_GRAPH_VERSION=v25.0
-META_FACEBOOK_SCOPES=pages_show_list,pages_read_engagement,instagram_basic,instagram_content_publish
+META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
 META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
 INSTAGRAM_PUBLISHING_ENABLED=true
 ```
@@ -233,4 +233,26 @@ Eventos registrados na tabela `activity_logs`:
 Criar rascunho → Enviar para aprovação → Aprovar → Agendar → social:publish-due → Publicado
                                                ↓
                                      Ou: Publicar Agora → Publicado
+```
+
+---
+
+## Correção de Invalid Scopes
+
+**Erro:** `Invalid Scopes: instagram_basic, instagram_content_publish`
+
+**Causa:** Sistema solicitando escopos antigos ou incompatíveis com o app Meta publicado.
+
+**Correção no `.env`:**
+```env
+META_AUTH_MODE=facebook_business_login
+META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
+META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
+```
+
+Depois rodar:
+```bash
+php artisan optimize:clear
+php artisan config:clear
+php artisan cache:clear
 ```

@@ -11,6 +11,9 @@ class InstagramDiagnoseOAuthCommand extends Command
     protected $signature   = 'instagram:diagnose-oauth';
     protected $description = 'Diagnóstico do fluxo OAuth Instagram / Meta.';
 
+    private array $legacyScopes = ['instagram_basic', 'instagram_content_publish', 'pages_show_list', 'pages_read_engagement'];
+    private array $businessScopes = ['instagram_business_basic', 'instagram_business_content_publish'];
+
     public function handle(): int
     {
         $this->info('');
@@ -20,7 +23,19 @@ class InstagramDiagnoseOAuthCommand extends Command
         // ── APP CONFIG ────────────────────────────────────────────────────────
         $this->info('── Configuração do App ─────────────────────────────');
         $this->line("  APP_URL             = " . config('app.url'));
-        $this->line("  META_AUTH_MODE      = " . config('meta.auth_mode', 'facebook_login'));
+
+        $authMode = config('meta.auth_mode', 'facebook_business_login');
+        $this->line("  META_AUTH_MODE      = {$authMode}");
+
+        if ($authMode === 'facebook_login') {
+            $this->warn("  [WARNING] facebook_login legado pode gerar Invalid Scopes se usar instagram_basic/instagram_content_publish.");
+            $this->warn("  Considere migrar para: META_AUTH_MODE=facebook_business_login");
+        } elseif ($authMode === 'facebook_business_login') {
+            $this->line("  <fg=green>[OK]</> auth_mode=facebook_business_login (recomendado)");
+        } elseif ($authMode === 'instagram_business_login') {
+            $this->line("  <fg=green>[OK]</> auth_mode=instagram_business_login");
+        }
+
         $this->check('META_APP_ID configurado',     !empty(config('meta.app_id')));
         $this->check('META_APP_SECRET configurado', !empty(config('meta.app_secret')));
 
@@ -40,25 +55,63 @@ class InstagramDiagnoseOAuthCommand extends Command
 
         $this->info('');
 
+        // ── SCOPE AUDIT ───────────────────────────────────────────────────────
+        $this->info('── Auditoria de Escopos ────────────────────────────');
+
+        $fbScopes = config('meta.facebook_scopes', []);
+        $igScopes = config('meta.instagram_scopes', []);
+        $allScopes = array_unique(array_merge($fbScopes, $igScopes));
+
+        $this->line("  META_FACEBOOK_SCOPES  = " . implode(', ', $fbScopes));
+        $this->line("  META_INSTAGRAM_SCOPES = " . implode(', ', $igScopes));
+
+        $foundLegacy   = array_intersect($allScopes, $this->legacyScopes);
+        $foundBusiness = array_intersect($allScopes, $this->businessScopes);
+
+        if (!empty($foundLegacy)) {
+            $this->error("  [ERROR] Escopos antigos detectados: " . implode(', ', $foundLegacy));
+            $this->error("  Atualize para:");
+            $this->error("  instagram_business_basic,instagram_business_content_publish");
+            $this->warn("  No .env:");
+            $this->warn("  META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish");
+            $this->warn("  META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish");
+            $this->warn("  Depois: php artisan optimize:clear");
+        } else {
+            $this->line("  <fg=green>[OK]</> Nenhum escopo antigo detectado.");
+        }
+
+        if (count($foundBusiness) === count($this->businessScopes)) {
+            $this->line("  <fg=green>[OK]</> Escopos business configurados: " . implode(', ', $foundBusiness));
+        } else {
+            $missing = array_diff($this->businessScopes, $allScopes);
+            $this->error("  [ERROR] Escopos business ausentes: " . implode(', ', $missing));
+        }
+
+        $this->info('');
+
         // ── OAUTH ENDPOINT ────────────────────────────────────────────────────
-        $this->info('── OAuth Endpoint (preview sem state real) ─────────');
-        $scopes = array_merge(
-            config('meta.facebook_scopes', []),
-            config('meta.instagram_scopes', [])
-        );
-        $this->line("  Scopes: " . implode(', ', $scopes));
+        $this->info('── OAuth Endpoint ──────────────────────────────────');
+
+        $endpoint = match ($authMode) {
+            'instagram_business_login' => 'https://www.instagram.com/oauth/authorize',
+            default                    => 'https://www.facebook.com/' . $graphVersion . '/dialog/oauth',
+        };
+        $scopesForEndpoint = ($authMode === 'instagram_business_login') ? $igScopes : $fbScopes;
+
+        $this->line("  Endpoint: {$endpoint}");
+        $this->line("  Scopes:   " . implode(', ', $scopesForEndpoint));
 
         if (!empty(config('meta.app_id')) && !empty($redirectUri)) {
-            $endpoint = 'https://www.facebook.com/' . $graphVersion . '/dialog/oauth?' . http_build_query([
+            $preview = $endpoint . '?' . http_build_query([
                 'client_id'     => config('meta.app_id'),
                 'redirect_uri'  => $redirectUri,
-                'scope'         => implode(',', $scopes),
+                'scope'         => implode(',', $scopesForEndpoint),
                 'response_type' => 'code',
                 'state'         => '[STATE_PLACEHOLDER]',
             ]);
-            $this->line("  Endpoint: {$endpoint}");
+            $this->line("  URL preview: {$preview}");
         } else {
-            $this->warn("  → Endpoint não pode ser gerado: META_APP_ID ou META_REDIRECT_URI ausentes.");
+            $this->warn("  → Endpoint preview não disponível: META_APP_ID ou META_REDIRECT_URI ausentes.");
         }
 
         $this->info('');
@@ -138,6 +191,7 @@ class InstagramDiagnoseOAuthCommand extends Command
         $this->line("  Web OAuth Login:           ON");
         $this->line("  Use Strict Mode:           ON");
         $this->line("  Enforce HTTPS:             ON");
+        $this->line("  Permissões necessárias:    instagram_business_basic, instagram_business_content_publish");
         $this->info('');
 
         $this->info('=== FIM DO DIAGNÓSTICO OAUTH ===');
