@@ -53,17 +53,15 @@ class SocialPostController extends Controller
     {
         $post = $this->postService->create($request->validated(), $request->user());
 
-        $imageType = $request->input('image_input_type', 'none');
-
-        // Process image inline if URL or upload selected
+        // Process image: file upload takes priority, then URL, then Gemini checkbox
         try {
-            if ($imageType === 'upload' && $request->hasFile('image_upload')) {
+            if ($request->hasFile('image_upload')) {
                 $this->imageService->replaceImageFromUpload($post, $request->file('image_upload'), $request->user());
-            } elseif ($imageType === 'url' && $request->filled('external_image_url')) {
+            } elseif ($request->filled('external_image_url')) {
                 $this->imageService->replaceImageFromUrl($post, $request->input('external_image_url'), $request->user());
-            } elseif ($imageType === 'gemini') {
+            } elseif ($request->boolean('generate_with_gemini')) {
                 if (empty(trim($post->main_caption ?? ''))) {
-                    session()->flash('warning', 'Post criado. Adicione a legenda e depois gere a imagem com IA.');
+                    session()->flash('warning', 'Post criado. Preencha a legenda e depois clique "Gerar com IA" na tela do post.');
                 } else {
                     $this->imageService->generateSingleImageFromPost($post, $request->user());
                 }
