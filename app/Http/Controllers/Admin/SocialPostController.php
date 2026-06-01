@@ -53,6 +53,25 @@ class SocialPostController extends Controller
     {
         $post = $this->postService->create($request->validated(), $request->user());
 
+        $imageType = $request->input('image_input_type', 'none');
+
+        // Process image inline if URL or upload selected
+        try {
+            if ($imageType === 'upload' && $request->hasFile('image_upload')) {
+                $this->imageService->replaceImageFromUpload($post, $request->file('image_upload'), $request->user());
+            } elseif ($imageType === 'url' && $request->filled('external_image_url')) {
+                $this->imageService->replaceImageFromUrl($post, $request->input('external_image_url'), $request->user());
+            } elseif ($imageType === 'gemini') {
+                if (empty(trim($post->main_caption ?? ''))) {
+                    session()->flash('warning', 'Post criado. Adicione a legenda e depois gere a imagem com IA.');
+                } else {
+                    $this->imageService->generateSingleImageFromPost($post, $request->user());
+                }
+            }
+        } catch (\Throwable $e) {
+            session()->flash('warning', 'Post criado, mas erro ao processar imagem: ' . $e->getMessage());
+        }
+
         return redirect()
             ->route('admin.social.posts.show', $post)
             ->with('success', 'Post criado com sucesso.');

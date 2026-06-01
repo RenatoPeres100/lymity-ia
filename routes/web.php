@@ -396,6 +396,11 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/social/posts/{post}/replace-image-upload',[App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUpload'])->name('admin.social.posts.replace-image-upload');
         Route::post('/social/posts/{post}/generate-carousel',  [App\Http\Controllers\Admin\SocialPostAiController::class, 'generateCarousel'])->name('admin.social.posts.generate-carousel');
         Route::post('/social/posts/{post}/suggest-carousel',   [App\Http\Controllers\Admin\SocialPostAiController::class, 'suggestCarousel'])->name('admin.social.posts.suggest-carousel');
+        // Aliases for spec-named routes
+        Route::post('/social/posts/{post}/upload-image',       [App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUpload'])->name('admin.social.posts.upload-image');
+        Route::post('/social/posts/{post}/set-image-url',      [App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUrl'])->name('admin.social.posts.set-image-url');
+        Route::post('/social/posts/{post}/submit-approval',    [AdminSocialPostController::class, 'sendToApproval'])->name('admin.social.posts.submit-approval');
+        Route::post('/social/posts/{post}/publish-now',        [App\Http\Controllers\Admin\SocialInstagramPublishController::class, 'publishNow'])->name('admin.social.posts.publish-now');
 
         // Calendar
         Route::get('/social/calendar',                         [AdminSocialCalendarController::class, 'index'])->name('admin.social.calendar.index');
