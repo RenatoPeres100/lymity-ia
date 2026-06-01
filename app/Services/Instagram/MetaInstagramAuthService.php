@@ -233,17 +233,23 @@ class MetaInstagramAuthService
         }
 
         // ── 6. Save channel ───────────────────────────────────────────────────
+        $expiresAt    = isset($longToken['expires_in'])
+            ? now()->addSeconds((int) $longToken['expires_in'])
+            : now()->addDays(60);
+        $refreshDueAt = $expiresAt->copy()->subDays(15);
+
         $channel = $this->saveChannelConnection([
-            'access_token'      => $longToken['access_token'],
-            'token_expires_at'  => isset($longToken['expires_in'])
-                ? now()->addSeconds((int) $longToken['expires_in'])
-                : now()->addDays(55),
-            'instagram_user_id' => $instagramAccount['id'] ?? null,
-            'facebook_page_id'  => $pageData['id'] ?? null,
-            'account_name'      => '@' . ($instagramAccount['username'] ?? 'lymity.ia'),
-            'account_url'       => 'https://instagram.com/' . ($instagramAccount['username'] ?? 'lymity.ia'),
-            'permissions'       => $tokenData['permissions'] ?? null,
-            'metadata'          => [
+            'access_token'        => $longToken['access_token'],
+            'token_expires_at'    => $expiresAt,
+            'refresh_due_at'      => $refreshDueAt,
+            'last_refreshed_at'   => now(),
+            'instagram_user_id'   => $instagramAccount['id'] ?? null,
+            'facebook_page_id'    => $pageData['id'] ?? null,
+            'account_name'        => '@' . ($instagramAccount['username'] ?? 'lymity.ia'),
+            'account_url'         => 'https://instagram.com/' . ($instagramAccount['username'] ?? 'lymity.ia'),
+            'profile_picture_url' => $instagramAccount['profile_picture_url'] ?? null,
+            'permissions'         => $tokenData['permissions'] ?? null,
+            'metadata'            => [
                 'page_name'    => $pageData['name'] ?? null,
                 'auth_mode'    => config('meta.auth_mode', 'facebook_login'),
                 'state_source' => $stateSource,
@@ -320,24 +326,31 @@ class MetaInstagramAuthService
     {
         $company = Company::first();
 
+        $expiresAt    = $data['token_expires_at'] ?? now()->addDays(60);
+        $refreshDueAt = $data['refresh_due_at'] ?? $expiresAt->copy()->subDays(15);
+
         $channel = SocialChannel::updateOrCreate(
             [
                 'company_id' => $company?->id,
                 'platform'   => 'instagram',
             ],
             [
-                'account_name'       => $data['account_name'] ?? '@lymity.ia',
-                'account_url'        => $data['account_url'] ?? 'https://instagram.com/lymity.ia',
-                'instagram_user_id'  => $data['instagram_user_id'] ?? null,
-                'facebook_page_id'   => $data['facebook_page_id'] ?? null,
-                'external_account_id'=> $data['instagram_user_id'] ?? null,
-                'access_token'       => $data['access_token'],
-                'token_expires_at'   => $data['token_expires_at'] ?? now()->addDays(55),
-                'permissions'        => $data['permissions'] ?? null,
-                'metadata'           => $data['metadata'] ?? null,
-                'status'             => 'connected',
-                'last_error'         => null,
-                'last_checked_at'    => now(),
+                'account_name'        => $data['account_name'] ?? '@lymity.ia',
+                'account_url'         => $data['account_url'] ?? 'https://instagram.com/lymity.ia',
+                'profile_picture_url' => $data['profile_picture_url'] ?? null,
+                'instagram_user_id'   => $data['instagram_user_id'] ?? null,
+                'facebook_page_id'    => $data['facebook_page_id'] ?? null,
+                'external_account_id' => $data['instagram_user_id'] ?? null,
+                'access_token'        => $data['access_token'],
+                'token_expires_at'    => $expiresAt,
+                'refresh_due_at'      => $refreshDueAt,
+                'last_refreshed_at'   => $data['last_refreshed_at'] ?? now(),
+                'permissions'         => $data['permissions'] ?? null,
+                'metadata'            => $data['metadata'] ?? null,
+                'status'              => 'connected',
+                'last_error'          => null,
+                'last_checked_at'     => now(),
+                'disconnected_at'     => null,
             ]
         );
 
@@ -385,10 +398,12 @@ class MetaInstagramAuthService
     public function disconnect(SocialChannel $channel, User $user): SocialChannel
     {
         $channel->update([
-            'status'       => 'disconnected',
-            'access_token' => null,
-            'refresh_token'=> null,
-            'last_error'   => null,
+            'status'          => 'disconnected',
+            'access_token'    => null,
+            'refresh_token'   => null,
+            'refresh_due_at'  => null,
+            'last_error'      => null,
+            'disconnected_at' => now(),
         ]);
 
         $this->logActivity('instagram_disconnected', $user, [

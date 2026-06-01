@@ -9,20 +9,26 @@ class SocialChannel extends Model
 {
     protected $fillable = [
         'client_id', 'company_id', 'platform', 'account_name', 'account_url',
+        'profile_picture_url',
         'instagram_user_id', 'facebook_page_id', 'external_account_id',
         'status', 'access_token', 'refresh_token', 'token_expires_at',
+        'refresh_due_at', 'last_refreshed_at',
         'permissions', 'metadata', 'last_checked_at', 'last_error',
+        'disconnected_at',
     ];
 
     protected $hidden = ['access_token', 'refresh_token'];
 
     protected $casts = [
-        'access_token'    => 'encrypted',
-        'refresh_token'   => 'encrypted',
-        'permissions'     => 'array',
-        'metadata'        => 'array',
-        'token_expires_at'=> 'datetime',
-        'last_checked_at' => 'datetime',
+        'access_token'      => 'encrypted',
+        'refresh_token'     => 'encrypted',
+        'permissions'       => 'array',
+        'metadata'          => 'array',
+        'token_expires_at'  => 'datetime',
+        'refresh_due_at'    => 'datetime',
+        'last_refreshed_at' => 'datetime',
+        'last_checked_at'   => 'datetime',
+        'disconnected_at'   => 'datetime',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────
@@ -53,6 +59,19 @@ class SocialChannel extends Model
     {
         return $this->status === 'expired'
             || ($this->token_expires_at && $this->token_expires_at->isPast());
+    }
+
+    public function shouldRefresh(): bool
+    {
+        if (!$this->isConnected() || empty($this->getRawOriginal('access_token'))) {
+            return false;
+        }
+        if ($this->refresh_due_at) {
+            return $this->refresh_due_at->isPast();
+        }
+        // Fallback: refresh if token expires in less than 15 days
+        return $this->token_expires_at && $this->token_expires_at->diffInDays(now()) <= 15
+            && $this->token_expires_at->isFuture();
     }
 
     public function hasValidToken(): bool
@@ -86,7 +105,9 @@ class SocialChannel extends Model
             'status'          => 'disconnected',
             'access_token'    => null,
             'refresh_token'   => null,
+            'refresh_due_at'  => null,
             'last_checked_at' => now(),
+            'disconnected_at' => now(),
         ]);
         return $this;
     }

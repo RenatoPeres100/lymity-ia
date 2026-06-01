@@ -118,10 +118,31 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                     </span>
                 </div>
                 @endif
+                @if($channel->last_refreshed_at)
+                <div>
+                    <span class="text-gray-500">Última renovação:</span>
+                    <span class="ml-2 text-gray-700 dark:text-gray-300">{{ $channel->last_refreshed_at->format('d/m/Y H:i') }} ({{ $channel->last_refreshed_at->diffForHumans() }})</span>
+                </div>
+                @endif
+                @if($channel->refresh_due_at)
+                <div>
+                    <span class="text-gray-500">Próxima renovação automática:</span>
+                    <span class="ml-2 {{ $channel->refresh_due_at->isPast() ? 'text-amber-600 font-semibold' : 'text-gray-700 dark:text-gray-300' }}">
+                        {{ $channel->refresh_due_at->format('d/m/Y') }}
+                        ({{ $channel->refresh_due_at->diffForHumans() }})
+                    </span>
+                </div>
+                @endif
                 @if($channel->last_checked_at)
                 <div>
                     <span class="text-gray-500">Última verificação:</span>
                     <span class="ml-2 text-gray-700 dark:text-gray-300">{{ $channel->last_checked_at->diffForHumans() }}</span>
+                </div>
+                @endif
+                @if($channel->disconnected_at && $channel->status === 'disconnected')
+                <div>
+                    <span class="text-gray-500">Desconectado em:</span>
+                    <span class="ml-2 text-gray-700 dark:text-gray-300">{{ $channel->disconnected_at->format('d/m/Y H:i') }}</span>
                 </div>
                 @endif
                 @if($channel->last_error)
