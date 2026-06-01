@@ -166,6 +166,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/{agentRoutine}/activate',       [App\Http\Controllers\Admin\AgentRoutineController::class, 'activate'])->name('admin.agents.routines.activate');
             Route::post('/{agentRoutine}/run-now',        [App\Http\Controllers\Admin\AgentRoutineController::class, 'runNow'])->name('admin.agents.routines.run-now');
             Route::get('/{agentRoutine}/runs',            [App\Http\Controllers\Admin\AgentRoutineController::class, 'runs'])->name('admin.agents.routines.runs');
+            Route::delete('/{agentRoutine}',              [App\Http\Controllers\Admin\AgentRoutineController::class, 'destroy'])->name('admin.agents.routines.destroy');
         });
 
         // Real Phase 3 — Instagram / Meta Connection

@@ -167,6 +167,18 @@ class AgentRoutineController extends Controller
         return view('admin.agents.routines.runs', ['routine' => $agentRoutine, 'runs' => $runs]);
     }
 
+    public function destroy(Request $request, AgentRoutine $agentRoutine)
+    {
+        $title = $agentRoutine->title;
+        $agentRoutine->runs()->delete();
+        $agentRoutine->delete();
+
+        $this->log('agent_routine_deleted', $request->user());
+
+        return redirect()->route('admin.agents.routines.index')
+            ->with('success', "Rotina \"{$title}\" excluída com sucesso.");
+    }
+
     private function log(string $action, $user, ?AgentRoutine $routine = null): void
     {
         try {
