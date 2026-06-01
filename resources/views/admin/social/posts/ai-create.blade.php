@@ -4,7 +4,14 @@
         <div style="margin-bottom:2rem;">
             <a href="{{ route('admin.social.posts.index') }}" style="color:#64748b;text-decoration:none;font-size:.9rem;">← Posts</a>
             <h1 style="font-size:1.6rem;font-weight:700;color:#0f172a;margin-top:.5rem;">✨ Criar Post com IA</h1>
-            <p style="color:#64748b;font-size:.9rem;margin-top:.25rem;">Preencha o briefing. Gemini gera a legenda e a imagem. Você revisa antes de publicar.</p>
+            <p style="color:#64748b;font-size:.9rem;margin-top:.25rem;">Preencha o briefing → Gemini gera a legenda → você revisa → depois gera a imagem.</p>
+        </div>
+
+        {{-- Flow diagram --}}
+        <div style="background:#faf5ff;border:1px solid #ddd6fe;border-radius:.75rem;padding:1rem 1.5rem;margin-bottom:1.5rem;font-size:.82rem;color:#5b21b6;">
+            <strong>Fluxo correto:</strong>
+            Briefing → Gemini gera legenda → Admin revisa/edita texto → Gerar imagem com base no texto final →
+            Validar imagem → Aprovar → Agendar → Publicar no @lymity.ia
         </div>
 
         @if(session('error'))
@@ -65,40 +72,41 @@
                 </div>
             </div>
 
-            {{-- Image prompt --}}
+            {{-- Creative brief --}}
             <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
-                <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Instrução visual da imagem <span style="font-weight:400;text-transform:none;">(opcional)</span></h3>
-                <textarea name="image_prompt" rows="3"
-                    placeholder="Descreva o estilo visual desejado. Ex: fundo azul escuro, elementos de IA abstratos, visual premium..."
-                    style="width:100%;padding:.75rem;border:1px solid #e2e8f0;border-radius:.5rem;font-size:.9rem;color:#0f172a;resize:vertical;box-sizing:border-box;">{{ old('image_prompt') }}</textarea>
-                <p style="color:#94a3b8;font-size:.8rem;margin-top:.4rem;">Se vazio, usa o prompt padrão da Lymity IA.</p>
+                <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Brief criativo <span style="font-weight:400;text-transform:none;">(opcional)</span></h3>
+                <textarea name="creative_brief" rows="3"
+                    placeholder="Contexto adicional: produto, campanha, mensagem-chave, restrições..."
+                    style="width:100%;padding:.75rem;border:1px solid #e2e8f0;border-radius:.5rem;font-size:.9rem;color:#0f172a;resize:vertical;box-sizing:border-box;">{{ old('creative_brief') }}</textarea>
             </div>
 
-            {{-- Scheduled at + Generate image --}}
+            {{-- Image format + Schedule --}}
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;">
+                    <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Formato de imagem</h3>
+                    <select name="image_format" style="width:100%;padding:.75rem;border:1px solid #e2e8f0;border-radius:.5rem;font-size:.9rem;color:#0f172a;">
+                        <option value="none" {{ old('image_format','none')==='none'?'selected':'' }}>Não gerar agora — revisar texto primeiro</option>
+                        <option value="ai_single" {{ old('image_format')==='ai_single'?'selected':'' }}>Imagem única com IA (gera após criar)</option>
+                        <option value="ai_carousel" {{ old('image_format')==='ai_carousel'?'selected':'' }}>Carrossel com IA (gera após criar)</option>
+                    </select>
+                    <p style="color:#94a3b8;font-size:.78rem;margin-top:.4rem;">
+                        Recomendado: "Não gerar agora". Revise o texto antes de gerar a imagem.
+                    </p>
+                </div>
                 <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;">
                     <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Data/hora sugerida</h3>
                     <input type="datetime-local" name="scheduled_at" value="{{ old('scheduled_at') }}"
                         style="width:100%;padding:.75rem;border:1px solid #e2e8f0;border-radius:.5rem;font-size:.9rem;color:#0f172a;box-sizing:border-box;">
                     <p style="color:#94a3b8;font-size:.8rem;margin-top:.4rem;">Agendamento final é feito após aprovação.</p>
                 </div>
-                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;display:flex;flex-direction:column;justify-content:center;">
-                    <label style="display:flex;align-items:center;gap:.75rem;cursor:pointer;">
-                        <input type="checkbox" name="generate_image" value="1" {{ old('generate_image') ? 'checked' : '' }}
-                            style="width:1.2rem;height:1.2rem;accent-color:#8b5cf6;cursor:pointer;">
-                        <div>
-                            <div style="color:#0f172a;font-size:.95rem;font-weight:600;">Gerar imagem com Gemini</div>
-                            <div style="color:#94a3b8;font-size:.8rem;margin-top:.15rem;">Pode ser gerada depois na tela do post</div>
-                        </div>
-                    </label>
-                </div>
             </div>
 
             {{-- Info box --}}
             <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:.5rem;padding:1rem;margin-bottom:1.5rem;">
                 <p style="color:#1e40af;font-size:.85rem;margin:0;">
-                    <strong>Fluxo seguro:</strong> O post é criado como rascunho. Gemini gera legenda e imagem.
-                    Você revisa, edita se necessário, envia para aprovação, e só então agenda ou publica no Instagram @lymity.ia.
+                    <strong>Fluxo seguro:</strong> O post é criado como rascunho. Gemini gera a legenda.
+                    Você revisa e edita o texto. <strong>Só depois você gera a imagem</strong> — ela será baseada no texto final.
+                    Após validação e aprovação, você agenda ou publica no Instagram @lymity.ia.
                     Nada publica automaticamente.
                 </p>
             </div>

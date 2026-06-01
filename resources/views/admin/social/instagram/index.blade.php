@@ -132,7 +132,7 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 @endif
             </div>
 
-            @if($channel->permissions && count($channel->permissions) > 0)
+            @if(is_array($channel->permissions) && count($channel->permissions) > 0)
             <div class="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                 <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Permissões concedidas</p>
                 <div class="flex flex-wrap gap-1.5">

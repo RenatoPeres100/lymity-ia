@@ -24,20 +24,20 @@
                 @if(in_array($post->status, ['draft','rejected','failed']))
                     <form method="POST" action="{{ route('admin.social.posts.send-approval', $post) }}" style="display:inline;">
                         @csrf
-                        @php $canSubmit = !empty(trim($post->main_caption ?? '')) && $post->hasValidImage(); @endphp
+                        @php $canSubmit = !empty(trim($post->main_caption ?? '')) && $post->hasValidImage() && !$post->isImageOutdated(); @endphp
                         <button
-                            @if(!$canSubmit) disabled title="Precisa de legenda e imagem válida para enviar" @endif
+                            @if(!$canSubmit) disabled title="Precisa de legenda, imagem válida e imagem não-desatualizada para enviar" @endif
                             style="background:{{ $canSubmit ? '#f59e0b' : '#e2e8f0' }};color:{{ $canSubmit ? '#fff' : '#94a3b8' }};padding:.5rem .9rem;border-radius:.375rem;border:none;cursor:{{ $canSubmit ? 'pointer' : 'not-allowed' }};font-size:.85rem;">
-                            Enviar Aprovação
+                            Enviar para Aprovação
                         </button>
                     </form>
                 @endif
                 @if($post->status === 'pending_approval')
-                    @php $canApprove = $post->hasValidImage(); @endphp
+                    @php $canApprove = $post->hasValidImage() && !$post->isImageOutdated(); @endphp
                     <form method="POST" action="{{ route('admin.social.posts.approve', $post) }}" style="display:inline;">
                         @csrf
                         <button
-                            @if(!$canApprove) disabled title="Imagem precisa estar válida para aprovar" @endif
+                            @if(!$canApprove) disabled title="Imagem precisa estar válida e não-desatualizada para aprovar" @endif
                             style="background:{{ $canApprove ? '#10b981' : '#e2e8f0' }};color:{{ $canApprove ? '#fff' : '#94a3b8' }};padding:.5rem .9rem;border-radius:.375rem;border:none;cursor:{{ $canApprove ? 'pointer' : 'not-allowed' }};font-size:.85rem;">
                             Aprovar
                         </button>
@@ -51,20 +51,49 @@
         </div>
 
         {{-- Alerts --}}
-        @if(session('success'))
-        <div style="background:#f0fdf4;border:1px solid #86efac;color:#166534;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('success') }}</div>
-        @endif
-        @if(session('warning'))
-        <div style="background:#fffbeb;border:1px solid #fcd34d;color:#92400e;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('warning') }}</div>
-        @endif
-        @if(session('warning_image'))
-        <div style="background:#fffbeb;border:1px solid #fcd34d;color:#92400e;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('warning_image') }}</div>
-        @endif
-        @if(session('error'))
-        <div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('error') }}</div>
+        @foreach(['success','warning','warning_image','error','info'] as $type)
+            @if(session($type))
+            <div style="background:{{ $type==='success'?'#f0fdf4':($type==='error'?'#fef2f2':'#fffbeb') }};border:1px solid {{ $type==='success'?'#86efac':($type==='error'?'#fca5a5':'#fcd34d') }};color:{{ $type==='success'?'#166534':($type==='error'?'#dc2626':'#92400e') }};padding:.75rem;border-radius:.5rem;margin-bottom:.75rem;">
+                {{ session($type) }}
+            </div>
+            @endif
+        @endforeach
+        @if(session('carousel_suggestion'))
+        <div style="background:#eff6ff;border:2px solid #3b82f6;border-radius:.75rem;padding:1rem 1.5rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div>
+                <span style="color:#1d4ed8;font-weight:700;font-size:.9rem;">💡 Sugestão de Carrossel</span>
+                <p style="color:#1d4ed8;font-size:.85rem;margin-top:.25rem;">{{ session('carousel_suggestion') }}</p>
+            </div>
+            <form method="POST" action="{{ route('admin.social.posts.generate-carousel', $post) }}"
+                  onsubmit="return confirm('Gerar carrossel com IA? Isso criará slides com base no texto atual.')">
+                @csrf
+                <button style="background:#3b82f6;color:#fff;padding:.5rem 1rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+                    Gerar Carrossel com IA
+                </button>
+            </form>
+        </div>
         @endif
         @if($errors->has('instagram'))
-        <div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:.75rem;border-radius:.5rem;margin-bottom:1rem;">{{ $errors->first('instagram') }}</div>
+        <div style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;padding:.75rem;border-radius:.5rem;margin-bottom:.75rem;">{{ $errors->first('instagram') }}</div>
+        @endif
+
+        {{-- Image outdated warning --}}
+        @if($post->isImageOutdated())
+        <div style="background:#fff7ed;border:2px solid #f97316;border-radius:.75rem;padding:1rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+            <div>
+                <span style="color:#c2410c;font-weight:700;font-size:.9rem;">⚠ Imagem desatualizada</span>
+                <p style="color:#c2410c;font-size:.85rem;margin-top:.25rem;">O texto foi alterado após a geração da imagem. Regenere a imagem para manter coerência antes de aprovar.</p>
+            </div>
+            @if($post->canBeEdited())
+            <form method="POST" action="{{ route('admin.social.posts.generate-image', $post) }}"
+                  onsubmit="return confirm('Regenerar imagem com base no texto atual?')">
+                @csrf
+                <button style="background:#f97316;color:#fff;padding:.5rem 1rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+                    Regenerar Imagem
+                </button>
+            </form>
+            @endif
+        </div>
         @endif
 
         {{-- Published / Permalink banner --}}
@@ -86,24 +115,50 @@
             {{-- Left Column --}}
             <div>
 
-                {{-- AI Actions --}}
+                {{-- Text-first AI Actions --}}
                 @if($post->canBeEdited())
                 <div style="background:#faf5ff;border:1px solid #ddd6fe;border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
-                    <h3 style="color:#5b21b6;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">✨ Ações com IA</h3>
+                    <h3 style="color:#5b21b6;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:.25rem;">✨ Ações com IA</h3>
+                    <p style="color:#7c3aed;font-size:.78rem;margin-bottom:1rem;">Fluxo correto: primeiro gere ou edite o texto → depois gere a imagem com base nele.</p>
                     <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+                        {{-- Step 1: Caption --}}
                         <form method="POST" action="{{ route('admin.social.posts.generate-caption', $post) }}" style="display:inline;">
                             @csrf
                             <button style="background:#8b5cf6;color:#fff;padding:.5rem .9rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.85rem;">
-                                ✨ Gerar Legenda com Gemini
+                                1. Gerar Legenda com Gemini
                             </button>
                         </form>
+
+                        {{-- Step 2: Single image --}}
+                        @php $hasCaption = !empty(trim($post->main_caption ?? '')); @endphp
                         <form method="POST" action="{{ route('admin.social.posts.generate-image', $post) }}" style="display:inline;"
-                              onsubmit="return confirm('Gerar imagem com Gemini? Isso pode levar alguns segundos.')">
+                              onsubmit="return confirm('Gerar imagem com Gemini com base no texto atual?')">
                             @csrf
-                            <button style="background:#7c3aed;color:#fff;padding:.5rem .9rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.85rem;">
-                                🖼 Gerar Imagem com Gemini
+                            <button
+                                @if(!$hasCaption) disabled title="Preencha o texto do post antes de gerar a imagem" @endif
+                                style="background:{{ $hasCaption ? '#7c3aed' : '#e2e8f0' }};color:{{ $hasCaption ? '#fff' : '#94a3b8' }};padding:.5rem .9rem;border-radius:.375rem;border:none;cursor:{{ $hasCaption ? 'pointer' : 'not-allowed' }};font-size:.85rem;">
+                                2. Gerar Imagem com IA
                             </button>
                         </form>
+
+                        {{-- Suggest carousel --}}
+                        @if($hasCaption)
+                        <form method="POST" action="{{ route('admin.social.posts.suggest-carousel', $post) }}" style="display:inline;">
+                            @csrf
+                            <button style="background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;padding:.5rem .9rem;border-radius:.375rem;border:1px solid #cbd5e1;cursor:pointer;font-size:.85rem;">
+                                💡 Sugerir Carrossel
+                            </button>
+                        </form>
+
+                        {{-- Generate carousel --}}
+                        <form method="POST" action="{{ route('admin.social.posts.generate-carousel', $post) }}" style="display:inline;"
+                              onsubmit="return confirm('Gerar carrossel com IA com base no texto atual? Isso criará múltiplos slides.')">
+                            @csrf
+                            <button style="background:#0ea5e9;color:#fff;padding:.5rem .9rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.85rem;">
+                                🎨 Gerar Carrossel com IA
+                            </button>
+                        </form>
+                        @endif
                     </div>
                 </div>
                 @endif
@@ -114,7 +169,7 @@
                     @if($post->main_caption)
                         <p style="color:#334155;font-size:.95rem;line-height:1.7;white-space:pre-wrap;">{{ $post->main_caption }}</p>
                     @else
-                        <p style="color:#94a3b8;font-size:.9rem;">Sem legenda. Use "Gerar Legenda com Gemini" ou edite o post.</p>
+                        <p style="color:#94a3b8;font-size:.9rem;">Sem legenda. Use "1. Gerar Legenda" ou edite o post para adicionar texto antes de gerar a imagem.</p>
                     @endif
                     @if($post->hashtags)
                         <p style="color:#3b82f6;font-size:.85rem;margin-top:1rem;">{{ $post->hashtags }}</p>
@@ -123,6 +178,59 @@
                         <p style="color:#10b981;font-size:.85rem;margin-top:.5rem;font-weight:600;">CTA: {{ $post->cta }}</p>
                     @endif
                 </div>
+
+                {{-- Carousel Assets --}}
+                @if($post->carousel_enabled && $post->assets->isNotEmpty())
+                <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;">Slides do Carrossel</h3>
+                        @php
+                            $carouselStatusColor = match($post->carousel_status) {
+                                'valid'    => '#166534',
+                                'failed'   => '#dc2626',
+                                'invalid'  => '#dc2626',
+                                'generating','planning' => '#78350f',
+                                default    => '#64748b',
+                            };
+                        @endphp
+                        <span style="font-size:.8rem;padding:.25rem .6rem;border-radius:9999px;background:{{ $carouselStatusColor }}20;color:{{ $carouselStatusColor }};font-weight:600;">
+                            {{ ucfirst($post->carousel_status ?? '—') }} ({{ $post->validAssets()->count() }}/{{ $post->assets->count() }} válidos)
+                        </span>
+                    </div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
+                        @foreach($post->assets->sortBy('position') as $asset)
+                        <div style="border:1px solid {{ $asset->isValid() ? '#86efac' : '#fca5a5' }};border-radius:.5rem;overflow:hidden;background:#f8fafc;">
+                            @if($asset->public_url && str_starts_with($asset->public_url, 'https://'))
+                                <img src="{{ $asset->public_url }}" alt="Slide {{ $asset->position }}"
+                                     style="width:100%;aspect-ratio:1;object-fit:cover;"
+                                     onerror="this.style.display='none'">
+                            @endif
+                            <div style="padding:.5rem;font-size:.75rem;">
+                                <div style="font-weight:600;color:#334155;">Slide {{ $asset->position }}</div>
+                                <div style="color:{{ $asset->isValid() ? '#166534' : '#dc2626' }};">
+                                    {{ $asset->isValid() ? '✓ Válido' : '✗ ' . ($asset->status) }}
+                                </div>
+                                @if($asset->validation_error)
+                                <div style="color:#dc2626;font-size:.7rem;margin-top:.25rem;">{{ Str::limit($asset->validation_error, 60) }}</div>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+
+                    @if($post->canBeEdited())
+                    <div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;">
+                        <form method="POST" action="{{ route('admin.social.posts.generate-carousel', $post) }}"
+                              onsubmit="return confirm('Regenerar carrossel? Os slides atuais serão substituídos.')">
+                            @csrf
+                            <button style="background:#0ea5e9;color:#fff;padding:.4rem .8rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.8rem;">
+                                Regenerar Carrossel
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+                </div>
+                @endif
 
                 {{-- Image Section --}}
                 <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
@@ -146,10 +254,25 @@
                                 default      => ($post->image_status ?? 'Sem imagem'),
                             };
                         @endphp
-                        @if($post->image_status)
-                            <span style="font-size:.8rem;padding:.25rem .6rem;border-radius:9999px;background:{{ $imgStatusColor }}20;color:{{ $imgStatusColor }};font-weight:600;">{{ $imgStatusLabel }}</span>
-                        @endif
+                        <div style="display:flex;gap:.5rem;align-items:center;">
+                            @if($post->image_status)
+                                <span style="font-size:.8rem;padding:.25rem .6rem;border-radius:9999px;background:{{ $imgStatusColor }}20;color:{{ $imgStatusColor }};font-weight:600;">{{ $imgStatusLabel }}</span>
+                            @endif
+                            @if($post->image_generated_from_caption_hash && $post->image_last_generated_at)
+                                <span style="font-size:.75rem;color:#94a3b8;">Gerada {{ $post->image_last_generated_at->diffForHumans() }}</span>
+                            @endif
+                            @if($post->isImageOutdated())
+                                <span style="font-size:.75rem;padding:.2rem .5rem;border-radius:9999px;background:#fff7ed;color:#c2410c;font-weight:600;border:1px solid #f97316;">⚠ Desatualizada</span>
+                            @endif
+                        </div>
                     </div>
+
+                    {{-- Image outdated detail --}}
+                    @if($post->isImageOutdated())
+                    <div style="background:#fff7ed;border:1px solid #fed7aa;border-radius:.375rem;padding:.75rem;margin-bottom:1rem;font-size:.85rem;color:#c2410c;">
+                        <strong>Atenção:</strong> O texto foi editado após a geração desta imagem. A imagem pode não representar o conteúdo atual. Regenere antes de aprovar.
+                    </div>
+                    @endif
 
                     {{-- Image preview --}}
                     @if($post->public_image_url)
@@ -173,7 +296,7 @@
                     @else
                         <div style="background:#f8fafc;border:2px dashed #e2e8f0;border-radius:.5rem;padding:2rem;text-align:center;margin-bottom:1rem;">
                             <div style="color:#94a3b8;font-size:2rem;">🖼</div>
-                            <p style="color:#94a3b8;font-size:.9rem;margin-top:.5rem;">Sem imagem. Gere com Gemini ou faça upload.</p>
+                            <p style="color:#94a3b8;font-size:.9rem;margin-top:.5rem;">Sem imagem. Primeiro adicione texto, depois gere com IA ou faça upload.</p>
                         </div>
                     @endif
 
@@ -288,10 +411,17 @@
                     $canPublishNow     = $post->canBePublished()
                         && $publishingEnabled
                         && $instagramChannel?->isConnected()
-                        && $instagramChannel?->hasValidToken();
+                        && $instagramChannel?->hasValidToken()
+                        && !$post->isImageOutdated();
+                    $isCarousel        = $post->carousel_enabled && $post->carousel_status === 'valid';
                 @endphp
                 <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem;">
                     <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Publicação Instagram</h3>
+                    @if($isCarousel)
+                        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:.375rem;padding:.75rem;margin-bottom:.75rem;font-size:.8rem;color:#1d4ed8;">
+                            📚 Modo carrossel — {{ $post->validAssets()->count() }} slides válidos
+                        </div>
+                    @endif
                     @if($canPublishNow)
                         <form method="POST" action="{{ route('admin.social.posts.publish-instagram-now', $post) }}"
                               onsubmit="return confirm('Publicar agora no Instagram @lymity.ia?')">
@@ -305,6 +435,7 @@
                             @if(!in_array($post->status, ['approved','scheduled']))<div>• Status: {{ $post->status_label }} (precisa ser aprovado)</div>@endif
                             @if($post->requires_approval && !$post->isApprovedForPublishing())<div>• Aprovação pendente</div>@endif
                             @if(!$post->hasValidImage())<div>• Imagem inválida ou ausente</div>@endif
+                            @if($post->isImageOutdated())<div>• Imagem desatualizada (regenere)</div>@endif
                             @if(empty(trim($post->main_caption ?? '')))<div>• Legenda vazia</div>@endif
                             @if(!$publishingEnabled)<div>• INSTAGRAM_PUBLISHING_ENABLED=false</div>@endif
                             @if(!$instagramChannel)<div>• Canal @lymity.ia não encontrado</div>
@@ -324,16 +455,18 @@
                     <h3 style="color:#475569;font-size:.85rem;font-weight:600;text-transform:uppercase;margin-bottom:1rem;">Informações</h3>
                     @php
                         $infos = [
-                            ['Criado',       $post->created_at->format('d/m/Y H:i')],
-                            ['Agendado',     $post->scheduled_at?->format('d/m/Y H:i') ?? '—'],
-                            ['Publicado',    $post->published_at?->format('d/m/Y H:i') ?? '—'],
-                            ['Aprovado por', $post->approver?->name ?? '—'],
-                            ['Aprovado em',  $post->approved_at?->format('d/m/Y H:i') ?? '—'],
-                            ['Post ID ext.', $post->external_post_id ?? '—'],
-                            ['Container IG', $post->instagram_container_id ?? '—'],
-                            ['Provedor img', $post->image_provider ?? '—'],
-                            ['Aprovação ob.',  $post->requires_approval ? 'Sim' : 'Não'],
-                            ['Agência',       $post->isAgencyPost() ? 'Sim' : 'Não'],
+                            ['Criado',        $post->created_at->format('d/m/Y H:i')],
+                            ['Agendado',      $post->scheduled_at?->format('d/m/Y H:i') ?? '—'],
+                            ['Publicado',     $post->published_at?->format('d/m/Y H:i') ?? '—'],
+                            ['Aprovado por',  $post->approver?->name ?? '—'],
+                            ['Aprovado em',   $post->approved_at?->format('d/m/Y H:i') ?? '—'],
+                            ['Post ID ext.',  $post->external_post_id ?? '—'],
+                            ['Container IG',  $post->instagram_container_id ?? '—'],
+                            ['Modo imagem',   $post->image_generation_mode ?? '—'],
+                            ['Provedor img',  $post->image_provider ?? '—'],
+                            ['Img gerada em', $post->image_last_generated_at?->format('d/m/Y H:i') ?? '—'],
+                            ['Carrossel',     $post->carousel_enabled ? 'Sim (' . ($post->carousel_slide_count ?? 0) . ' slides)' : 'Não'],
+                            ['Aprovação ob.', $post->requires_approval ? 'Sim' : 'Não'],
                         ];
                     @endphp
                     @foreach($infos as [$label, $value])
@@ -377,7 +510,6 @@
                     <p style="color:#475569;font-size:.85rem;line-height:1.6;">{{ $post->creative_brief }}</p>
                 </div>
                 @endif
-
             </div>
         </div>
 

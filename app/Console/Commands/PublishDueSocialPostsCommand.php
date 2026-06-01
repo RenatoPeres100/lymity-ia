@@ -41,15 +41,14 @@ class PublishDueSocialPostsCommand extends Command
             return self::SUCCESS;
         }
 
-        // Find due posts: agency, scheduled, feed/feed_image, past scheduled_at
+        // Find due posts: approved or scheduled, with valid image and approved_by set
         $due = SocialPost::whereNotNull('company_id')
             ->whereNull('client_id')
-            ->where('status', 'scheduled')
+            ->whereIn('status', ['approved', 'scheduled'])
             ->where('scheduled_at', '<=', now())
-            ->where(function ($q) {
-                $q->where('content_type', 'feed')
-                  ->orWhere('creative_format', 'feed_image');
-            })
+            ->whereNotNull('approved_by')
+            ->where('image_validation_status', 'valid')
+            ->whereNotNull('public_image_url')
             ->get();
 
         $this->line("DUE_POSTS={$due->count()}");
@@ -99,9 +98,25 @@ class PublishDueSocialPostsCommand extends Command
                 continue;
             }
 
+            // Guard: outdated image
+            if ($post->isImageOutdated()) {
+                $reason = "Post #{$post->id} com imagem desatualizada — texto foi editado após a imagem. Regenere a imagem.";
+                $this->warn("  SKIP #{$post->id} — {$reason}");
+                $publisher->blockPublish($post, $reason, $channel);
+                continue;
+            }
+
             try {
                 $this->info("  PUBLISHING #{$post->id} — {$post->title}");
-                $publisher->publishSingleImage($channel, $post);
+
+                // Carousel or single image
+                if ($post->carousel_enabled && $post->canBePublishedAsCarousel()) {
+                    $publisher->publishCarousel($channel, $post);
+                    $this->info("  PUBLISHED CAROUSEL #{$post->id}");
+                } else {
+                    $publisher->publishSingleImage($channel, $post);
+                }
+
                 $post->refresh();
                 $this->info("  PUBLISHED #{$post->id} external_id={$post->external_post_id} permalink=" . ($post->permalink ?? 'none'));
                 $published++;

@@ -394,6 +394,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/social/posts/{post}/validate-image',     [App\Http\Controllers\Admin\SocialPostAiController::class, 'validateImage'])->name('admin.social.posts.validate-image');
         Route::post('/social/posts/{post}/replace-image-url',  [App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUrl'])->name('admin.social.posts.replace-image-url');
         Route::post('/social/posts/{post}/replace-image-upload',[App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUpload'])->name('admin.social.posts.replace-image-upload');
+        Route::post('/social/posts/{post}/generate-carousel',  [App\Http\Controllers\Admin\SocialPostAiController::class, 'generateCarousel'])->name('admin.social.posts.generate-carousel');
+        Route::post('/social/posts/{post}/suggest-carousel',   [App\Http\Controllers\Admin\SocialPostAiController::class, 'suggestCarousel'])->name('admin.social.posts.suggest-carousel');
 
         // Calendar
         Route::get('/social/calendar',                         [AdminSocialCalendarController::class, 'index'])->name('admin.social.calendar.index');

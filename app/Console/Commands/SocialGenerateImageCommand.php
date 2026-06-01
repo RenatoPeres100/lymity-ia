@@ -32,8 +32,13 @@ class SocialGenerateImageCommand extends Command
             return self::FAILURE;
         }
 
+        if (empty(trim($post->main_caption ?? ''))) {
+            $this->error('Post sem legenda (main_caption). Crie o texto antes de gerar imagem.');
+            return self::FAILURE;
+        }
+
         try {
-            $post = $imageService->generateWithGemini($post, $admin);
+            $post = $imageService->generateSingleImageFromPost($post, $admin);
             $this->info("  Imagem gerada: " . $post->public_image_url);
             $this->info("  Status imagem: " . $post->image_status);
             $this->info("  Validação    : " . ($post->image_validation_status ?? '—'));

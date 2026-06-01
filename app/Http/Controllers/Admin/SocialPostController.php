@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateSocialPostRequest;
 use App\Http\Requests\ScheduleSocialPostRequest;
 use App\Models\Client;
 use App\Models\SocialPost;
+use App\Services\Social\SocialImageService;
 use App\Services\Social\SocialPostService;
 use App\Services\Social\SocialPublishingService;
 use Illuminate\Http\Request;
@@ -18,6 +19,7 @@ class SocialPostController extends Controller
     public function __construct(
         private SocialPostService $postService,
         private SocialPublishingService $publishingService,
+        private SocialImageService $imageService,
     ) {}
 
     public function index(Request $request)
@@ -70,11 +72,37 @@ class SocialPostController extends Controller
 
     public function update(UpdateSocialPostRequest $request, SocialPost $post)
     {
+        $oldCaption = trim($post->main_caption ?? '');
+
         $post->update($request->validated());
+        $post->refresh();
+
+        // If caption changed after image was generated, mark as outdated
+        $newCaption = trim($post->main_caption ?? '');
+        if ($oldCaption !== $newCaption) {
+            $this->imageService->markImageOutdatedIfTextChanged($post);
+        }
+
+        // If post was approved/pending and text changed, revert to draft
+        if ($oldCaption !== $newCaption && in_array($post->status, ['approved', 'pending_approval', 'scheduled'])) {
+            $post->update([
+                'status'      => 'draft',
+                'approved_by' => null,
+                'approved_at' => null,
+            ]);
+            return redirect()
+                ->route('admin.social.posts.show', $post)
+                ->with('warning', 'Post voltou para rascunho porque o texto foi editado após aprovação. Revise a imagem e envie novamente para aprovação.');
+        }
+
+        $msg = 'Post atualizado.';
+        if ($oldCaption !== $newCaption && $post->isImageOutdated()) {
+            $msg .= ' Atenção: a imagem pode estar desatualizada. Considere regenerar.';
+        }
 
         return redirect()
             ->route('admin.social.posts.show', $post)
-            ->with('success', 'Post atualizado.');
+            ->with('success', $msg);
     }
 
     public function destroy(SocialPost $post)

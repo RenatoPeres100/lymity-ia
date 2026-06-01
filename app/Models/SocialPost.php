@@ -15,20 +15,26 @@ class SocialPost extends Model
         'title', 'objective', 'content_type', 'creative_format', 'main_caption',
         'creative_brief', 'hashtags', 'cta', 'status',
         'image_url', 'public_image_url', 'external_post_id', 'publication_error',
-        'image_prompt', 'image_path', 'image_status', 'image_provider',
+        'image_generation_mode',
+        'image_prompt', 'image_prompt_source_hash', 'image_generated_from_caption_hash',
+        'image_last_generated_at',
+        'image_path', 'image_status', 'image_provider',
         'image_metadata', 'image_validation_status', 'image_validation_error',
+        'carousel_enabled', 'carousel_slide_count', 'carousel_status',
         'instagram_container_id', 'permalink',
         'scheduled_at', 'published_at', 'requires_approval',
         'approved_by', 'approved_at', 'metadata',
     ];
 
     protected $casts = [
-        'requires_approval'  => 'boolean',
-        'scheduled_at'       => 'datetime',
-        'published_at'       => 'datetime',
-        'approved_at'        => 'datetime',
-        'metadata'           => 'array',
-        'image_metadata'     => 'array',
+        'requires_approval'          => 'boolean',
+        'carousel_enabled'           => 'boolean',
+        'scheduled_at'               => 'datetime',
+        'published_at'               => 'datetime',
+        'approved_at'                => 'datetime',
+        'image_last_generated_at'    => 'datetime',
+        'metadata'                   => 'array',
+        'image_metadata'             => 'array',
     ];
 
     public function client(): BelongsTo
@@ -64,6 +70,16 @@ class SocialPost extends Model
     public function variants(): HasMany
     {
         return $this->hasMany(SocialPostVariant::class);
+    }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(SocialPostAsset::class)->orderBy('position');
+    }
+
+    public function validAssets(): HasMany
+    {
+        return $this->hasMany(SocialPostAsset::class)->where('status', 'valid')->orderBy('position');
     }
 
     public function approvalRequests(): MorphMany
@@ -211,6 +227,36 @@ class SocialPost extends Model
     public function hasValidImage(): bool
     {
         return $this->hasPublicImage() && $this->image_validation_status === 'valid';
+    }
+
+    public function isImageOutdated(): bool
+    {
+        if (empty($this->image_generated_from_caption_hash)) {
+            return false;
+        }
+        if (empty($this->main_caption)) {
+            return false;
+        }
+        $currentHash = md5(trim($this->main_caption));
+        return $currentHash !== $this->image_generated_from_caption_hash;
+    }
+
+    public function captionHash(): string
+    {
+        return md5(trim($this->main_caption ?? ''));
+    }
+
+    public function hasEnoughValidAssetsForCarousel(): bool
+    {
+        $min = config('social.carousel.min_slides', 3);
+        return $this->validAssets()->count() >= $min;
+    }
+
+    public function canBePublishedAsCarousel(): bool
+    {
+        return $this->carousel_enabled
+            && $this->carousel_status === 'valid'
+            && $this->hasEnoughValidAssetsForCarousel();
     }
 
     public function isAgencyPost(): bool

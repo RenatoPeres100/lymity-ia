@@ -2,6 +2,8 @@
 
 namespace App\Services\AI;
 
+use App\Models\SocialPost;
+use App\Services\Social\SocialImagePromptService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -158,6 +160,49 @@ class GeminiImageGenerationService
             'Verifique se GEMINI_API_KEY tem acesso a modelos de geração de imagem. ' .
             'Você pode substituir a imagem manualmente na tela de edição do post.'
         );
+    }
+
+    /**
+     * Generate carousel plan JSON via Gemini text model.
+     * Returns ['recommended' => bool, 'reason' => string, 'slides' => array]
+     */
+    public function generateCarouselPlan(SocialPost $post, SocialImagePromptService $promptService): array
+    {
+        $this->assertConfigured();
+
+        $textModel = config('ai.gemini_model', 'gemini-1.5-flash');
+        $prompt    = $promptService->buildCarouselPlanPrompt($post);
+        $endpoint  = "https://generativelanguage.googleapis.com/v1beta/models/{$textModel}:generateContent";
+
+        $body = [
+            'contents' => [['role' => 'user', 'parts' => [['text' => $prompt]]]],
+            'generationConfig' => ['temperature' => 0.4, 'maxOutputTokens' => 2048],
+        ];
+
+        $response = Http::withoutVerifying()
+            ->timeout(60)
+            ->withQueryParameters(['key' => $this->apiKey])
+            ->post($endpoint, $body);
+
+        if ($response->failed()) {
+            throw new \RuntimeException('Gemini text falhou ao gerar plano de carrossel: ' . ($response->json('error.message') ?? 'HTTP ' . $response->status()));
+        }
+
+        $text = $response->json('candidates.0.content.parts.0.text') ?? '';
+
+        // Extract JSON from markdown code block if wrapped
+        if (preg_match('/```(?:json)?\s*([\s\S]+?)\s*```/i', $text, $m)) {
+            $text = $m[1];
+        }
+
+        $plan = json_decode(trim($text), true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || empty($plan['slides'])) {
+            Log::warning('[GeminiImage] Carousel plan JSON parse failed. Raw: ' . mb_substr($text, 0, 500));
+            throw new \RuntimeException('Gemini não retornou JSON válido para o plano de carrossel.');
+        }
+
+        return $plan;
     }
 
     private function detectMime(string $bytes): string

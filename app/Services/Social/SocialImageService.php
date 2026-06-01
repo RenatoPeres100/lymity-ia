@@ -4,6 +4,7 @@ namespace App\Services\Social;
 
 use App\Models\ActivityLog;
 use App\Models\SocialPost;
+use App\Models\SocialPostAsset;
 use App\Models\User;
 use App\Services\AI\GeminiImageGenerationService;
 use App\Services\Brand\BrandContextService;
@@ -17,8 +18,29 @@ class SocialImageService
     public function __construct(
         private GeminiImageGenerationService $geminiImage,
         private PublicImageValidatorService  $validator,
+        private SocialImagePromptService     $promptService,
         private BrandContextService          $brandContext,
     ) {}
+
+    // ── Text-first guard ───────────────────────────────────────────────────────
+
+    private function assertHasCaption(SocialPost $post): void
+    {
+        if (empty(trim($post->main_caption ?? ''))) {
+            throw new \RuntimeException(
+                'Crie ou edite o texto do post antes de gerar a imagem. '
+                . 'A legenda precisa estar preenchida para gerar uma imagem coerente.'
+            );
+        }
+    }
+
+    // ── Single image generation ────────────────────────────────────────────────
+
+    public function generateSingleImageFromPost(SocialPost $post, User $user): SocialPost
+    {
+        $this->assertHasCaption($post);
+        return $this->generateWithGemini($post, $user);
+    }
 
     public function generateWithGemini(SocialPost $post, User $user): SocialPost
     {
@@ -26,25 +48,34 @@ class SocialImageService
             throw new \RuntimeException("Post #{$post->id} não pode ser editado no status '{$post->status}'.");
         }
 
+        $this->assertHasCaption($post);
         $this->geminiImage->assertConfigured();
 
-        $post->update(['image_status' => 'generating', 'image_validation_status' => null, 'image_validation_error' => null]);
+        $post->update([
+            'image_status'            => 'generating',
+            'image_validation_status' => null,
+            'image_validation_error'  => null,
+        ]);
 
-        $prompt = $this->buildImagePrompt($post);
-
+        $prompt     = $this->promptService->buildSingleImagePrompt($post);
+        $captionHash = $post->captionHash();
         $storagePath = config('social.image.path', 'social/generated') . "/{$post->id}/image";
 
         try {
             $result = $this->geminiImage->generateAndStore($prompt, $storagePath);
 
             $post->update([
-                'image_path'      => $result['path'],
-                'image_url'       => $result['public_url'],
-                'public_image_url'=> $result['public_url'],
-                'image_status'    => 'generated',
-                'image_provider'  => 'gemini',
-                'image_prompt'    => $prompt,
-                'image_metadata'  => [
+                'image_path'                        => $result['path'],
+                'image_url'                         => $result['public_url'],
+                'public_image_url'                  => $result['public_url'],
+                'image_status'                      => 'generated',
+                'image_provider'                    => 'gemini',
+                'image_generation_mode'             => 'ai_single',
+                'image_prompt'                      => $prompt,
+                'image_prompt_source_hash'          => $this->promptService->hashPostVisualSource($post),
+                'image_generated_from_caption_hash' => $captionHash,
+                'image_last_generated_at'           => now(),
+                'image_metadata'                    => [
                     'bytes'       => $result['bytes'],
                     'mime'        => $result['mime'],
                     'model'       => config('ai.gemini_image_model'),
@@ -57,24 +88,136 @@ class SocialImageService
                 'public_url' => $result['public_url'],
             ]);
 
-            // Auto-validate after generation
             $post = $this->validateImage($post);
         } catch (\Throwable $e) {
             $safe = $this->redactSecrets($e->getMessage());
             Log::error("[SocialImageService] generateWithGemini #{$post->id}: {$safe}");
 
             $post->update([
-                'image_status'          => 'failed',
+                'image_status'           => 'failed',
                 'image_validation_error' => $safe,
             ]);
 
             $this->logActivity($post, 'social_image_generation_failed', $user, ['error' => $safe]);
-
             throw new \RuntimeException("Falha ao gerar imagem: {$safe}");
         }
 
         return $post->fresh();
     }
+
+    // ── Carousel generation ────────────────────────────────────────────────────
+
+    public function generateCarouselFromPost(SocialPost $post, User $user): SocialPost
+    {
+        $this->assertHasCaption($post);
+
+        if (!$post->canBeEdited()) {
+            throw new \RuntimeException("Post #{$post->id} não pode ser editado no status '{$post->status}'.");
+        }
+
+        $this->geminiImage->assertConfigured();
+
+        if (!config('social.carousel.enabled', true)) {
+            throw new \RuntimeException('Geração de carrossel desabilitada (AI_SOCIAL_CAROUSEL_GENERATION_ENABLED=false).');
+        }
+
+        $post->update([
+            'carousel_enabled' => true,
+            'carousel_status'  => 'planning',
+        ]);
+
+        try {
+            $carouselPlan = $this->geminiImage->generateCarouselPlan($post, $this->promptService);
+        } catch (\Throwable $e) {
+            $safe = $this->redactSecrets($e->getMessage());
+            $post->update(['carousel_status' => 'failed']);
+            throw new \RuntimeException("Falha ao planejar carrossel: {$safe}");
+        }
+
+        if (empty($carouselPlan['slides'])) {
+            $post->update(['carousel_status' => 'failed']);
+            throw new \RuntimeException('Gemini não retornou plano de slides válido.');
+        }
+
+        $slides  = $carouselPlan['slides'];
+        $max     = config('social.carousel.max_slides', 5);
+        $slides  = array_slice($slides, 0, $max);
+
+        $post->update(['carousel_status' => 'generating', 'carousel_slide_count' => count($slides)]);
+
+        // Delete existing assets
+        $post->assets()->delete();
+
+        $failures = [];
+
+        foreach ($slides as $index => $slide) {
+            $position = $index + 1;
+            $asset    = SocialPostAsset::create([
+                'social_post_id' => $post->id,
+                'type'           => 'image',
+                'source'         => 'generated',
+                'provider'       => 'gemini',
+                'position'       => $position,
+                'status'         => 'generating',
+                'public_url'     => '',
+            ]);
+
+            $slidePrompt = $this->promptService->buildCarouselSlidePrompt($post, $slides, $position);
+            $storagePath = config('social.image.path', 'social/generated') . "/{$post->id}/slide_{$position}";
+
+            try {
+                $result = $this->geminiImage->generateAndStore($slidePrompt, $storagePath);
+
+                $asset->update([
+                    'path'       => $result['path'],
+                    'public_url' => $result['public_url'],
+                    'prompt'     => $slidePrompt,
+                    'status'     => 'generated',
+                    'metadata'   => ['bytes' => $result['bytes'], 'mime' => $result['mime']],
+                ]);
+
+                // Validate asset
+                $validationResult = $this->validator->validateUrl($result['public_url']);
+                if ($validationResult->valid) {
+                    $asset->markValid();
+                } else {
+                    $asset->markInvalid($validationResult->error ?? 'Validação falhou');
+                    $failures[] = "Slide {$position}: " . $validationResult->error;
+                }
+            } catch (\Throwable $e) {
+                $safe = $this->redactSecrets($e->getMessage());
+                $asset->update(['status' => 'failed', 'validation_error' => $safe]);
+                $failures[] = "Slide {$position}: {$safe}";
+                Log::error("[SocialImageService] Carousel slide {$position} failed for post #{$post->id}: {$safe}");
+            }
+        }
+
+        $validCount = $post->validAssets()->count();
+        $min        = config('social.carousel.min_slides', 3);
+
+        if ($validCount >= $min) {
+            $post->update([
+                'carousel_status'                   => 'valid',
+                'carousel_slide_count'              => $validCount,
+                'image_generation_mode'             => 'ai_carousel',
+                'image_generated_from_caption_hash' => $post->captionHash(),
+                'image_last_generated_at'           => now(),
+            ]);
+        } else {
+            $errorMsg = "Apenas {$validCount}/{$min} slides válidos. " . implode('; ', $failures);
+            $post->update(['carousel_status' => 'failed']);
+            throw new \RuntimeException($errorMsg);
+        }
+
+        $this->logActivity($post, 'social_carousel_generated', $user, [
+            'valid_slides' => $validCount,
+            'total_slides' => count($slides),
+        ]);
+
+        return $post->fresh();
+    }
+
+    // ── Upload & URL replacement ───────────────────────────────────────────────
 
     public function replaceImageFromUpload(SocialPost $post, UploadedFile $file, User $user): SocialPost
     {
@@ -85,7 +228,8 @@ class SocialImageService
         $this->validateUploadedFile($file);
 
         $storagePath = config('social.image.path', 'social/generated') . "/{$post->id}";
-        $ext         = $file->getClientOriginalExtension() ?: 'jpg';
+        $ext         = strtolower($file->getClientOriginalExtension() ?: 'jpg');
+        if (!in_array($ext, ['jpg', 'jpeg', 'png'])) $ext = 'jpg';
         $filename    = "image.{$ext}";
         $disk        = config('social.image.disk', 'public');
 
@@ -100,8 +244,10 @@ class SocialImageService
             'public_image_url'       => $publicUrl,
             'image_status'           => 'replaced',
             'image_provider'         => 'upload',
+            'image_generation_mode'  => 'upload',
             'image_validation_status'=> null,
             'image_validation_error' => null,
+            'image_last_generated_at'=> now(),
             'image_metadata'         => [
                 'original_name' => $file->getClientOriginalName(),
                 'mime'          => $file->getMimeType(),
@@ -110,7 +256,6 @@ class SocialImageService
             ],
         ]);
 
-        // If post was pending_approval, go back to draft since image changed
         if ($post->status === 'pending_approval') {
             $post->update(['status' => 'draft']);
         }
@@ -131,8 +276,10 @@ class SocialImageService
             'image_url'              => $url,
             'image_status'           => 'replaced',
             'image_provider'         => 'url',
+            'image_generation_mode'  => 'external_url',
             'image_validation_status'=> null,
             'image_validation_error' => null,
+            'image_last_generated_at'=> now(),
         ]);
 
         if ($post->status === 'pending_approval') {
@@ -143,6 +290,8 @@ class SocialImageService
 
         return $this->validateImage($post);
     }
+
+    // ── Validation ─────────────────────────────────────────────────────────────
 
     public function validateImage(SocialPost $post): SocialPost
     {
@@ -156,13 +305,61 @@ class SocialImageService
             'image_validation_error' => $result->valid ? null : $result->error,
         ]);
 
-        $this->logActivity($post, $result->valid ? 'social_image_validated' : 'social_image_validation_failed', null, [
-            'url'   => $post->public_image_url,
-            'error' => $result->error,
-        ]);
+        $this->logActivity(
+            $post,
+            $result->valid ? 'social_image_validated' : 'social_image_validation_failed',
+            null,
+            ['url' => $post->public_image_url, 'error' => $result->error]
+        );
 
         return $post->fresh();
     }
+
+    public function validateCarouselAssets(SocialPost $post): SocialPost
+    {
+        $assets   = $post->assets;
+        $allValid = true;
+
+        foreach ($assets as $asset) {
+            if (!$asset->hasPublicUrl()) {
+                $asset->markInvalid('URL pública ausente.');
+                $allValid = false;
+                continue;
+            }
+            $result = $this->validator->validateUrl($asset->public_url);
+            if ($result->valid) {
+                $asset->markValid();
+            } else {
+                $asset->markInvalid($result->error ?? 'Inválida');
+                $allValid = false;
+            }
+        }
+
+        $validCount = $post->validAssets()->count();
+        $min        = config('social.carousel.min_slides', 3);
+        $status     = ($allValid && $validCount >= $min) ? 'valid' : 'invalid';
+
+        $post->update(['carousel_status' => $status]);
+
+        return $post->fresh();
+    }
+
+    // ── Outdated image detection ───────────────────────────────────────────────
+
+    public function markImageOutdatedIfTextChanged(SocialPost $post): void
+    {
+        if (empty($post->image_generated_from_caption_hash)) {
+            return;
+        }
+        if ($post->isImageOutdated()) {
+            $meta = (array) ($post->image_metadata ?? []);
+            $meta['image_outdated'] = true;
+            $meta['outdated_since'] = now()->toIso8601String();
+            $post->update(['image_metadata' => $meta]);
+        }
+    }
+
+    // ── Cleanup ────────────────────────────────────────────────────────────────
 
     public function deleteGeneratedImage(SocialPost $post): void
     {
@@ -181,54 +378,24 @@ class SocialImageService
         ]);
     }
 
-    private function buildImagePrompt(SocialPost $post): string
-    {
-        if (!empty($post->image_prompt)) {
-            return $post->image_prompt;
-        }
-
-        $brandContext = $this->brandContext->getCompactContext();
-        $objective    = $post->objective_label;
-        $caption      = mb_substr($post->main_caption ?? $post->creative_brief ?? $post->title, 0, 200);
-
-        $prompt = "Crie uma imagem quadrada 1080x1080 pixels para um post institucional da Lymity IA — agência de inteligência artificial aplicada ao crescimento de negócios digitais.
-
-Estilo: premium, moderno, tecnológico e sofisticado. Visual limpo com fundo elegante escuro ou gradiente profissional. Elementos abstratos que remetam a inteligência artificial, automação e crescimento digital. Paleta: tons de azul profundo, roxo digital, branco e preto com detalhes luminosos.
-
-Tema do post: {$caption}
-Objetivo: {$objective}
-
-Regras obrigatórias:
-- Sem texto pequeno ou ilegível
-- Sem logotipos de terceiros
-- Sem pessoas reais identificáveis
-- Sem conteúdo sensível
-- Arte de alta qualidade, adequada para feed profissional no Instagram
-- Proporção exatamente quadrada 1:1";
-
-        if (!empty($brandContext)) {
-            $prompt .= "\n\nContexto da marca: " . mb_substr($brandContext, 0, 300);
-        }
-
-        return $prompt;
-    }
+    // ── Private helpers ────────────────────────────────────────────────────────
 
     private function validateUploadedFile(UploadedFile $file): void
     {
-        $maxBytes  = (int) (config('social.image.max_size_mb', 8) * 1024 * 1024);
+        $maxBytes     = (int) (config('social.image.max_size_mb', 8) * 1024 * 1024);
         $allowedMimes = config('social.image.allowed_mimes', ['image/jpeg', 'image/png']);
 
         if ($file->getSize() > $maxBytes) {
-            throw new \RuntimeException("Arquivo muito grande. Máximo: " . config('social.image.max_size_mb', 8) . "MB.");
+            throw new \RuntimeException('Arquivo muito grande. Máximo: ' . config('social.image.max_size_mb', 8) . 'MB.');
         }
 
         if (!in_array($file->getMimeType(), $allowedMimes)) {
-            throw new \RuntimeException("Tipo de arquivo inválido. Use JPEG ou PNG.");
+            throw new \RuntimeException('Tipo de arquivo inválido. Use JPEG ou PNG.');
         }
 
         $imageInfo = @getimagesize($file->getPathname());
         if (!$imageInfo) {
-            throw new \RuntimeException("Arquivo não é uma imagem válida.");
+            throw new \RuntimeException('Arquivo não é uma imagem válida.');
         }
 
         $minW = config('social.image.min_width', 320);

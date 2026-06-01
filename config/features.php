@@ -19,9 +19,13 @@ return [
     'ai_blog_writer'      => true,
 
     // === SOCIAL MEDIA ===
-    'social_media_module'   => true,
-    'social_post_creation'  => true,
-    'social_approval_flow'  => true,
+    'social_media_module'        => true,
+    'social_post_creation'       => true,
+    'social_approval_flow'       => true,
+    'social_image_generation'    => true,
+    'social_carousel_generation' => true,
+    'social_manual_upload'       => true,
+    'ai_image_generation'        => true,
 
     // === FASE 5 — ROTINAS OPERACIONAIS ===
     'agent_routines'       => true,

@@ -5,6 +5,7 @@ namespace App\Services\Instagram;
 use App\Models\ActivityLog;
 use App\Models\SocialChannel;
 use App\Models\SocialPost;
+use App\Models\SocialPostAsset;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -269,14 +270,89 @@ class InstagramPublishingService
 
     public function publishCarousel(SocialChannel $channel, SocialPost $post): array
     {
-        // Carousel is prepared but blocked in this phase
-        $message = 'Publicação de carrossel ainda não habilitada. Use imagem única nesta etapa.';
-        $this->logActivity('instagram_publish_blocked', null, [
+        $this->validateChannel($channel);
+        $this->validatePost($post);
+
+        $validAssets = $post->validAssets()->get();
+        $min         = config('social.carousel.min_slides', 3);
+
+        if ($validAssets->count() < $min) {
+            throw new \RuntimeException(
+                "Carrossel precisa de ao menos {$min} assets válidos. "
+                . "Encontrado: {$validAssets->count()}. "
+                . "Gere ou valide os slides antes de publicar."
+            );
+        }
+
+        $caption = $this->buildCaption($post);
+
+        $this->logActivity('instagram_carousel_publish_started', null, [
             'channel_id' => $channel->id,
             'post_id'    => $post->id,
-            'reason'     => $message,
+            'slides'     => $validAssets->count(),
         ]);
-        throw new \RuntimeException($message);
+
+        $post->markPublishing();
+
+        // Step 1: Create a container for each carousel item
+        $childIds = [];
+        foreach ($validAssets as $asset) {
+            $this->assertPublicUrl($asset->public_url);
+            $itemContainer  = $this->createCarouselItemContainer($channel, $asset->public_url);
+            $itemContainerId = $itemContainer['id'] ?? null;
+
+            if (!$itemContainerId) {
+                throw new \RuntimeException("Falha ao criar container para slide #{$asset->position}.");
+            }
+
+            $asset->update(['instagram_container_id' => $itemContainerId, 'status' => 'publishing']);
+
+            $this->waitUntilContainerFinished($channel, $itemContainerId);
+
+            $childIds[] = $itemContainerId;
+        }
+
+        // Step 2: Create carousel container
+        $carouselContainer   = $this->createCarouselContainer($channel, $childIds, $caption);
+        $carouselContainerId = $carouselContainer['id'] ?? null;
+
+        if (!$carouselContainerId) {
+            throw new \RuntimeException('Falha ao criar container de carrossel pai.');
+        }
+
+        $post->update(['instagram_container_id' => $carouselContainerId]);
+
+        $this->waitUntilContainerFinished($channel, $carouselContainerId);
+
+        // Step 3: Publish carousel
+        $published  = $this->publishContainer($channel, $carouselContainerId);
+        $externalId = $published['id'] ?? null;
+
+        // Step 4: Fetch permalink
+        $permalink = null;
+        if ($externalId) {
+            try {
+                $media     = $this->getPublishedMedia($channel, $externalId);
+                $permalink = $media['permalink'] ?? null;
+            } catch (\Throwable $e) {
+                Log::warning("[InstagramPublishingService] Could not fetch carousel permalink: {$e->getMessage()}");
+            }
+        }
+
+        $post->markPublished($externalId, $permalink);
+
+        // Mark all assets as published
+        $post->assets()->whereIn('status', ['valid', 'publishing'])->update(['status' => 'published']);
+
+        $this->logActivity('instagram_carousel_publish_success', null, [
+            'channel_id'      => $channel->id,
+            'post_id'         => $post->id,
+            'external_post_id'=> $externalId,
+            'permalink'       => $permalink,
+            'slides'          => count($childIds),
+        ]);
+
+        return array_merge($published, ['permalink' => $permalink]);
     }
 
     // ── Controlled blocking ────────────────────────────────────────────────────
