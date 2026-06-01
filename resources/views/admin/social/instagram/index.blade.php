@@ -20,6 +20,54 @@
             </div>
         @endif
 
+        {{-- Needs reconnect / expired / error alert --}}
+        @if($channel && in_array($channel->status, ['needs_reconnect', 'expired', 'error']))
+            <div class="rounded-xl border border-red-300 bg-red-50 dark:bg-red-900/20 p-5">
+                <div class="flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-red-800 dark:text-red-200">
+                            @if($channel->status === 'needs_reconnect')
+                                Reconexão necessária — token expirado ou revogado
+                            @elseif($channel->status === 'expired')
+                                Token expirado — clique em Reconectar
+                            @else
+                                Erro de conexão — canal precisa ser reconectado
+                            @endif
+                        </h3>
+                        <p class="text-sm text-red-700 dark:text-red-300 mt-1">
+                            A sessão Meta expirou ou o token foi revogado. Clique em <strong>Reconectar Instagram</strong> para refazer a conexão.
+                            O histórico de posts não será afetado.
+                        </p>
+                        @if($channel->last_error)
+                            <p class="mt-2 text-xs text-red-600 dark:text-red-400 font-mono bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded">
+                                {{ $channel->last_error }}
+                            </p>
+                        @endif
+                        <div class="mt-3 flex gap-3">
+                            <a href="{{ route('admin.social.instagram.connect') }}"
+                               class="{{ !$configured ? 'opacity-50 pointer-events-none' : '' }} inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+                                Reconectar Instagram
+                            </a>
+                            <form method="POST" action="{{ route('admin.social.instagram.disconnect') }}"
+                                  onsubmit="return confirm('Desconectar o canal antigo?')">
+                                @csrf
+                                <button type="submit" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-300 text-red-700 dark:text-red-400 hover:bg-red-100 text-sm font-medium transition">
+                                    Desconectar canal antigo
+                                </button>
+                            </form>
+                        </div>
+                        <p class="mt-2 text-xs text-red-600 dark:text-red-400">
+                            Este fluxo usa login Meta/Facebook para conectar a conta Instagram profissional vinculada ao Business/Página. Isso é esperado para o modo <strong>facebook_business_login</strong>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
         {{-- Meta not configured warning --}}
         @if(!$configured)
             <div class="rounded-xl border border-amber-300 bg-amber-50 dark:bg-amber-900/20 p-5">
@@ -173,7 +221,13 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 <a href="{{ route('admin.social.instagram.connect') }}"
                    class="{{ !$configured ? 'opacity-50 pointer-events-none' : '' }} inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium transition">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
-                    {{ $channel && $channel->isConnected() ? 'Reconectar Instagram' : 'Conectar Instagram' }}
+                    @if($channel && $channel->isConnected())
+                        Reconectar Instagram
+                    @elseif($channel && in_array($channel->status, ['needs_reconnect', 'expired', 'error']))
+                        Reconectar Instagram
+                    @else
+                        Conectar Instagram
+                    @endif
                 </a>
 
                 @if($channel)
@@ -210,13 +264,18 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
 
                 <div>{!! $diag['app_id_set'] ? $ok : $err !!} META_APP_ID configurado</div>
                 <div>{!! $diag['app_secret_set'] ? $ok : $err !!} META_APP_SECRET configurado (valor oculto)</div>
-                <div class="text-gray-600 dark:text-gray-400">META_AUTH_MODE = {{ $diag['auth_mode'] }}</div>
                 @php
                     $isLegacyMode = $diag['auth_mode'] === 'facebook_login';
+                    $isBusinessMode = $diag['auth_mode'] === 'facebook_business_login';
                     $legacyScopesDetected = !empty(array_intersect($diag['scopes'] ?? [], ['instagram_basic','instagram_content_publish','pages_show_list','pages_read_engagement']));
                     $businessScopesOk = in_array('instagram_business_basic', $diag['scopes'] ?? []) && in_array('instagram_business_content_publish', $diag['scopes'] ?? []);
                 @endphp
-                @if($isLegacyMode)
+                <div class="{{ $isBusinessMode ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400' }}">
+                    {!! $isBusinessMode ? $ok : '<span class="text-amber-600 font-semibold">[AVISO]</span>' !!} META_AUTH_MODE = {{ $diag['auth_mode'] }}
+                </div>
+                @if($isBusinessMode)
+                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Modo correto: o login aparece como Meta/Facebook porque a conta do Business administra o Instagram profissional. Isso é esperado.</div>
+                @elseif($isLegacyMode)
                 <div class="text-amber-700 dark:text-amber-400 pl-2 text-xs">⚠ auth_mode legado — pode gerar Invalid Scopes. Atualize para facebook_business_login.</div>
                 @endif
                 <div class="text-gray-600 dark:text-gray-400">META_GRAPH_VERSION = {{ $diag['graph_version'] }}</div>
@@ -227,6 +286,9 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 <div class="text-amber-700 pl-6 text-xs">Esperado: https://ia.lymity.com.br/admin/social/instagram/callback</div>
                 @endif
                 <div class="text-gray-600 dark:text-gray-400">INSTAGRAM_PUBLISHING_ENABLED = {{ $diag['publishing_enabled'] ? 'true' : 'false' }}</div>
+                @if($channel && $channel->last_checked_at)
+                <div class="text-gray-600 dark:text-gray-400">Última verificação do canal: {{ $channel->last_checked_at->format('d/m/Y H:i:s') }} ({{ $channel->last_checked_at->diffForHumans() }})</div>
+                @endif
                 @if(!empty($diag['scopes']))
                 <div class="{{ $businessScopesOk ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
                     {!! $businessScopesOk ? $ok : $err !!} Scopes: {{ implode(', ', $diag['scopes']) }}

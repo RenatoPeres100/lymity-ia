@@ -154,7 +154,19 @@ class MetaInstagramAuthService
 
         // ── 2. Validate code ─────────────────────────────────────────────────
         if (empty($query['code'])) {
-            throw new \RuntimeException('Código de autorização ausente na resposta da Meta.');
+            $receivedKeys = implode(', ', array_keys(array_filter($query, fn($v) => !empty($v))));
+            $this->logActivity('instagram_oauth_code_missing', $user, [
+                'received_params' => $receivedKeys ?: 'nenhum',
+                'auth_mode'       => config('meta.auth_mode'),
+                'redirect_uri'    => config('meta.redirect_uri'),
+            ]);
+            throw new \RuntimeException(
+                'A Meta não retornou o código de autorização. ' .
+                'Parâmetros recebidos: [' . ($receivedKeys ?: 'nenhum') . ']. ' .
+                'Confirme que a autorização foi concluída e que a Redirect URI ' .
+                config('meta.redirect_uri') .
+                ' está cadastrada exatamente em "Valid OAuth Redirect URIs" no app Meta.'
+            );
         }
 
         // ── 3. Validate state ────────────────────────────────────────────────
@@ -379,20 +391,49 @@ class MetaInstagramAuthService
 
             if ($response->successful()) {
                 $tokenData = $response->json('data', []);
+
                 if (($tokenData['is_valid'] ?? false) === false) {
-                    $channel->markExpired();
+                    $errorMsg = $tokenData['error']['message'] ?? 'Token inválido.';
+                    $safe     = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $errorMsg);
+
+                    if ($this->isSessionExpiredError($errorMsg)) {
+                        $channel->markNeedsReconnect($safe);
+                    } else {
+                        $channel->markExpired();
+                        $channel->update(['last_error' => $safe]);
+                    }
                 } else {
                     $channel->markConnected(['last_checked_at' => now()]);
                 }
             } else {
-                $channel->markError('Falha ao verificar token.');
+                $errorBody = $response->json('error.message') ?? $response->body();
+                $safe      = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', (string) $errorBody);
+
+                if ($this->isSessionExpiredError($errorBody)) {
+                    $channel->markNeedsReconnect($safe);
+                } else {
+                    $channel->markError('Falha ao verificar token: ' . $safe);
+                }
             }
         } catch (\Throwable $e) {
-            $channel->markError('Erro ao verificar conexão: ' . $e->getMessage());
-            Log::warning('[MetaInstagramAuthService] Token check failed: ' . $e->getMessage());
+            $safe = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $e->getMessage());
+            $channel->markError('Erro ao verificar conexão: ' . $safe);
+            Log::warning('[MetaInstagramAuthService] Token check failed: ' . $safe);
         }
 
         return $channel->fresh();
+    }
+
+    private function isSessionExpiredError(string $message): bool
+    {
+        $lower = strtolower($message);
+        return str_contains($lower, 'session has expired')
+            || str_contains($lower, 'token has expired')
+            || str_contains($lower, 'access token has expired')
+            || str_contains($lower, 'token revoked')
+            || str_contains($lower, 'token is invalid')
+            || str_contains($lower, 'invalid oauth access token')
+            || str_contains($lower, 'error validating access token');
     }
 
     public function disconnect(SocialChannel $channel, User $user): SocialChannel

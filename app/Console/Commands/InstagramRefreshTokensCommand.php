@@ -93,10 +93,12 @@ class InstagramRefreshTokensCommand extends Command
                 $this->error("  FALHOU #{$channel->id}: {$safe}");
                 Log::warning("[instagram:refresh-tokens] Canal #{$channel->id} falhou: {$safe}");
 
-                // Mark expired only if token already past its expiry date
-                if ($channel->token_expires_at && $channel->token_expires_at->isPast()) {
+                if ($this->isSessionExpiredError($safe)) {
+                    $channel->markNeedsReconnect("Renovação falhou: {$safe}");
+                    $this->warn("  Canal #{$channel->id} marcado como needs_reconnect.");
+                } elseif ($channel->token_expires_at && $channel->token_expires_at->isPast()) {
                     $channel->update([
-                        'status'     => 'expired',
+                        'status'     => 'needs_reconnect',
                         'last_error' => "Renovação falhou e token expirou: {$safe}",
                     ]);
                 } else {
@@ -119,6 +121,18 @@ class InstagramRefreshTokensCommand extends Command
         $this->line("FAILED={$failed}");
 
         return self::SUCCESS;
+    }
+
+    private function isSessionExpiredError(string $message): bool
+    {
+        $lower = strtolower($message);
+        return str_contains($lower, 'session has expired')
+            || str_contains($lower, 'token has expired')
+            || str_contains($lower, 'access token has expired')
+            || str_contains($lower, 'token revoked')
+            || str_contains($lower, 'token is invalid')
+            || str_contains($lower, 'invalid oauth access token')
+            || str_contains($lower, 'error validating access token');
     }
 
     private function logActivity(string $action, int $channelId, array $metadata = []): void

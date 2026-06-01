@@ -48,8 +48,13 @@ class InstagramPublishingService
             config('meta.instagram_publishing_enabled', false), 403,
             'Publicação Instagram desabilitada no .env. Configure INSTAGRAM_PUBLISHING_ENABLED=true após validar a conexão.'
         );
+
+        if ($channel->needsReconnect()) {
+            abort(422, 'Canal Instagram precisa ser reconectado. Acesse /admin/social/instagram e clique em "Reconectar Instagram".');
+        }
+
         abort_unless($channel->isConnected(), 422,
-            'Canal Instagram ainda não conectado. Acesse /admin/social/instagram e clique em Conectar Instagram.');
+            'Canal Instagram não conectado. Acesse /admin/social/instagram e clique em "Conectar Instagram".');
         abort_unless(!empty($channel->getRawOriginal('access_token')), 422,
             'Token de acesso ausente. Reconecte o canal Instagram em /admin/social/instagram.');
         abort_unless(!$channel->isExpired(), 422,

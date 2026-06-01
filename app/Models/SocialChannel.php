@@ -57,8 +57,13 @@ class SocialChannel extends Model
 
     public function isExpired(): bool
     {
-        return $this->status === 'expired'
+        return in_array($this->status, ['expired', 'needs_reconnect'])
             || ($this->token_expires_at && $this->token_expires_at->isPast());
+    }
+
+    public function needsReconnect(): bool
+    {
+        return $this->status === 'needs_reconnect';
     }
 
     public function shouldRefresh(): bool
@@ -126,6 +131,17 @@ class SocialChannel extends Model
         return $this;
     }
 
+    public function markNeedsReconnect(string $reason = 'Token expirado ou revogado pela Meta.'): static
+    {
+        $safe = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $reason);
+        $this->update([
+            'status'          => 'needs_reconnect',
+            'last_error'      => $safe,
+            'last_checked_at' => now(),
+        ]);
+        return $this;
+    }
+
     // ── Accessors ──────────────────────────────────────────────────────────────
 
     public function isActive(): bool
@@ -164,14 +180,15 @@ class SocialChannel extends Model
     public function getStatusLabelAttribute(): string
     {
         return match ($this->status) {
-            'not_configured' => 'Não configurado',
-            'disconnected'   => 'Desconectado',
-            'connected'      => 'Conectado',
-            'expired'        => 'Token expirado',
-            'error'          => 'Erro de conexão',
-            'active'         => 'Ativo',
-            'inactive'       => 'Inativo',
-            default          => $this->status ?? '—',
+            'not_configured'  => 'Não configurado',
+            'disconnected'    => 'Desconectado',
+            'connected'       => 'Conectado',
+            'expired'         => 'Token expirado',
+            'needs_reconnect' => 'Reconexão necessária',
+            'error'           => 'Erro de conexão',
+            'active'          => 'Ativo',
+            'inactive'        => 'Inativo',
+            default           => $this->status ?? '—',
         };
     }
 
