@@ -3,18 +3,21 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Jobs\RunAgentRoutineJob;
 use App\Models\ActivityLog;
 use App\Models\AgentRoutine;
 use App\Models\AiEmployee;
 use App\Models\Company;
+use App\Services\Agents\AgentRoutineExecutionService;
 use App\Services\Agents\AgentRoutineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AgentRoutineController extends Controller
 {
-    public function __construct(private AgentRoutineService $service) {}
+    public function __construct(
+        private AgentRoutineService          $service,
+        private AgentRoutineExecutionService $engine,
+    ) {}
 
     public function index()
     {
@@ -38,27 +41,35 @@ class AgentRoutineController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'ai_employee_id'   => 'required|exists:ai_employees,id',
-            'routine_type'     => 'required|in:social_post_creation,blog_post_creation,copy_improvement,content_review',
-            'title'            => 'required|string|max:255',
-            'description'      => 'nullable|string',
-            'frequency'        => 'required|in:daily,weekly,monthly',
-            'days_of_week'     => 'nullable|array',
-            'days_of_week.*'   => 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
-            'time_of_day'      => 'nullable|date_format:H:i',
-            'content_quantity' => 'required|integer|min:1|max:10',
-            'active'           => 'boolean',
-            'requires_approval'=> 'boolean',
+            'ai_employee_id'    => 'required|exists:ai_employees,id',
+            'routine_type'      => 'required|string',
+            'title'             => 'required|string|max:255',
+            'description'       => 'nullable|string',
+            'frequency'         => 'required|in:daily,weekly,monthly,manual',
+            'days_of_week'      => 'nullable|array',
+            'days_of_week.*'    => 'in:monday,tuesday,wednesday,thursday,friday,saturday,sunday',
+            'time_of_day'       => 'nullable|date_format:H:i',
+            'content_quantity'  => 'nullable|integer|min:1|max:20',
+            'quantity_per_run'  => 'nullable|integer|min:1|max:20',
+            'approval_lead_days'=> 'nullable|integer|min:0|max:14',
+            'publication_time'  => 'nullable|date_format:H:i',
+            'active'            => 'boolean',
+            'requires_approval' => 'boolean',
         ]);
 
         $company = Company::first();
         $validated['company_id']        = $company?->id;
         $validated['client_id']         = null;
         $validated['active']            = $request->boolean('active', true);
+        $validated['status']            = $request->boolean('active', true) ? 'active' : 'paused';
         $validated['requires_approval'] = $request->boolean('requires_approval', true);
+        // Sync quantity_per_run and content_quantity
+        $qty = (int)($validated['quantity_per_run'] ?? $validated['content_quantity'] ?? 1);
+        $validated['quantity_per_run']  = $qty;
+        $validated['content_quantity']  = $qty;
 
         $routine = AgentRoutine::create($validated);
-        $routine->update(['next_run_at' => $this->service->calculateNextRun($routine)]);
+        $routine->update(['next_run_at' => $this->engine->calculateNextRunAt($routine)]);
 
         $this->log('agent_routine_created', $request->user(), $routine);
 
@@ -97,8 +108,13 @@ class AgentRoutineController extends Controller
         $validated['active']            = $request->boolean('active', true);
         $validated['requires_approval'] = $request->boolean('requires_approval', true);
 
+        $qty = (int)($validated['quantity_per_run'] ?? $validated['content_quantity'] ?? 1);
+        $validated['quantity_per_run'] = $qty;
+        $validated['content_quantity'] = $qty;
+        $validated['status'] = $validated['active'] ? 'active' : 'paused';
+
         $agentRoutine->update($validated);
-        $agentRoutine->update(['next_run_at' => $this->service->calculateNextRun($agentRoutine)]);
+        $agentRoutine->update(['next_run_at' => $this->engine->calculateNextRunAt($agentRoutine)]);
 
         $this->log('agent_routine_updated', $request->user(), $agentRoutine);
 
@@ -124,13 +140,24 @@ class AgentRoutineController extends Controller
 
     public function runNow(Request $request, AgentRoutine $agentRoutine)
     {
+        // Force next_run_at to past so engine picks it up
+        $agentRoutine->update(['next_run_at' => now()->subMinute()]);
+
         try {
-            RunAgentRoutineJob::dispatch($agentRoutine->id);
+            $run = $this->engine->runRoutine($agentRoutine, now(), false);
             $this->log('agent_routine_run_now', $request->user(), $agentRoutine);
 
-            return redirect()->back()->with('success', "Rotina \"{$agentRoutine->title}\" enfileirada para execução imediata.");
+            $msg = "Rotina \"{$agentRoutine->title}\" executada. ";
+            $msg .= "Items criados: {$run->items_created} | Aprovações: {$run->approvals_created}";
+
+            if ($run->status === 'failed') {
+                return redirect()->back()->withErrors(['run' => 'Execução falhou: ' . $run->error_message]);
+            }
+
+            return redirect()->route('admin.agents.routines.runs', $agentRoutine)
+                ->with('success', $msg);
         } catch (\Throwable $e) {
-            return redirect()->back()->withErrors(['run' => 'Erro ao enfileirar: ' . $e->getMessage()]);
+            return redirect()->back()->withErrors(['run' => 'Erro ao executar: ' . $e->getMessage()]);
         }
     }
 
