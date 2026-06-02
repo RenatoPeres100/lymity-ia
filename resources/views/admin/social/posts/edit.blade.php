@@ -262,7 +262,7 @@
         {{-- ────────────────────────────────────────────── --}}
         {{-- OPÇÃO 3: URL Pública                           --}}
         {{-- ────────────────────────────────────────────── --}}
-        <div style="border:1px solid #e2e8f0;border-radius:.6rem;padding:1.1rem;background:#f8fafc;">
+        <div style="border:1px solid #e2e8f0;border-radius:.6rem;padding:1.1rem;background:#f8fafc;margin-bottom:.85rem;">
             <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;">
                 <span style="font-size:1.2rem;">🔗</span>
                 <span style="font-weight:700;color:#334155;font-size:.95rem;">URL Pública HTTPS</span>
@@ -281,6 +281,51 @@
                 </div>
             </form>
         </div>
+
+        {{-- ────────────────────────────────────────────── --}}
+        {{-- OPÇÃO 4: Biblioteca IA                         --}}
+        {{-- ────────────────────────────────────────────── --}}
+        @if(config('features.ai_images_module'))
+        <div style="border:1px solid #e2e8f0;border-radius:.6rem;padding:1.1rem;background:#f8fafc;">
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;">
+                <span style="font-size:1.2rem;">🖼</span>
+                <span style="font-weight:700;color:#334155;font-size:.95rem;">Biblioteca de Imagens IA</span>
+                <span style="font-size:.75rem;color:#94a3b8;">Selecionar imagem já gerada</span>
+            </div>
+            @php
+                $aiLibrary = \App\Models\AiImageGeneration::where('status','completed')
+                    ->where('generation_type','single')
+                    ->with('activeImages')
+                    ->latest()->limit(20)->get()
+                    ->filter(fn($g) => $g->activeImages->isNotEmpty());
+            @endphp
+            @if($aiLibrary->isEmpty())
+            <p style="font-size:.85rem;color:#94a3b8;margin:0;">Nenhuma imagem única gerada ainda. <a href="{{ route('admin.ai-images.create', ['social_post_id' => $post->id]) }}" style="color:#4f46e5;">Gerar nova imagem</a></p>
+            @else
+            <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap;">
+                <select id="aiLibrarySelect" style="flex:1;min-width:200px;padding:.6rem .85rem;border:1px solid #cbd5e1;border-radius:.4rem;font-size:.85rem;color:#0f172a;">
+                    <option value="">Selecione uma imagem gerada...</option>
+                    @foreach($aiLibrary as $gen)
+                    @php $img = $gen->activeImages->first(); @endphp
+                    <option value="{{ $gen->id }}" data-url="{{ $img->public_url }}">{{ Str::limit($gen->title ?? "Geração #{$gen->id}", 50) }} — {{ $gen->created_at->format('d/m') }}</option>
+                    @endforeach
+                </select>
+                <div id="aiLibraryPreview" style="display:none;">
+                    <img id="aiLibraryPreviewImg" src="" alt="preview" style="width:48px;height:48px;object-fit:cover;border-radius:.375rem;border:1px solid #e2e8f0;">
+                </div>
+                <form id="aiLibraryForm" method="POST" action="">
+                    @csrf
+                    <button type="button" onclick="applyAiLibraryImage()" style="background:#4f46e5;color:#fff;padding:.55rem 1.1rem;border-radius:.4rem;border:none;cursor:pointer;font-size:.88rem;font-weight:600;white-space:nowrap;">
+                        Usar esta imagem
+                    </button>
+                </form>
+                <a href="{{ route('admin.ai-images.create', ['social_post_id' => $post->id]) }}" style="background:#f1f5f9;color:#475569;padding:.55rem 1rem;border-radius:.4rem;text-decoration:none;font-size:.85rem;border:1px solid #e2e8f0;white-space:nowrap;">
+                    + Nova imagem IA
+                </a>
+            </div>
+            @endif
+        </div>
+        @endif
     </div>
 
     {{-- ═══════════════════════════════════════════════════ --}}
@@ -324,4 +369,29 @@
     @endif
 
 </div>
+
+<script>
+document.getElementById('aiLibrarySelect')?.addEventListener('change', function() {
+    const url     = this.options[this.selectedIndex]?.getAttribute('data-url');
+    const preview = document.getElementById('aiLibraryPreview');
+    const img     = document.getElementById('aiLibraryPreviewImg');
+    if (url) { preview.style.display = 'block'; img.src = url; }
+    else      { preview.style.display = 'none'; img.src = ''; }
+});
+
+function applyAiLibraryImage() {
+    const sel   = document.getElementById('aiLibrarySelect');
+    const genId = sel?.value;
+    if (!genId) { alert('Selecione uma imagem da biblioteca.'); return; }
+    if (!confirm('Vincular esta imagem ao post?')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/ai-images/' + genId + '/attach/social/{{ $post->id }}';
+    const csrf  = document.createElement('input');
+    csrf.type   = 'hidden'; csrf.name = '_token'; csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+    form.appendChild(csrf);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
 </x-layouts.app>

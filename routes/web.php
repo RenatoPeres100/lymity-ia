@@ -85,6 +85,9 @@ use App\Http\Controllers\Client\BudgetController as ClientBudgetController;
 use App\Http\Controllers\Client\ContractController as ClientContractController;
 use App\Http\Controllers\Admin\AiSettingsController;
 use App\Http\Controllers\Admin\AiUsageController;
+use App\Http\Controllers\Admin\AiImageController;
+use App\Http\Controllers\Admin\AiImageSettingsController;
+use App\Http\Controllers\Admin\AiImageLogController;
 use Illuminate\Support\Facades\Route;
 
 // ─── Public Site ──────────────────────────────────────────
@@ -599,6 +602,24 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/ai-settings/test',    [AiSettingsController::class, 'testForm'])->name('admin.ai-settings.test');
         Route::post('/ai-settings/test',   [AiSettingsController::class, 'testConnection'])->name('admin.ai-settings.test.run');
         Route::get('/ai-usage',            [AiUsageController::class, 'index'])->name('admin.ai-usage.index');
+
+        // ─── AI Image Studio ──────────────────────────────────────────────
+        Route::prefix('ai-images')->group(function () {
+            Route::get('/',                                                [AiImageController::class, 'index'])->name('admin.ai-images.index');
+            Route::get('/create',                                          [AiImageController::class, 'create'])->name('admin.ai-images.create');
+            Route::post('/',                                               [AiImageController::class, 'store'])->name('admin.ai-images.store');
+            Route::get('/settings',                                        [AiImageSettingsController::class, 'index'])->name('admin.ai-images.settings');
+            Route::post('/settings/test',                                  [AiImageSettingsController::class, 'testConnection'])->name('admin.ai-images.settings.test');
+            Route::get('/logs',                                            [AiImageLogController::class, 'index'])->name('admin.ai-images.logs');
+            Route::get('/{aiImageGeneration}',                             [AiImageController::class, 'show'])->name('admin.ai-images.show');
+            Route::get('/{aiImageGeneration}/edit',                        [AiImageController::class, 'edit'])->name('admin.ai-images.edit');
+            Route::put('/{aiImageGeneration}',                             [AiImageController::class, 'update'])->name('admin.ai-images.update');
+            Route::post('/{aiImageGeneration}/generate',                   [AiImageController::class, 'generate'])->name('admin.ai-images.generate');
+            Route::post('/{aiImageGeneration}/regenerate',                 [AiImageController::class, 'regenerate'])->name('admin.ai-images.regenerate');
+            Route::post('/{aiImageGeneration}/archive',                    [AiImageController::class, 'archive'])->name('admin.ai-images.archive');
+            Route::post('/{aiImageGeneration}/attach/social/{socialPost}', [AiImageController::class, 'attachToSocialPost'])->name('admin.ai-images.attach.social');
+            Route::post('/{aiImageGeneration}/attach/blog/{blogPost}',     [AiImageController::class, 'attachToBlogPost'])->name('admin.ai-images.attach.blog');
+        });
     });
 
     // ─── Client Area ──────────────────────────────────────

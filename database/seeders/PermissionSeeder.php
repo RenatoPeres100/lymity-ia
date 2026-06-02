@@ -70,6 +70,14 @@ class PermissionSeeder extends Seeder
             ['key' => 'logs.view',   'name' => 'Ver logs',    'module' => 'logs'],
             // system
             ['key' => 'system.health', 'name' => 'Ver saúde do sistema', 'module' => 'system'],
+            // ai_images
+            ['key' => 'ai_images.view',     'name' => 'Ver Imagens IA',               'module' => 'ai_images'],
+            ['key' => 'ai_images.create',   'name' => 'Criar geração de imagens IA',  'module' => 'ai_images'],
+            ['key' => 'ai_images.update',   'name' => 'Editar geração de imagens IA', 'module' => 'ai_images'],
+            ['key' => 'ai_images.delete',   'name' => 'Excluir imagens IA',           'module' => 'ai_images'],
+            ['key' => 'ai_images.attach',   'name' => 'Vincular imagens IA',          'module' => 'ai_images'],
+            ['key' => 'ai_images.settings', 'name' => 'Configurar Imagens IA',        'module' => 'ai_images'],
+            ['key' => 'ai_images.logs',     'name' => 'Ver logs de Imagens IA',       'module' => 'ai_images'],
             // ads
             ['key' => 'ads.view',    'name' => 'Ver campanhas',    'module' => 'ads'],
             ['key' => 'ads.create',  'name' => 'Criar campanhas',  'module' => 'ads'],

@@ -150,6 +150,37 @@
             </a>
             @endif
 
+            {{-- IA / CRIATIVOS --}}
+            @if(config('features.ai_images_module'))
+            <span class="nav-section-label">IA / Criativos</span>
+
+            <a href="{{ route('admin.ai-images.index') }}" class="nav-item {{ request()->routeIs('admin.ai-images.index','admin.ai-images.show','admin.ai-images.create','admin.ai-images.edit') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="18" height="18" rx="3"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
+                </svg>
+                Imagens IA
+            </a>
+
+            <a href="{{ route('admin.ai-images.settings') }}" class="nav-item {{ request()->routeIs('admin.ai-images.settings*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+                Config. Gemini Imagens
+            </a>
+
+            @if(config('features.ai_image_logs'))
+            <a href="{{ route('admin.ai-images.logs') }}" class="nav-item {{ request()->routeIs('admin.ai-images.logs') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6M8 13h8M8 17h5"/>
+                </svg>
+                Logs de Imagens
+            </a>
+            @endif
+            @endif
+
             {{-- FUNCIONÁRIOS IA --}}
             <span class="nav-section-label">Funcionários IA</span>
 

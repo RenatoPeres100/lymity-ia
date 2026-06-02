@@ -20,6 +20,7 @@ class SocialPost extends Model
         'image_last_generated_at',
         'image_path', 'image_status', 'image_provider',
         'image_metadata', 'image_validation_status', 'image_validation_error',
+        'ai_image_generation_id',
         'carousel_enabled', 'carousel_slide_count', 'carousel_status',
         'instagram_container_id', 'permalink',
         'scheduled_at', 'published_at', 'requires_approval',
@@ -80,6 +81,11 @@ class SocialPost extends Model
     public function validAssets(): HasMany
     {
         return $this->hasMany(SocialPostAsset::class)->where('status', 'valid')->orderBy('position');
+    }
+
+    public function aiImageGeneration(): BelongsTo
+    {
+        return $this->belongsTo(AiImageGeneration::class, 'ai_image_generation_id');
     }
 
     public function approvalRequests(): MorphMany

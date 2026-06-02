@@ -101,6 +101,50 @@
                 </div>
             </div>
 
+            {{-- Imagem de Capa --}}
+            <div class="table-wrapper" style="padding:24px;">
+                <div style="font-size:.8rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;">Imagem de Capa</div>
+
+                @if($blogPost->featured_image)
+                <div style="margin-bottom:12px;">
+                    <img src="{{ $blogPost->featured_image }}" alt="Imagem de capa" style="width:100%;max-height:160px;object-fit:cover;border-radius:.5rem;border:1px solid #e2e8f0;">
+                    <p style="font-size:.75rem;color:#94a3b8;margin:.4rem 0 0;word-break:break-all;">{{ Str::limit($blogPost->featured_image, 80) }}</p>
+                </div>
+                @endif
+
+                <input type="text" name="featured_image" value="{{ old('featured_image', $blogPost->featured_image) }}"
+                    placeholder="URL da imagem de capa"
+                    style="width:100%;background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;color:#334155;font-size:.85rem;outline:none;box-sizing:border-box;margin-bottom:10px;">
+
+                @if(config('features.ai_images_module'))
+                @php
+                    $aiLibraryBlog = \App\Models\AiImageGeneration::where('status','completed')
+                        ->whereIn('channel',['blog','general'])
+                        ->with('activeImages')
+                        ->latest()->limit(15)->get()
+                        ->filter(fn($g) => $g->activeImages->isNotEmpty());
+                @endphp
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:.5rem;padding:.75rem;margin-top:.5rem;">
+                    <p style="font-size:.75rem;font-weight:600;color:#64748b;margin:0 0 .5rem;">Selecionar da biblioteca IA</p>
+                    @if($aiLibraryBlog->isEmpty())
+                    <p style="font-size:.8rem;color:#94a3b8;margin:0;">Nenhuma imagem disponível. <a href="{{ route('admin.ai-images.create', ['blog_post_id' => $blogPost->id]) }}" style="color:#4f46e5;">Gerar imagem IA</a></p>
+                    @else
+                    <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+                        <select id="blogAiLibSelect" style="flex:1;min-width:150px;border:1px solid #e2e8f0;border-radius:.375rem;padding:.4rem;background:#fff;font-size:.8rem;color:#334155;">
+                            <option value="">Selecione...</option>
+                            @foreach($aiLibraryBlog as $gen)
+                            @php $img = $gen->activeImages->first(); @endphp
+                            <option value="{{ $gen->id }}" data-url="{{ $img->public_url }}">{{ Str::limit($gen->title ?? "Geração #{$gen->id}", 40) }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" onclick="applyBlogAiImage()" style="background:#4f46e5;color:#fff;padding:.4rem .75rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.8rem;white-space:nowrap;">Usar</button>
+                        <a href="{{ route('admin.ai-images.create', ['blog_post_id' => $blogPost->id]) }}" style="font-size:.75rem;color:#4f46e5;text-decoration:none;white-space:nowrap;">+ Gerar nova</a>
+                    </div>
+                    @endif
+                </div>
+                @endif
+            </div>
+
             <div class="table-wrapper" style="padding:24px;">
                 <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
                     <input type="checkbox" name="is_featured" value="1" {{ old('is_featured', $blogPost->is_featured) ? 'checked' : '' }}
@@ -121,4 +165,24 @@
     </div>
 </form>
 
+<script>
+document.getElementById('blogAiLibSelect')?.addEventListener('change', function() {
+    const url = this.options[this.selectedIndex]?.getAttribute('data-url');
+    if (url) document.querySelector('input[name="featured_image"]').value = url;
+});
+function applyBlogAiImage() {
+    const sel   = document.getElementById('blogAiLibSelect');
+    const genId = sel?.value;
+    if (!genId) { alert('Selecione uma geração.'); return; }
+    if (!confirm('Vincular esta imagem ao artigo?')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/ai-images/' + genId + '/attach/blog/{{ $blogPost->id }}';
+    const csrf  = document.createElement('input');
+    csrf.type = 'hidden'; csrf.name = '_token'; csrf.value = document.querySelector('meta[name="csrf-token"]').content;
+    form.appendChild(csrf);
+    document.body.appendChild(form);
+    form.submit();
+}
+</script>
 </x-layouts.app>

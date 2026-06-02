@@ -37,6 +37,14 @@ return [
     'ai_blog_planner'     => true,
     'ai_cover_image'      => false,
 
+    // === AI IMAGE STUDIO ===
+    'ai_images_module'         => true,
+    'gemini_image_generation'  => true,
+    'ai_image_carousel'        => true,
+    'ai_image_library'         => true,
+    'ai_image_logs'            => true,
+    'ai_image_usage'           => true,
+
     // === MÓDULOS DESATIVADOS ===
     'ads_module'          => false,
     'proposals_module'    => false,

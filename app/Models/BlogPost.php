@@ -10,6 +10,7 @@ class BlogPost extends Model
 {
     protected $fillable = [
         'title', 'slug', 'subtitle', 'excerpt', 'content', 'featured_image',
+        'featured_image_generation_id',
         'category_id', 'author_id', 'ai_employee_id', 'client_id', 'company_id', 'type', 'status',
         'seo_title', 'seo_description', 'focus_keyword', 'secondary_keywords',
         'tags', 'is_featured',
@@ -69,6 +70,11 @@ class BlogPost extends Model
     public function contentBrief(): BelongsTo
     {
         return $this->belongsTo(ContentBrief::class, 'content_brief_id');
+    }
+
+    public function featuredImageGeneration(): BelongsTo
+    {
+        return $this->belongsTo(AiImageGeneration::class, 'featured_image_generation_id');
     }
 
     // ── Scopes ─────────────────────────────────────────────────────────────────
