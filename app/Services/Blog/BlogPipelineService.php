@@ -146,8 +146,11 @@ class BlogPipelineService
     {
         abort_unless($post->canBeApproved(), 422, "Post com status '{$post->status}' não pode ser aprovado.");
 
+        $futureScheduled = $post->scheduled_at && $post->scheduled_at->isFuture();
+        $targetStatus    = $futureScheduled ? 'scheduled' : 'approved';
+
         $post->update([
-            'status'      => 'approved',
+            'status'      => $targetStatus,
             'approved_by' => $user->id,
             'approved_at' => now(),
         ]);
@@ -163,6 +166,12 @@ class BlogPipelineService
             ]);
 
         $this->registerLog($post, 'approved', $user);
+
+        if ($futureScheduled) {
+            $this->registerLog($post, 'blog_post_scheduled_after_approval', $user, [
+                'scheduled_at' => $post->scheduled_at->toIso8601String(),
+            ]);
+        }
 
         return $post;
     }
@@ -266,27 +275,7 @@ class BlogPipelineService
 
     public function approvePost(BlogPost $post, User $user): BlogPost
     {
-        abort_unless($post->canBeApproved(), 422, "Post com status '{$post->status}' não pode ser aprovado.");
-
-        $post->update([
-            'status'             => 'approved',
-            'approved_by'        => $user->id,
-            'approved_by_user_id'=> $user->id,
-            'approved_at'        => now(),
-            'revision_notes'     => null,
-        ]);
-
-        ApprovalRequest::where('approvable_type', BlogPost::class)
-            ->where('approvable_id', $post->id)
-            ->where('status', 'pending')
-            ->update([
-                'status'      => 'approved',
-                'approved_by' => $user->id,
-                'approved_at' => now(),
-            ]);
-
-        $this->registerLog($post, 'approved', $user);
-        return $post->fresh();
+        return $this->approve($post, $user);
     }
 
     public function rejectPost(BlogPost $post, User $user, ?string $reason = null): BlogPost

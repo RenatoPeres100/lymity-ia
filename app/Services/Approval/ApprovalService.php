@@ -146,7 +146,7 @@ class ApprovalService
         }
 
         if (in_array($modelClass, [\App\Models\BlogPost::class, \App\Models\ClientWebsitePage::class])) {
-            $this->syncContentStatus($approvable, $newStatus);
+            $this->syncContentStatus($approvable, $newStatus, $user);
             return;
         }
 
@@ -215,8 +215,57 @@ class ApprovalService
 
     private function syncSocialPostStatus(\App\Models\SocialPost $post, string $newStatus, ?User $user): void
     {
+        if ($newStatus === 'approved') {
+            $updateData = [
+                'approved_by' => $user?->id,
+                'approved_at' => now(),
+            ];
+
+            $futureScheduled = $post->scheduled_at && $post->scheduled_at->isFuture();
+            $imageValid      = $post->image_validation_status === 'valid' && !empty($post->public_image_url);
+
+            if ($futureScheduled && $imageValid) {
+                $updateData['status'] = 'scheduled';
+
+                ActivityLog::create([
+                    'user_id'     => $user?->id,
+                    'client_id'   => $post->client_id,
+                    'action'      => 'social_post_scheduled_after_approval',
+                    'module'      => 'social',
+                    'description' => "Post social #{$post->id} agendado automaticamente após aprovação para " . $post->scheduled_at->format('d/m/Y H:i'),
+                    'metadata'    => ['social_post_id' => $post->id, 'scheduled_at' => $post->scheduled_at->toIso8601String()],
+                ]);
+            } elseif ($futureScheduled && !$imageValid) {
+                $updateData['status'] = 'approved';
+
+                ActivityLog::create([
+                    'user_id'     => $user?->id,
+                    'client_id'   => $post->client_id,
+                    'action'      => 'social_post_approved_but_image_invalid',
+                    'module'      => 'social',
+                    'description' => "Post social #{$post->id} aprovado mas não agendado — imagem inválida ou ausente.",
+                    'metadata'    => [
+                        'social_post_id'          => $post->id,
+                        'image_validation_status' => $post->image_validation_status,
+                        'public_image_url'        => !empty($post->public_image_url),
+                    ],
+                ]);
+            } else {
+                $updateData['status'] = 'approved';
+            }
+
+            $post->update($updateData);
+
+            $this->logActivity(
+                new \App\Models\ApprovalRequest(['client_id' => $post->client_id]),
+                $user ?? new User(),
+                'social_post_approved'
+            );
+
+            return;
+        }
+
         $targetStatus = match ($newStatus) {
-            'approved'          => 'approved',
             'rejected'          => 'rejected',
             'changes_requested' => 'draft',
             default             => null,
@@ -226,14 +275,7 @@ class ApprovalService
             return;
         }
 
-        $updateData = ['status' => $targetStatus];
-
-        if ($newStatus === 'approved') {
-            $updateData['approved_by'] = $user?->id;
-            $updateData['approved_at'] = now();
-        }
-
-        $post->update($updateData);
+        $post->update(['status' => $targetStatus]);
 
         $this->logActivity(
             new \App\Models\ApprovalRequest(['client_id' => $post->client_id]),
@@ -298,10 +340,32 @@ class ApprovalService
         }
     }
 
-    private function syncContentStatus($model, string $newStatus): void
+    private function syncContentStatus($model, string $newStatus, ?User $user = null): void
     {
+        if ($newStatus === 'approved') {
+            $futureScheduled = $model->scheduled_at && $model->scheduled_at->isFuture();
+            $targetStatus    = $futureScheduled ? 'scheduled' : 'approved';
+
+            $model->update([
+                'status'      => $targetStatus,
+                'approved_by' => $user?->id,
+                'approved_at' => now(),
+            ]);
+
+            if ($futureScheduled) {
+                ActivityLog::create([
+                    'user_id'     => $user?->id,
+                    'action'      => 'blog_post_scheduled_after_approval',
+                    'module'      => 'blog',
+                    'description' => "Post #{$model->id} agendado automaticamente após aprovação para " . $model->scheduled_at->format('d/m/Y H:i'),
+                    'metadata'    => ['blog_post_id' => $model->id, 'scheduled_at' => $model->scheduled_at->toIso8601String()],
+                ]);
+            }
+
+            return;
+        }
+
         $targetStatus = match ($newStatus) {
-            'approved'          => 'approved',
             'rejected'          => 'draft',
             'changes_requested' => 'draft',
             default             => null,

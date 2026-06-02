@@ -13,6 +13,14 @@
                     </a>
                 </div>
 
+                {{-- Featured image preview --}}
+                @if(!empty($post->featured_image))
+                    <div class="mb-2">
+                        <img src="{{ $post->featured_image }}" alt="preview"
+                             class="w-full h-20 object-cover rounded-md">
+                    </div>
+                @endif
+
                 <div class="text-xs text-gray-500 space-y-0.5 mb-3">
                     @if($post->focus_keyword)
                         <div>🔑 {{ $post->focus_keyword }}</div>
@@ -34,6 +42,21 @@
                     @endif
                     @if($post->aiEmployee)
                         <div>🤖 {{ $post->aiEmployee->name }}</div>
+                    @endif
+                </div>
+
+                {{-- Image actions --}}
+                <div class="flex flex-wrap gap-1 mb-1">
+                    @if(empty($post->featured_image))
+                        <a href="{{ route('admin.blog.posts.edit', $post) }}#image-section"
+                           class="px-2 py-1 text-xs rounded bg-indigo-100 text-indigo-800 hover:bg-indigo-200">
+                            ✨ Gerar imagem IA
+                        </a>
+                    @else
+                        <a href="{{ route('admin.blog.posts.edit', $post) }}#image-section"
+                           class="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600 hover:bg-gray-200">
+                            Trocar imagem
+                        </a>
                     @endif
                 </div>
 

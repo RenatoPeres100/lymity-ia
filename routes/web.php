@@ -375,6 +375,9 @@ Route::middleware(['auth', 'active'])->group(function () {
         // ─── Phase 6 — Social Media ───────────────────────────────────────
         Route::get('/social',                                   [SocialDashboardController::class, 'index'])->name('admin.social.index');
 
+        // Pipeline Social
+        Route::get('/social/pipeline',                         [App\Http\Controllers\Admin\SocialPipelineController::class, 'index'])->name('admin.social.pipeline.index');
+
         // Posts
         Route::get('/social/posts',                            [AdminSocialPostController::class, 'index'])->name('admin.social.posts.index');
         Route::get('/social/posts/ai-create',                  [App\Http\Controllers\Admin\SocialPostAiController::class, 'create'])->name('admin.social.posts.ai-create');

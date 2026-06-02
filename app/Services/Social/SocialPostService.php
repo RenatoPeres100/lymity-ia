@@ -247,13 +247,25 @@ PROMPT;
 
     public function approve(SocialPost $post, User $user, ?string $notes = null): SocialPost
     {
+        $futureScheduled = $post->scheduled_at && $post->scheduled_at->isFuture();
+        $imageValid      = $post->image_validation_status === 'valid' && !empty($post->public_image_url);
+
+        $targetStatus = ($futureScheduled && $imageValid) ? 'scheduled' : 'approved';
+
         $post->update([
-            'status'      => 'approved',
+            'status'      => $targetStatus,
             'approved_by' => $user->id,
             'approved_at' => now(),
         ]);
 
-        $this->logActivity($post, 'social_post_approved', $user);
+        $logAction = $targetStatus === 'scheduled' ? 'social_post_scheduled_after_approval' : 'social_post_approved';
+        $this->logActivity($post, $logAction, $user);
+
+        if ($futureScheduled && !$imageValid) {
+            $this->logActivity($post, 'social_post_approved_but_image_invalid', $user, [
+                'image_validation_status' => $post->image_validation_status,
+            ]);
+        }
 
         return $post->fresh();
     }

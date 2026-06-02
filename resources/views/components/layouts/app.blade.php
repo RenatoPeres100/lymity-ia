@@ -78,6 +78,13 @@
             @if(config('features.social_media_module') || config('features.instagram_pipeline'))
             <span class="nav-section-label">Social Media</span>
 
+            <a href="{{ route('admin.social.pipeline.index') }}" class="nav-item {{ request()->routeIs('admin.social.pipeline*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="9" width="4" height="12" rx="1"/>
+                </svg>
+                Pipeline Social
+            </a>
+
             <a href="{{ route('admin.social.posts.index') }}" class="nav-item {{ request()->routeIs('admin.social.posts*','admin.social.ai*','admin.social.briefs*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <rect x="2" y="2" width="20" height="20" rx="5"/>

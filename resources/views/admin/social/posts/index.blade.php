@@ -6,6 +6,7 @@
                 <p style="color:#64748b;">{{ $posts->total() }} post(s) encontrado(s)</p>
             </div>
             <div style="display:flex;gap:.75rem;">
+                <a href="{{ route('admin.social.pipeline.index') }}" style="background:#6366f1;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;text-decoration:none;font-size:.9rem;">📊 Ver Pipeline</a>
                 <a href="{{ route('admin.social.posts.ai-create') }}" style="background:#8b5cf6;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;text-decoration:none;font-size:.9rem;">✨ Criar com IA</a>
                 <a href="{{ route('admin.social.posts.create') }}" style="background:#3b82f6;color:#fff;padding:.6rem 1.2rem;border-radius:.5rem;text-decoration:none;font-size:.9rem;">+ Novo Manual</a>
             </div>

@@ -25,11 +25,20 @@ class ContentRunPublishingCycleCommand extends Command
             Log::error('[content:run-publishing-cycle] agents error: ' . $e->getMessage());
         }
 
-        // 2. Blog publishing
+        // 2. Fix approved → scheduled
+        try {
+            $this->info('[2/4] Corrigindo conteúdos aprovados com data futura...');
+            Artisan::call('content:fix-approved-scheduled', [], $this->output);
+        } catch (\Throwable $e) {
+            $this->error('Erro em content:fix-approved-scheduled: ' . $e->getMessage());
+            Log::error('[content:run-publishing-cycle] fix-approved-scheduled error: ' . $e->getMessage());
+        }
+
+        // 3. Blog publishing
         $blogPublished = 0;
         $blogFailed    = 0;
         try {
-            $this->info('[2/3] Publicando posts de blog agendados...');
+            $this->info('[3/4] Publicando posts de blog agendados...');
             Artisan::call('blog:publish-due', [], $this->output);
             $output = Artisan::output();
             if (preg_match('/PUBLISHED=(\d+)/', $output, $m)) $blogPublished = (int) $m[1];
@@ -39,11 +48,11 @@ class ContentRunPublishingCycleCommand extends Command
             Log::error('[content:run-publishing-cycle] blog error: ' . $e->getMessage());
         }
 
-        // 3. Social publishing
+        // 4. Social publishing
         $socialPublished = 0;
         $socialFailed    = 0;
         try {
-            $this->info('[3/3] Publicando posts sociais agendados...');
+            $this->info('[4/4] Publicando posts sociais agendados...');
             Artisan::call('social:publish-due', [], $this->output);
             $output = Artisan::output();
             if (preg_match('/PUBLISHED=(\d+)/', $output, $m)) $socialPublished = (int) $m[1];

@@ -10,7 +10,7 @@ class BlogPost extends Model
 {
     protected $fillable = [
         'title', 'slug', 'subtitle', 'excerpt', 'content', 'featured_image',
-        'featured_image_generation_id',
+        'featured_image_generation_id', 'featured_image_source', 'featured_image_status', 'featured_image_error',
         'category_id', 'author_id', 'ai_employee_id', 'client_id', 'company_id', 'type', 'status',
         'seo_title', 'seo_description', 'focus_keyword', 'secondary_keywords',
         'tags', 'is_featured',
