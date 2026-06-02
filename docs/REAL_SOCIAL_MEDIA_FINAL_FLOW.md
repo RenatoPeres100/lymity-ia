@@ -229,7 +229,8 @@ php artisan social:test-instagram-publish {post_id?}
 ## Configuração .env
 
 ```env
-# Instagram OAuth
+# Fluxo validado: Facebook Login + Instagram Graph API
+META_AUTH_MODE=facebook_login
 META_APP_ID=
 META_APP_SECRET=
 META_REDIRECT_URI=https://ia.lymity.com.br/admin/social/instagram/callback

@@ -34,34 +34,38 @@ class InstagramDiagnosePublishingCommand extends Command
             $redirectUri === 'https://ia.lymity.com.br/admin/social/instagram/callback'
         );
 
-        $authMode = config('meta.auth_mode', 'facebook_business_login');
+        // Validated flow: facebook_login + Instagram Graph API
+        $authMode = config('meta.auth_mode', 'facebook_login');
         $this->line("  META_AUTH_MODE={$authMode}");
+
         if ($authMode === 'facebook_login') {
-            $this->warn("  [WARNING] facebook_login legado — pode gerar Invalid Scopes. Migre para facebook_business_login.");
+            $this->line("  <fg=green>[OK]</> Fluxo validado: facebook_login + Instagram Graph API via Facebook Pages");
+            $this->line("  Endpoint: https://www.facebook.com/v25.0/dialog/oauth");
+        } elseif ($authMode === 'instagram_business_login') {
+            $this->error("  [ERROR] instagram_business_login não é o fluxo validado neste projeto.");
+            $this->error("  Configure META_AUTH_MODE=facebook_login no .env e rode php artisan optimize:clear");
+            $ok = false;
+        } else {
+            $this->warn("  [WARN] auth_mode={$authMode} — esperado: facebook_login");
         }
 
-        // Scope audit
-        $legacyScopes   = ['instagram_basic', 'instagram_content_publish'];
-        $businessScopes = ['instagram_business_basic', 'instagram_business_content_publish'];
-        $allScopes      = array_unique(array_merge(
-            config('meta.facebook_scopes', []),
-            config('meta.instagram_scopes', [])
-        ));
-        $foundLegacy    = array_intersect($allScopes, $legacyScopes);
-        $foundBusiness  = array_intersect($allScopes, $businessScopes);
+        // Scope audit — validated scopes for facebook_login
+        $validatedScopes = ['pages_show_list', 'pages_read_engagement', 'business_management', 'instagram_basic', 'instagram_content_publish'];
+        $fbScopes        = config('meta.facebook_scopes', []);
+        $this->line("  META_FACEBOOK_SCOPES=" . implode(', ', $fbScopes));
 
-        if (!empty($foundLegacy)) {
-            $this->error("  [ERROR] Escopos antigos detectados: " . implode(', ', $foundLegacy));
-            $this->error("  Atualize META_FACEBOOK_SCOPES e META_INSTAGRAM_SCOPES para:");
-            $this->error("  instagram_business_basic,instagram_business_content_publish");
+        $missingScopes = array_diff($validatedScopes, $fbScopes);
+        if (empty($missingScopes)) {
+            $this->line("  <fg=green>[OK]</> Scopes validados configurados: " . implode(', ', $fbScopes));
         } else {
-            $this->line("  <fg=green>[OK]</> Nenhum escopo antigo detectado.");
+            $this->error("  [ERROR] Scopes ausentes: " . implode(', ', $missingScopes));
+            $this->error("  Configure: META_FACEBOOK_SCOPES=pages_show_list,pages_read_engagement,business_management,instagram_basic,instagram_content_publish");
         }
 
-        if (count($foundBusiness) === count($businessScopes)) {
-            $this->line("  <fg=green>[OK]</> Escopos business configurados: " . implode(', ', $foundBusiness));
-        } else {
-            $this->error("  [ERROR] Escopos business ausentes. Configure: instagram_business_basic,instagram_business_content_publish");
+        // Warn if instagram_business_* scopes are mixed in
+        $wrongMix = array_intersect($fbScopes, ['instagram_business_basic', 'instagram_business_content_publish']);
+        if (!empty($wrongMix)) {
+            $this->error("  [ERROR] instagram_business_* scopes não devem estar em META_FACEBOOK_SCOPES para facebook_login: " . implode(', ', $wrongMix));
         }
 
         $graphVersion = config('meta.graph_version', 'v25.0');

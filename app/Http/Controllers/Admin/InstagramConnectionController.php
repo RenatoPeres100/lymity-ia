@@ -112,14 +112,18 @@ class InstagramConnectionController extends Controller
 
     private function buildDiagnostics(bool $configured): array
     {
-        $authMode    = config('meta.auth_mode', 'instagram_business_login');
+        $authMode    = config('meta.auth_mode', 'facebook_login');
         $redirectUri = config('meta.redirect_uri', '');
         $expectedUri = 'https://ia.lymity.com.br/admin/social/instagram/callback';
 
-        // Show the scopes that will actually be used for the current auth_mode
-        $scopes = ($authMode === 'instagram_business_login')
-            ? config('meta.instagram_scopes', ['instagram_business_basic', 'instagram_business_content_publish'])
-            : config('meta.facebook_scopes', []);
+        // Validated scopes for facebook_login flow
+        $scopes = config('meta.facebook_scopes', [
+            'pages_show_list',
+            'pages_read_engagement',
+            'business_management',
+            'instagram_basic',
+            'instagram_content_publish',
+        ]);
 
         return [
             'app_id_set'        => !empty(config('meta.app_id')),
@@ -130,6 +134,10 @@ class InstagramConnectionController extends Controller
             'redirect_uri_ok'   => $redirectUri === $expectedUri,
             'scopes'            => $scopes,
             'publishing_enabled'=> config('meta.instagram_publishing_enabled', false),
+            // Validated channel constants
+            'official_page_id'    => config('meta.official.page_id', '1069242536283477'),
+            'official_ig_user_id' => config('meta.official.ig_user_id', '17841434234661171'),
+            'official_username'   => config('meta.official.username', 'lymity.ia'),
         ];
     }
 

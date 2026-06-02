@@ -1,217 +1,119 @@
-# Instagram Connection — Real Phase 3
+# Instagram Connection — Lymity IA
 
-## Overview
-
-This document describes how to connect the @lymity.ia Instagram Business account
-to the Lymity IA platform using the Meta Graph API.
-
-The integration is **read-ready** — all infrastructure is in place. Publishing
-remains disabled until the connection is validated (`INSTAGRAM_PUBLISHING_ENABLED=false`).
+Canal oficial: **@lymity.ia** | Domínio: **https://ia.lymity.com.br**
 
 ---
 
-## Prerequisites
+## Fluxo validado
 
-1. Instagram account is **Business or Creator** type.
-2. Instagram is **linked to a Facebook Page**.
-3. A **Meta App** exists at developers.facebook.com with:
-   - Type: Business
-   - Redirect URI configured: `https://ia.lymity.com.br/admin/social/instagram/callback`
-   - Permissions added: `instagram_business_basic`, `instagram_business_content_publish`
-   - (Escopos legados `instagram_basic`, `instagram_content_publish` não são mais aceitos em apps publicados)
+**Facebook Login + Instagram Graph API**
+
+Este é o fluxo validado e em produção. Não usar `instagram_business_login` como fluxo principal.
+
+| Campo              | Valor               |
+|--------------------|---------------------|
+| Facebook Page ID   | `1069242536283477`  |
+| Page Name          | Lymity IA           |
+| Instagram User ID  | `17841434234661171` |
+| Instagram Username | `@lymity.ia`        |
+| IG Name            | Lymity - Agency IA  |
 
 ---
 
-## Environment Variables
-
-Add to `/var/www/lymity-ia/.env`:
+## Configuração .env
 
 ```env
-META_APP_ID=your_app_id
-META_APP_SECRET=your_app_secret
+META_AUTH_MODE=facebook_login
+META_APP_ID=<seu_app_id>
+META_APP_SECRET=<seu_app_secret>
 META_REDIRECT_URI=https://ia.lymity.com.br/admin/social/instagram/callback
 META_GRAPH_VERSION=v25.0
-INSTAGRAM_PUBLISHING_ENABLED=false
-```
-
-After editing:
-
-```bash
-php artisan config:cache
-```
-
----
-
-## Connection Flow
-
-1. Navigate to **Admin → Conexão Instagram** (`/admin/social/instagram`).
-2. Click **Conectar Instagram**.
-3. Authorize the app on Facebook/Instagram (grant all required permissions).
-4. Callback returns to `/admin/social/instagram/callback`.
-5. The system:
-   - Validates the OAuth `state` via **database** (`instagram_oauth_states` table, expires in 15 min) with session fallback.
-   - Exchanges the short-lived code for a long-lived token (~60 days).
-   - Fetches the Facebook Pages linked to the account.
-   - Finds the Instagram Business Account linked to a Page.
-   - Saves the channel with encrypted token, Instagram User ID, Facebook Page ID.
-
----
-
-## Enabling Publishing
-
-Only after the connection is validated and tested:
-
-```env
+META_FACEBOOK_SCOPES=pages_show_list,pages_read_engagement,business_management,instagram_basic,instagram_content_publish
+META_INSTAGRAM_SCOPES=
 INSTAGRAM_PUBLISHING_ENABLED=true
+INSTAGRAM_OFFICIAL_USERNAME=lymity.ia
+INSTAGRAM_OFFICIAL_PAGE_ID=1069242536283477
+INSTAGRAM_OFFICIAL_IG_USER_ID=17841434234661171
 ```
 
-```bash
-php artisan config:cache
+---
+
+## Fluxo OAuth
+
+1. Admin clica em "Conectar Instagram"
+2. Sistema gera URL: `https://www.facebook.com/v25.0/dialog/oauth?scope=pages_show_list,...`
+3. Usuário autoriza no Facebook
+4. Meta redireciona para callback com `code`
+5. Backend: `code` → short-lived token → long-lived token (60 dias)
+6. Backend: `/me/accounts` → encontra página `1069242536283477`
+7. Backend: `/{page_id}?fields=instagram_business_account` → `id=17841434234661171`, `username=lymity.ia`
+8. Token salvo **criptografado** em `social_channels.access_token`
+9. Canal marcado como `connected`
+
+---
+
+## Publicação
+
+O sistema **nunca pede token manual**. Usa sempre o token salvo em `social_channels`:
+
+```
+POST https://graph.facebook.com/v25.0/{ig_user_id}/media     → cria container
+GET  /{creation_id}?fields=status_code,status                 → aguarda FINISHED
+POST https://graph.facebook.com/v25.0/{ig_user_id}/media_publish → publica
+GET  /{media_id}?fields=id,permalink,caption,media_type,timestamp → permalink
 ```
 
-Then posts with `approved` or `scheduled` status can be published via
-`InstagramPublishingService`.
+Permalink real validado: `https://www.instagram.com/p/DY7w8jyjVQQ/`
 
 ---
 
-## Security Design
+## Token persistente
 
-| Layer | Mechanism |
-|---|---|
-| Token storage | `encrypted` cast on `access_token` / `refresh_token` in `SocialChannel` |
-| Token serialization | `hidden` array on model prevents tokens from appearing in JSON/arrays |
-| Log redaction | `preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', ...)` in all services |
-| OAuth CSRF | `state` (64 chars) stored in `instagram_oauth_states` DB table (SHA-256 hash), expires 15 min; session used as fallback only |
-| Publish guard | `INSTAGRAM_PUBLISHING_ENABLED` checked first before any API call |
-
-Tokens are **never shown** in any view, log, or API response.
+- Token salvo criptografado via Laravel `encrypted` cast
+- Nunca aparece em logs, telas ou JSON público
+- Válido por ~60 dias
+- Renovação automática via `instagram:refresh-tokens` (diário 03:00)
+- Se expirar: canal = `needs_reconnect`, admin reconecta via OAuth
 
 ---
 
-## Troubleshooting: "URL bloqueada pela Meta"
+## Reconexão
 
-The Meta callback URL is blocked when the redirect URI does not match exactly.
+O histórico de posts **não é afetado** ao reconectar.
 
-Steps to fix:
-
-1. Open your app at [developers.facebook.com](https://developers.facebook.com/apps).
-2. Go to **Facebook Login → Settings**.
-3. Under **Valid OAuth Redirect URIs** add exactly:
-   ```
-   https://ia.lymity.com.br/admin/social/instagram/callback
-   ```
-   - No trailing slash.
-   - No query string.
-   - Must be HTTPS.
-4. Under **App Domains** add:
-   ```
-   ia.lymity.com.br
-   ```
-5. Ensure **Client OAuth Login: ON**, **Web OAuth Login: ON**, **Use Strict Mode for Redirect URIs: ON**, **Enforce HTTPS: ON**.
-6. Save and try connecting again.
+Se o token expirar:
+1. Canal marcado como `needs_reconnect`
+2. Admin acessa `/admin/social/instagram`
+3. Clica em "Reconectar Instagram"
+4. Fluxo OAuth completo novamente
 
 ---
 
-## Troubleshooting: "Estado OAuth inválido ou expirado"
-
-The OAuth state is a one-time security token that expires in 15 minutes and is stored in the `instagram_oauth_states` database table.
-
-Common causes:
-
-- The OAuth flow took more than 15 minutes.
-- The browser session changed (different tab, incognito, cookie cleared).
-- The callback URL was opened manually instead of via Meta redirect.
-
-Fix:
-
-1. Run `php artisan config:clear && php artisan optimize:clear`.
-2. Return to `/admin/social/instagram`.
-3. Click **Conectar Instagram** again — a new state is generated.
-4. Complete the authorization within 15 minutes without changing browser/tab.
-
-Diagnostic:
+## Diagnóstico
 
 ```bash
 php artisan instagram:diagnose-oauth
+php artisan instagram:diagnose-publishing
+php artisan instagram:connection-check
 ```
 
 ---
 
-## Key Files
-
-| File | Purpose |
-|---|---|
-| `config/meta.php` | All Meta/Instagram config |
-| `config/features.php` | Feature flags (`instagram_connection`, `instagram_publishing`) |
-| `app/Services/Instagram/MetaInstagramAuthService.php` | OAuth flow, token exchange, channel persistence |
-| `app/Services/Instagram/InstagramPublishingService.php` | Media containers, publishing, error handling |
-| `app/Http/Controllers/Admin/InstagramConnectionController.php` | Admin routes handler |
-| `app/Models/SocialChannel.php` | Channel model with encrypted tokens and status helpers |
-| `app/Models/InstagramOAuthState.php` | OAuth state persistence model |
-| `database/migrations/2026_05_29_200000_create_instagram_oauth_states_table.php` | `instagram_oauth_states` table |
-| `database/migrations/2026_05_26_130153_add_instagram_fields_to_social_channels_table.php` | Schema for instagram_user_id, facebook_page_id, permissions, etc. |
-| `resources/views/admin/social/instagram/index.blade.php` | Connection management UI with diagnostics |
-
----
-
-## Channel Status Values
-
-| Status | Meaning |
-|---|---|
-| `not_configured` | Meta App not configured in .env |
-| `disconnected` | Channel exists but no active token |
-| `connected` | Token valid, Instagram account linked |
-| `expired` | Token expired, reconnect required |
-| `error` | Last operation failed (see `last_error` column) |
-
----
-
-## Testing Without Credentials
+## Importar token de emergência (fallback técnico)
 
 ```bash
-php artisan tinker
->>> $auth = app(App\Services\Instagram\MetaInstagramAuthService::class);
->>> $auth->isConfigured(); // false — safe, no API calls made
-
->>> $pub = app(App\Services\Instagram\InstagramPublishingService::class);
->>> $channel = App\Models\SocialChannel::where('platform', 'instagram')->first();
->>> $pub->canPublish($channel); // false — publishing disabled
+php artisan instagram:import-tested-token \
+  --from-env=META_TEST_USER_TOKEN \
+  --page-id=1069242536283477 \
+  --ig-user-id=17841434234661171 \
+  --username=lymity.ia \
+  --force
 ```
 
 ---
 
-## Checklist
+## NÃO usar
 
-- [ ] META_APP_ID configured
-- [ ] META_APP_SECRET configured
-- [ ] META_AUTH_MODE=facebook_business_login
-- [ ] META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
-- [ ] META_REDIRECT_URI configured and matches Meta App settings
-- [ ] Instagram account is Business/Creator
-- [ ] Instagram linked to a Facebook Page
-- [ ] OAuth flow completed successfully
-- [ ] Channel shows `connected` status
-- [ ] instagram_user_id populated in DB
-- [ ] `INSTAGRAM_PUBLISHING_ENABLED=true` (only after above steps validated)
-
----
-
-## Correção de Invalid Scopes
-
-**Erro:** `Invalid Scopes: instagram_basic, instagram_content_publish`
-
-**Causa:** Sistema solicitando escopos antigos ou incompatíveis com o app Meta publicado.
-
-**Correção no `.env`:**
-```env
-META_AUTH_MODE=facebook_business_login
-META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
-META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
-```
-
-Depois rodar:
-```bash
-php artisan optimize:clear
-php artisan config:clear
-php artisan cache:clear
-```
+- `META_AUTH_MODE=instagram_business_login` — fluxo alternativo, não é o principal
+- `instagram.com/oauth/authorize` — endpoint do fluxo instagram_business_login
+- `instagram_business_basic` / `instagram_business_content_publish` — scopes do outro fluxo

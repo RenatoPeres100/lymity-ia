@@ -11,8 +11,10 @@ class InstagramDiagnoseOAuthCommand extends Command
     protected $signature   = 'instagram:diagnose-oauth';
     protected $description = 'Diagnóstico do fluxo OAuth Instagram / Meta.';
 
-    private array $legacyScopes = ['instagram_basic', 'instagram_content_publish', 'pages_show_list', 'pages_read_engagement'];
-    private array $businessScopes = ['instagram_business_basic', 'instagram_business_content_publish'];
+    // Validated scopes for facebook_login + Instagram Graph API flow
+    private array $validatedScopes = ['pages_show_list', 'pages_read_engagement', 'business_management', 'instagram_basic', 'instagram_content_publish'];
+    // instagram_business_* scopes belong only to instagram_business_login flow (not current)
+    private array $businessOnlyScopes = ['instagram_business_basic', 'instagram_business_content_publish'];
 
     public function handle(): int
     {
@@ -24,17 +26,16 @@ class InstagramDiagnoseOAuthCommand extends Command
         $this->info('── Configuração do App ─────────────────────────────');
         $this->line("  APP_URL             = " . config('app.url'));
 
-        $authMode = config('meta.auth_mode', 'instagram_business_login');
+        $authMode = config('meta.auth_mode', 'facebook_login');
         $this->line("  META_AUTH_MODE      = {$authMode}");
 
-        if ($authMode === 'instagram_business_login') {
-            $this->line("  <fg=green>[OK]</> auth_mode=instagram_business_login (recomendado para instagram_business_* scopes)");
-        } elseif ($authMode === 'facebook_business_login') {
-            $this->warn("  [WARNING] facebook_business_login usa facebook.com/dialog/oauth — NÃO compatível com instagram_business_* scopes.");
-            $this->warn("  Migrate para: META_AUTH_MODE=instagram_business_login");
-        } elseif ($authMode === 'facebook_login') {
-            $this->error("  [ERROR] facebook_login legado — gera Invalid Scopes com instagram_business_* scopes.");
-            $this->warn("  Migrate para: META_AUTH_MODE=instagram_business_login");
+        if ($authMode === 'facebook_login') {
+            $this->line("  <fg=green>[OK]</> auth_mode=facebook_login (fluxo validado: Facebook Login + Instagram Graph API)");
+        } elseif ($authMode === 'instagram_business_login') {
+            $this->error("  [ERROR] instagram_business_login não é o fluxo principal validado neste projeto.");
+            $this->error("  Configure META_AUTH_MODE=facebook_login no .env e rode php artisan optimize:clear");
+        } else {
+            $this->warn("  [WARN] auth_mode={$authMode} — configure META_AUTH_MODE=facebook_login");
         }
 
         $this->check('META_APP_ID configurado',     !empty(config('meta.app_id')));
@@ -59,33 +60,28 @@ class InstagramDiagnoseOAuthCommand extends Command
         // ── SCOPE AUDIT ───────────────────────────────────────────────────────
         $this->info('── Auditoria de Escopos ────────────────────────────');
 
-        $fbScopes = config('meta.facebook_scopes', []);
-        $igScopes = config('meta.instagram_scopes', []);
-        $allScopes = array_unique(array_merge($fbScopes, $igScopes));
+        $fbScopes  = config('meta.facebook_scopes', []);
+        $igScopes  = config('meta.instagram_scopes', []);
 
         $this->line("  META_FACEBOOK_SCOPES  = " . implode(', ', $fbScopes));
-        $this->line("  META_INSTAGRAM_SCOPES = " . implode(', ', $igScopes));
-
-        $foundLegacy   = array_intersect($allScopes, $this->legacyScopes);
-        $foundBusiness = array_intersect($allScopes, $this->businessScopes);
-
-        if (!empty($foundLegacy)) {
-            $this->error("  [ERROR] Escopos antigos detectados: " . implode(', ', $foundLegacy));
-            $this->error("  Atualize para:");
-            $this->error("  instagram_business_basic,instagram_business_content_publish");
-            $this->warn("  No .env:");
-            $this->warn("  META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish");
-            $this->warn("  META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish");
-            $this->warn("  Depois: php artisan optimize:clear");
-        } else {
-            $this->line("  <fg=green>[OK]</> Nenhum escopo antigo detectado.");
+        if (!empty($igScopes)) {
+            $this->line("  META_INSTAGRAM_SCOPES = " . implode(', ', $igScopes));
         }
 
-        if (count($foundBusiness) === count($this->businessScopes)) {
-            $this->line("  <fg=green>[OK]</> Escopos business configurados: " . implode(', ', $foundBusiness));
+        // Validated scopes for facebook_login flow
+        $missingValidated = array_diff($this->validatedScopes, $fbScopes);
+        if (empty($missingValidated)) {
+            $this->line("  <fg=green>[OK]</> Escopos validados configurados: " . implode(', ', $fbScopes));
         } else {
-            $missing = array_diff($this->businessScopes, $allScopes);
-            $this->error("  [ERROR] Escopos business ausentes: " . implode(', ', $missing));
+            $this->error("  [ERROR] Escopos validados ausentes: " . implode(', ', $missingValidated));
+            $this->warn("  No .env: META_FACEBOOK_SCOPES=pages_show_list,pages_read_engagement,business_management,instagram_basic,instagram_content_publish");
+        }
+
+        // Warn if instagram_business_* scopes are in facebook_scopes (wrong flow mix)
+        $wrongMix = array_intersect($fbScopes, $this->businessOnlyScopes);
+        if (!empty($wrongMix)) {
+            $this->error("  [ERROR] instagram_business_* scopes detectados em META_FACEBOOK_SCOPES: " . implode(', ', $wrongMix));
+            $this->error("  Esses scopes pertencem ao fluxo instagram_business_login, não ao facebook_login.");
         }
 
         $this->info('');
@@ -93,22 +89,8 @@ class InstagramDiagnoseOAuthCommand extends Command
         // ── OAUTH ENDPOINT ────────────────────────────────────────────────────
         $this->info('── OAuth Endpoint ──────────────────────────────────');
 
-        $endpoint = match ($authMode) {
-            'instagram_business_login' => 'https://www.instagram.com/oauth/authorize',
-            default                    => 'https://www.facebook.com/' . $graphVersion . '/dialog/oauth',
-        };
-        $scopesForEndpoint = ($authMode === 'instagram_business_login') ? $igScopes : $fbScopes;
-
-        // Warn if instagram_business_* scopes would be sent to facebook.com
-        if ($authMode !== 'instagram_business_login') {
-            foreach ($scopesForEndpoint as $scope) {
-                if (str_starts_with($scope, 'instagram_business_')) {
-                    $this->error("  [ERROR] Configuração inválida: escopo '{$scope}' não pode ser enviado para {$endpoint}.");
-                    $this->error("  Configure META_AUTH_MODE=instagram_business_login e rode php artisan optimize:clear");
-                    break;
-                }
-            }
-        }
+        $endpoint          = 'https://www.facebook.com/' . $graphVersion . '/dialog/oauth';
+        $scopesForEndpoint = $fbScopes;
 
         $this->line("  Endpoint: {$endpoint}");
         $this->line("  Scopes:   " . implode(', ', $scopesForEndpoint));
@@ -196,6 +178,7 @@ class InstagramDiagnoseOAuthCommand extends Command
 
         // ── META INSTRUCTIONS ─────────────────────────────────────────────────
         $this->info('── Instruções de Configuração Meta ─────────────────');
+        $this->line("  Fluxo validado: Facebook Login + Instagram Graph API");
         $this->line("  No app Meta Developers configure exatamente:");
         $this->line("  App Domains:              ia.lymity.com.br");
         $this->line("  Valid OAuth Redirect URIs: https://ia.lymity.com.br/admin/social/instagram/callback");
@@ -203,7 +186,7 @@ class InstagramDiagnoseOAuthCommand extends Command
         $this->line("  Web OAuth Login:           ON");
         $this->line("  Use Strict Mode:           ON");
         $this->line("  Enforce HTTPS:             ON");
-        $this->line("  Permissões necessárias:    instagram_business_basic, instagram_business_content_publish");
+        $this->line("  Permissões (facebook_login): pages_show_list, pages_read_engagement, business_management, instagram_basic, instagram_content_publish");
         $this->info('');
 
         $this->info('=== FIM DO DIAGNÓSTICO OAUTH ===');

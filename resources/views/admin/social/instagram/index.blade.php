@@ -61,7 +61,7 @@
                             </form>
                         </div>
                         <p class="mt-2 text-xs text-red-600 dark:text-red-400">
-                            Este fluxo usa o <strong>Instagram Business Login</strong> (instagram_business_login). Você será redirecionado para o Instagram para autorizar a conta @lymity.ia diretamente.
+                            Este fluxo usa <strong>Facebook Login + Instagram Graph API</strong>. Você será redirecionado para o Facebook para autorizar a conta. O histórico de posts não é afetado.
                         </p>
                     </div>
                 </div>
@@ -257,73 +257,67 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
             <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Diagnóstico de Configuração</h3>
             <div class="space-y-2 text-sm font-mono">
                 @php
-                    $diag = $diagnostics;
-                    $ok   = '<span class="text-green-600 font-semibold">[OK]</span>';
-                    $err  = '<span class="text-red-600 font-semibold">[ERRO]</span>';
+                    $diag        = $diagnostics;
+                    $ok          = '<span class="text-green-600 font-semibold">[OK]</span>';
+                    $err         = '<span class="text-red-600 font-semibold">[ERRO]</span>';
+                    $warn        = '<span class="text-amber-600 font-semibold">[AVISO]</span>';
+                    $isFbLogin   = $diag['auth_mode'] === 'facebook_login';
+                    $validatedScopes = ['pages_show_list','pages_read_engagement','business_management','instagram_basic','instagram_content_publish'];
+                    $scopesOk    = empty(array_diff($validatedScopes, $diag['scopes'] ?? []));
                 @endphp
 
                 <div>{!! $diag['app_id_set'] ? $ok : $err !!} META_APP_ID configurado</div>
                 <div>{!! $diag['app_secret_set'] ? $ok : $err !!} META_APP_SECRET configurado (valor oculto)</div>
-                @php
-                    $isIgMode       = $diag['auth_mode'] === 'instagram_business_login';
-                    $isFbMode       = in_array($diag['auth_mode'], ['facebook_business_login', 'facebook_login']);
-                    $legacyScopesDetected = !empty(array_intersect($diag['scopes'] ?? [], ['instagram_basic','instagram_content_publish','pages_show_list','pages_read_engagement']));
-                    $businessScopesOk = in_array('instagram_business_basic', $diag['scopes'] ?? []) && in_array('instagram_business_content_publish', $diag['scopes'] ?? []);
-                    $endpointOk = $isIgMode; // instagram_business_login is the required mode
-                @endphp
-                <div class="{{ $isIgMode ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
-                    {!! $isIgMode ? $ok : $err !!} META_AUTH_MODE = {{ $diag['auth_mode'] }}
-                </div>
-                @if($isIgMode)
-                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Modo correto: Instagram Business Login usa <code>www.instagram.com/oauth/authorize</code> — compatível com instagram_business_* scopes.</div>
-                @elseif($isFbMode)
-                <div class="text-red-700 dark:text-red-400 pl-2 text-xs font-semibold">Modo errado: facebook_business_login usa facebook.com/dialog/oauth — INCOMPATÍVEL com instagram_business_* scopes (causa Invalid Scopes). Configure META_AUTH_MODE=instagram_business_login no .env e rode php artisan optimize:clear.</div>
-                @endif
 
-                @if($isIgMode)
-                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Endpoint OAuth: https://www.instagram.com/oauth/authorize</div>
+                <div class="{{ $isFbLogin ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
+                    {!! $isFbLogin ? $ok : $err !!} META_AUTH_MODE = {{ $diag['auth_mode'] }}
+                </div>
+                @if($isFbLogin)
+                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Fluxo validado: Facebook Login + Instagram Graph API</div>
+                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Endpoint OAuth: https://www.facebook.com/{{ $diag['graph_version'] }}/dialog/oauth</div>
                 @else
-                <div class="text-red-700 dark:text-red-400 pl-2 text-xs">Endpoint gerado: https://www.facebook.com/.../dialog/oauth (ERRADO para instagram_business_* scopes)</div>
+                <div class="text-red-700 dark:text-red-400 pl-2 text-xs font-semibold">
+                    Fluxo incorreto. Configure <code>META_AUTH_MODE=facebook_login</code> no .env e rode <code>php artisan optimize:clear</code>.
+                </div>
                 @endif
 
                 <div class="text-gray-600 dark:text-gray-400">META_GRAPH_VERSION = {{ $diag['graph_version'] }}</div>
+
                 <div class="{{ $diag['redirect_uri_ok'] ? 'text-green-700' : 'text-red-700' }}">
                     {!! $diag['redirect_uri_ok'] ? $ok : $err !!} META_REDIRECT_URI = {{ $diag['redirect_uri'] ?: '(não definido)' }}
                 </div>
                 @if(!$diag['redirect_uri_ok'])
                 <div class="text-amber-700 pl-6 text-xs">Esperado: https://ia.lymity.com.br/admin/social/instagram/callback</div>
                 @endif
-                <div class="text-gray-600 dark:text-gray-400">INSTAGRAM_PUBLISHING_ENABLED = {{ $diag['publishing_enabled'] ? 'true' : 'false' }}</div>
-                @if($channel && $channel->last_checked_at)
-                <div class="text-gray-600 dark:text-gray-400">Última verificação do canal: {{ $channel->last_checked_at->format('d/m/Y H:i:s') }} ({{ $channel->last_checked_at->diffForHumans() }})</div>
-                @endif
+
                 @if(!empty($diag['scopes']))
-                <div class="{{ $businessScopesOk ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
-                    {!! $businessScopesOk ? $ok : $err !!} Scopes: {{ implode(', ', $diag['scopes']) }}
+                <div class="{{ $scopesOk ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
+                    {!! $scopesOk ? $ok : $err !!} Scopes: {{ implode(', ', $diag['scopes']) }}
                 </div>
-                @if($legacyScopesDetected)
-                <div class="text-red-700 dark:text-red-400 pl-6 text-xs font-semibold">
-                    Escopos antigos detectados. Atualize .env para:<br>
-                    META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
+                @if(!$scopesOk)
+                <div class="text-red-700 pl-6 text-xs font-semibold">
+                    Esperado: pages_show_list, pages_read_engagement, business_management, instagram_basic, instagram_content_publish<br>
+                    Configure: <code>META_FACEBOOK_SCOPES=pages_show_list,pages_read_engagement,business_management,instagram_basic,instagram_content_publish</code>
                 </div>
-                @elseif($businessScopesOk && $isIgMode)
-                <div class="text-green-700 dark:text-green-400 pl-6 text-xs">Escopos corretos para Instagram Business Login.</div>
                 @endif
                 @endif
 
-                {{-- Invalid Scopes error --}}
-                @if($isFbMode && $businessScopesOk)
-                <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded text-xs text-red-700 dark:text-red-300 font-semibold">
-                    Configuração inválida: instagram_business_* scopes não devem ser enviados para facebook.com/dialog/oauth.<br>
-                    Configure <code>META_AUTH_MODE=instagram_business_login</code> no .env e rode <code>php artisan optimize:clear</code>.
-                </div>
+                <div class="text-gray-600 dark:text-gray-400">INSTAGRAM_PUBLISHING_ENABLED = {{ $diag['publishing_enabled'] ? 'true' : 'false' }}</div>
+
+                @if($channel && $channel->last_checked_at)
+                <div class="text-gray-600 dark:text-gray-400">Última verificação: {{ $channel->last_checked_at->format('d/m/Y H:i:s') }} ({{ $channel->last_checked_at->diffForHumans() }})</div>
                 @endif
+
+                {{-- Validated channel constants --}}
+                <div class="text-gray-500 dark:text-gray-500 text-xs pt-1">Facebook Page ID (validado): {{ $diag['official_page_id'] ?? '1069242536283477' }}</div>
+                <div class="text-gray-500 dark:text-gray-500 text-xs">Instagram User ID (validado): {{ $diag['official_ig_user_id'] ?? '17841434234661171' }}</div>
+                <div class="text-gray-500 dark:text-gray-500 text-xs">Username (validado): @{{ $diag['official_username'] ?? 'lymity.ia' }}</div>
             </div>
         </div>
 
         {{-- Meta App configuration instructions --}}
         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-200 dark:border-blue-800 p-5">
-            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-3">Configuração necessária no Meta Developers</h3>
+            <h3 class="font-semibold text-blue-900 dark:text-blue-200 mb-3">Configuração no Meta Developers — Fluxo Validado</h3>
             <p class="text-sm text-blue-700 dark:text-blue-300 mb-3">
                 No painel <a href="https://developers.facebook.com/apps" target="_blank" class="underline">developers.facebook.com</a>, abra seu app e configure:
             </p>
@@ -337,31 +331,22 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                     <code class="block mt-1 bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded px-3 py-1.5 text-xs">https://ia.lymity.com.br/admin/social/instagram/callback</code>
                 </div>
                 <div class="grid grid-cols-2 gap-2 pt-1">
-                    @foreach([
-                        'Client OAuth Login'           => 'ON',
-                        'Web OAuth Login'              => 'ON',
-                        'Use Strict Mode for Redirects'=> 'ON',
-                        'Enforce HTTPS'                => 'ON',
-                    ] as $setting => $value)
+                    @foreach(['Client OAuth Login' => 'ON', 'Web OAuth Login' => 'ON', 'Use Strict Mode for Redirects' => 'ON', 'Enforce HTTPS' => 'ON'] as $setting => $value)
                     <div class="flex items-center gap-2">
                         <span class="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"></span>
                         <span class="text-blue-700 dark:text-blue-300">{{ $setting }}: <strong>{{ $value }}</strong></span>
                     </div>
                     @endforeach
                 </div>
-                <div class="text-xs text-blue-600 dark:text-blue-400 pt-1 border-t border-blue-200 dark:border-blue-700">
-                    Atenção: a Redirect URI deve ser idêntica — sem barra final, sem query string, obrigatoriamente HTTPS.
-                </div>
                 <div class="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
-                    <p class="font-semibold text-blue-800 dark:text-blue-200">Permissões obrigatórias no app Meta</p>
-                    <div class="mt-1 space-y-1 text-xs text-blue-700 dark:text-blue-300">
-                        <div><code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">instagram_business_basic</code> — acesso à conta Instagram Business</div>
-                        <div><code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">instagram_business_content_publish</code> — publicação de conteúdo</div>
+                    <p class="font-semibold text-blue-800 dark:text-blue-200">Permissões validadas (Facebook Login + Instagram Graph API)</p>
+                    <div class="mt-1 grid grid-cols-2 gap-1 text-xs text-blue-700 dark:text-blue-300">
+                        @foreach(['pages_show_list','pages_read_engagement','business_management','instagram_basic','instagram_content_publish'] as $scope)
+                        <div><code class="bg-blue-100 dark:bg-blue-900 px-1 rounded">{{ $scope }}</code></div>
+                        @endforeach
                     </div>
-                    <p class="mt-2 text-xs text-amber-700 dark:text-amber-400">
-                        Se aparecer <strong>Invalid Scopes</strong>, confirme se o app Meta aprovado usa as permissões
-                        <code>instagram_business_basic</code> e <code>instagram_business_content_publish</code>.
-                        Escopos antigos (<code>instagram_basic</code>, <code>instagram_content_publish</code>) não são mais aceitos.
+                    <p class="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                        Fluxo: OAuth → código → token → <code>/me/accounts</code> → página <code>1069242536283477</code> → <code>instagram_business_account</code> → token salvo criptografado.
                     </p>
                 </div>
             </div>
@@ -369,23 +354,25 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
 
         {{-- Checklist --}}
         <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-            <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Checklist de Configuração</h3>
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-4">Checklist — Fluxo Validado</h3>
             @php
-                $scopesOk = in_array('instagram_business_basic', $diagnostics['scopes'] ?? [])
-                    && in_array('instagram_business_content_publish', $diagnostics['scopes'] ?? []);
+                $validatedScopes = ['pages_show_list','pages_read_engagement','business_management','instagram_basic','instagram_content_publish'];
+                $scopesOk        = empty(array_diff($validatedScopes, $diagnostics['scopes'] ?? []));
+                $authModeOk      = $diagnostics['auth_mode'] === 'facebook_login';
+                $pageIdOk        = $channel && $channel->facebook_page_id === ($diagnostics['official_page_id'] ?? '1069242536283477');
+                $igUserIdOk      = $channel && $channel->instagram_user_id === ($diagnostics['official_ig_user_id'] ?? '17841434234661171');
 
                 $checks = [
-                    ['label' => 'Conta Instagram é profissional (Business ou Creator)', 'done' => null],
-                    ['label' => 'Instagram está vinculado a uma Página do Facebook', 'done' => null],
-                    ['label' => 'App criado em Meta Developers (developers.facebook.com)', 'done' => null],
-                    ['label' => 'App Domain configurado: ia.lymity.com.br', 'done' => null],
-                    ['label' => 'Valid OAuth Redirect URI: https://ia.lymity.com.br/admin/social/instagram/callback', 'done' => $diagnostics['redirect_uri_ok']],
-                    ['label' => 'META_APP_ID configurado no .env', 'done' => $diagnostics['app_id_set']],
-                    ['label' => 'META_APP_SECRET configurado no .env', 'done' => $diagnostics['app_secret_set']],
-                    ['label' => 'Escopos business: instagram_business_basic, instagram_business_content_publish', 'done' => $scopesOk],
-                    ['label' => 'INSTAGRAM_PUBLISHING_ENABLED=false (manter até validar conexão)', 'done' => !$diagnostics['publishing_enabled']],
-                    ['label' => 'Canal Instagram conectado com instagram_user_id preenchido', 'done' => $channel?->isConnected() && !empty($channel?->instagram_user_id)],
-                    ['label' => 'Canal Instagram conectado com facebook_page_id preenchido', 'done' => $channel?->isConnected() && !empty($channel?->facebook_page_id)],
+                    ['label' => 'META_AUTH_MODE=facebook_login (fluxo validado)',                               'done' => $authModeOk],
+                    ['label' => 'META_APP_ID configurado no .env',                                              'done' => $diagnostics['app_id_set']],
+                    ['label' => 'META_APP_SECRET configurado no .env',                                          'done' => $diagnostics['app_secret_set']],
+                    ['label' => 'Valid OAuth Redirect URI correto',                                             'done' => $diagnostics['redirect_uri_ok']],
+                    ['label' => 'Scopes validados: pages_show_list, pages_read_engagement, business_management, instagram_basic, instagram_content_publish', 'done' => $scopesOk],
+                    ['label' => 'Canal @lymity.ia conectado (status=connected)',                                'done' => $channel?->isConnected()],
+                    ['label' => 'Token válido e não expirado',                                                  'done' => $channel?->hasValidToken()],
+                    ['label' => 'Facebook Page ID = 1069242536283477 (validado)',                               'done' => $pageIdOk],
+                    ['label' => 'Instagram User ID = 17841434234661171 (validado)',                             'done' => $igUserIdOk],
+                    ['label' => 'INSTAGRAM_PUBLISHING_ENABLED=true',                                           'done' => $diagnostics['publishing_enabled']],
                 ];
             @endphp
             <ul class="space-y-2">
