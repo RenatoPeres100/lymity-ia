@@ -14,11 +14,16 @@ class InstagramRefreshTokensCommand extends Command
     protected $description = 'Renova automaticamente tokens Instagram (Meta long-lived) antes do vencimento.';
 
     private string $graphBase;
+    private string $instagramBase;
+    private bool $isInstagramMode;
 
     public function handle(): int
     {
-        $version         = config('meta.graph_version', 'v25.0');
-        $this->graphBase = "https://graph.facebook.com/{$version}";
+        $version               = config('meta.graph_version', 'v25.0');
+        $authMode              = config('meta.auth_mode', 'instagram_business_login');
+        $this->isInstagramMode = ($authMode === 'instagram_business_login');
+        $this->graphBase       = "https://graph.facebook.com/{$version}";
+        $this->instagramBase   = 'https://graph.instagram.com';
 
         $channels = SocialChannel::where('platform', 'instagram')
             ->where('status', 'connected')
@@ -40,14 +45,14 @@ class InstagramRefreshTokensCommand extends Command
             $this->line("  Renovando canal #{$channel->id} ({$channel->account_name})...");
 
             try {
-                $response = Http::get("{$this->graphBase}/oauth/access_token", [
-                    'grant_type'        => 'ig_refresh_token',
-                    'access_token'      => $channel->access_token,
-                ]);
-
-                // Meta may return fb_exchange_token endpoint for some token types
-                if ($response->failed() || empty($response->json('access_token'))) {
-                    // Fallback: fb_exchange_token
+                if ($this->isInstagramMode) {
+                    // Instagram Business Login: refresh via graph.instagram.com
+                    $response = Http::get("{$this->instagramBase}/refresh_access_token", [
+                        'grant_type'   => 'ig_refresh_token',
+                        'access_token' => $channel->access_token,
+                    ]);
+                } else {
+                    // Facebook Business Login: refresh via graph.facebook.com with fb_exchange_token
                     $response = Http::get("{$this->graphBase}/oauth/access_token", [
                         'grant_type'        => 'fb_exchange_token',
                         'client_id'         => config('meta.app_id'),

@@ -1,7 +1,7 @@
 <?php
 
 return [
-    'auth_mode' => env('META_AUTH_MODE', 'facebook_business_login'),
+    'auth_mode' => env('META_AUTH_MODE', 'instagram_business_login'),
 
     'app_id'      => env('META_APP_ID'),
     'app_secret'  => env('META_APP_SECRET'),

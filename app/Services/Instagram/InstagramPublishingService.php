@@ -18,7 +18,12 @@ class InstagramPublishingService
     public function __construct()
     {
         $version         = config('meta.graph_version', 'v25.0');
-        $this->graphBase = "https://graph.facebook.com/{$version}";
+        $authMode        = config('meta.auth_mode', 'instagram_business_login');
+
+        // Instagram Business Login uses graph.instagram.com; Facebook Login uses graph.facebook.com
+        $this->graphBase = ($authMode === 'instagram_business_login')
+            ? 'https://graph.instagram.com'
+            : "https://graph.facebook.com/{$version}";
     }
 
     // ── Publish guards ─────────────────────────────────────────────────────────
@@ -28,7 +33,9 @@ class InstagramPublishingService
         if (!config('meta.instagram_publishing_enabled', false)) return false;
         if (!$channel->isConnected() || !$channel->hasValidToken())  return false;
         if (empty($channel->instagram_user_id))                       return false;
-        if (empty($channel->facebook_page_id))                        return false;
+        // facebook_page_id only required for Facebook Business Login flow
+        $authMode = config('meta.auth_mode', 'instagram_business_login');
+        if ($authMode !== 'instagram_business_login' && empty($channel->facebook_page_id)) return false;
 
         if ($post !== null) {
             if (!in_array($post->status, ['approved', 'scheduled']))  return false;
@@ -61,8 +68,13 @@ class InstagramPublishingService
             'Token expirado. Reconecte o canal Instagram em /admin/social/instagram.');
         abort_unless(!empty($channel->instagram_user_id), 422,
             'Instagram User ID ausente. Reconecte o canal Instagram para obter o ID.');
-        abort_unless(!empty($channel->facebook_page_id), 422,
-            'Facebook Page ID ausente. Reconecte o canal Instagram para obter o ID da página.');
+
+        // facebook_page_id only required for Facebook Business Login flow
+        $authMode = config('meta.auth_mode', 'instagram_business_login');
+        if ($authMode !== 'instagram_business_login') {
+            abort_unless(!empty($channel->facebook_page_id), 422,
+                'Facebook Page ID ausente. Reconecte o canal Instagram para obter o ID da página.');
+        }
     }
 
     public function validatePost(SocialPost $post): void

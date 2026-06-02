@@ -24,16 +24,17 @@ class InstagramDiagnoseOAuthCommand extends Command
         $this->info('── Configuração do App ─────────────────────────────');
         $this->line("  APP_URL             = " . config('app.url'));
 
-        $authMode = config('meta.auth_mode', 'facebook_business_login');
+        $authMode = config('meta.auth_mode', 'instagram_business_login');
         $this->line("  META_AUTH_MODE      = {$authMode}");
 
-        if ($authMode === 'facebook_login') {
-            $this->warn("  [WARNING] facebook_login legado pode gerar Invalid Scopes se usar instagram_basic/instagram_content_publish.");
-            $this->warn("  Considere migrar para: META_AUTH_MODE=facebook_business_login");
+        if ($authMode === 'instagram_business_login') {
+            $this->line("  <fg=green>[OK]</> auth_mode=instagram_business_login (recomendado para instagram_business_* scopes)");
         } elseif ($authMode === 'facebook_business_login') {
-            $this->line("  <fg=green>[OK]</> auth_mode=facebook_business_login (recomendado)");
-        } elseif ($authMode === 'instagram_business_login') {
-            $this->line("  <fg=green>[OK]</> auth_mode=instagram_business_login");
+            $this->warn("  [WARNING] facebook_business_login usa facebook.com/dialog/oauth — NÃO compatível com instagram_business_* scopes.");
+            $this->warn("  Migrate para: META_AUTH_MODE=instagram_business_login");
+        } elseif ($authMode === 'facebook_login') {
+            $this->error("  [ERROR] facebook_login legado — gera Invalid Scopes com instagram_business_* scopes.");
+            $this->warn("  Migrate para: META_AUTH_MODE=instagram_business_login");
         }
 
         $this->check('META_APP_ID configurado',     !empty(config('meta.app_id')));
@@ -97,6 +98,17 @@ class InstagramDiagnoseOAuthCommand extends Command
             default                    => 'https://www.facebook.com/' . $graphVersion . '/dialog/oauth',
         };
         $scopesForEndpoint = ($authMode === 'instagram_business_login') ? $igScopes : $fbScopes;
+
+        // Warn if instagram_business_* scopes would be sent to facebook.com
+        if ($authMode !== 'instagram_business_login') {
+            foreach ($scopesForEndpoint as $scope) {
+                if (str_starts_with($scope, 'instagram_business_')) {
+                    $this->error("  [ERROR] Configuração inválida: escopo '{$scope}' não pode ser enviado para {$endpoint}.");
+                    $this->error("  Configure META_AUTH_MODE=instagram_business_login e rode php artisan optimize:clear");
+                    break;
+                }
+            }
+        }
 
         $this->line("  Endpoint: {$endpoint}");
         $this->line("  Scopes:   " . implode(', ', $scopesForEndpoint));

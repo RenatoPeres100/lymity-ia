@@ -14,12 +14,16 @@ use Illuminate\Support\Str;
 class MetaInstagramAuthService
 {
     private string $graphVersion;
-    private string $graphBase;
+    private string $graphBase;        // graph.facebook.com/{version}
+    private string $instagramBase;    // graph.instagram.com
+    private string $instagramApiBase; // api.instagram.com
 
     public function __construct()
     {
-        $this->graphVersion = config('meta.graph_version', 'v25.0');
-        $this->graphBase    = "https://graph.facebook.com/{$this->graphVersion}";
+        $this->graphVersion    = config('meta.graph_version', 'v25.0');
+        $this->graphBase       = "https://graph.facebook.com/{$this->graphVersion}";
+        $this->instagramBase   = 'https://graph.instagram.com';
+        $this->instagramApiBase = 'https://api.instagram.com';
     }
 
     // ── Config ─────────────────────────────────────────────────────────────────
@@ -31,6 +35,11 @@ class MetaInstagramAuthService
             && !empty(config('meta.redirect_uri'));
     }
 
+    public function isInstagramBusinessLoginMode(): bool
+    {
+        return config('meta.auth_mode', 'instagram_business_login') === 'instagram_business_login';
+    }
+
     // ── OAuth ──────────────────────────────────────────────────────────────────
 
     public function getAuthorizationUrl(?User $user = null): string
@@ -39,35 +48,53 @@ class MetaInstagramAuthService
             throw new \RuntimeException('Meta não configurado. Configure META_APP_ID, META_APP_SECRET e META_REDIRECT_URI no .env.');
         }
 
-        $authMode    = config('meta.auth_mode', 'facebook_business_login');
+        $authMode    = config('meta.auth_mode', 'instagram_business_login');
         $state       = Str::random(64);
         $stateHash   = hash('sha256', $state);
         $redirectUri = config('meta.redirect_uri');
 
-        // Select scopes and endpoint based on auth_mode
         switch ($authMode) {
             case 'instagram_business_login':
                 $endpoint = 'https://www.instagram.com/oauth/authorize';
                 $scopes   = config('meta.instagram_scopes', ['instagram_business_basic', 'instagram_business_content_publish']);
                 break;
 
-            case 'facebook_login':
-                // Legacy mode — still supported but generates a warning
+            case 'facebook_business_login':
+                // Facebook Login uses Facebook-specific scopes — NOT instagram_business_* scopes
                 $endpoint = 'https://www.facebook.com/' . $this->graphVersion . '/dialog/oauth';
-                $scopes   = config('meta.facebook_scopes', ['instagram_business_basic', 'instagram_business_content_publish']);
-                Log::warning('[MetaInstagramAuthService] AUTH_MODE=facebook_login (legado). '
-                    . 'Este modo pode gerar Invalid Scopes se usar instagram_basic/instagram_content_publish. '
-                    . 'Considere migrar para facebook_business_login.');
+                $scopes   = config('meta.facebook_scopes', ['pages_show_list', 'pages_read_engagement', 'instagram_basic', 'instagram_content_publish']);
+                Log::warning('[MetaInstagramAuthService] AUTH_MODE=facebook_business_login: usando Facebook OAuth. '
+                    . 'Para instagram_business_* scopes, configure META_AUTH_MODE=instagram_business_login.');
                 break;
 
-            case 'facebook_business_login':
+            case 'facebook_login':
             default:
                 $endpoint = 'https://www.facebook.com/' . $this->graphVersion . '/dialog/oauth';
-                $scopes   = config('meta.facebook_scopes', ['instagram_business_basic', 'instagram_business_content_publish']);
+                $scopes   = config('meta.facebook_scopes', ['pages_show_list', 'pages_read_engagement', 'instagram_basic', 'instagram_content_publish']);
+                Log::warning('[MetaInstagramAuthService] AUTH_MODE legado: ' . $authMode);
                 break;
         }
 
-        // Persist state in database — primary validation mechanism
+        // Defensive guard: instagram_business_* scopes must NEVER go to facebook.com dialog
+        if (str_contains($endpoint, 'facebook.com')) {
+            foreach ($scopes as $scope) {
+                if (str_starts_with($scope, 'instagram_business_')) {
+                    throw new \RuntimeException(
+                        'Configuração inválida: escopos instagram_business_* não podem ser enviados para ' . $endpoint . '. '
+                        . 'Configure META_AUTH_MODE=instagram_business_login no .env e rode php artisan optimize:clear.'
+                    );
+                }
+            }
+        }
+
+        // Defensive guard: instagram_business_login must always use instagram.com
+        if ($authMode === 'instagram_business_login' && !str_contains($endpoint, 'instagram.com')) {
+            throw new \RuntimeException(
+                'Invalid OAuth endpoint for instagram_business_login. Expected Instagram OAuth endpoint (www.instagram.com/oauth/authorize), got: ' . $endpoint
+            );
+        }
+
+        // Persist state in database
         InstagramOAuthState::create([
             'state_hash'   => $stateHash,
             'user_id'      => $user?->id,
@@ -80,7 +107,6 @@ class MetaInstagramAuthService
             'expires_at'   => now()->addMinutes(15),
         ]);
 
-        // Session fallback (may fail for cookie/domain/cache reasons)
         session(['instagram_oauth_state' => $state]);
 
         $this->logActivity('instagram_oauth_started', $user, [
@@ -90,18 +116,26 @@ class MetaInstagramAuthService
             'scopes'       => implode(',', $scopes),
         ]);
 
-        return $endpoint . '?' . http_build_query([
+        $params = [
             'client_id'     => config('meta.app_id'),
             'redirect_uri'  => $redirectUri,
             'scope'         => implode(',', $scopes),
             'response_type' => 'code',
             'state'         => $state,
-        ]);
+        ];
+
+        // Instagram Business Login optional params to avoid fallback to Facebook Login dialog
+        if ($authMode === 'instagram_business_login') {
+            $params['enable_fb_login']      = 0;
+            $params['force_authentication'] = 1;
+        }
+
+        return $endpoint . '?' . http_build_query($params);
     }
 
     public function handleCallback(array $query, User $user): SocialChannel
     {
-        // ── 1. Handle Meta-side errors first ─────────────────────────────────
+        // ── 1. Handle Meta-side errors ────────────────────────────────────────
         if (!empty($query['error'])) {
             $errorCode = $query['error'] ?? '';
             $errorDesc = $query['error_description'] ?? $query['error_reason'] ?? $errorCode;
@@ -117,39 +151,26 @@ class MetaInstagramAuthService
             }
 
             if (stripos($errorCode . $errorDesc, 'url_blocked') !== false
-                || stripos($errorCode . $errorDesc, 'URL blocked') !== false
                 || stripos($errorDesc, 'blocked') !== false) {
                 throw new \RuntimeException(
-                    'URL bloqueada pela Meta. Confirme que a Redirect URI ' .
-                    config('meta.redirect_uri') .
-                    ' está cadastrada exatamente em "Valid OAuth Redirect URIs" no app Meta (sem barra final, HTTPS, domínio ia.lymity.com.br).'
+                    'URL bloqueada pela Meta. Confirme que a Redirect URI '
+                    . config('meta.redirect_uri')
+                    . ' está cadastrada exatamente em "Valid OAuth Redirect URIs" no app Meta (sem barra final, HTTPS, domínio ia.lymity.com.br).'
                 );
             }
 
             if (stripos($errorCode . $errorDesc, 'invalid_scope') !== false
                 || stripos($errorDesc, 'scope') !== false
                 || stripos($errorDesc, 'Invalid Scopes') !== false) {
-                $invalidScopesMsg = 'Escopos inválidos recusados pela Meta. Atualize o .env para usar instagram_business_basic e instagram_business_content_publish.';
-
-                $this->logActivity('instagram_oauth_invalid_scopes', $user, [
-                    'error'       => $errorCode,
-                    'description' => $errorDesc,
-                    'auth_mode'   => config('meta.auth_mode'),
-                    'scopes'      => implode(',', config('meta.facebook_scopes', [])),
-                ]);
-
-                if ($channel) {
-                    $channel->update(['last_error' => $invalidScopesMsg]);
-                }
-
                 throw new \RuntimeException(
-                    'Escopos recusados pela Meta. O sistema estava pedindo permissões antigas. '
-                    . 'Atualize META_FACEBOOK_SCOPES para instagram_business_basic,instagram_business_content_publish '
-                    . 'e rode php artisan optimize:clear.'
+                    'Escopos recusados pela Meta/Instagram. '
+                    . 'Confirme que META_AUTH_MODE=instagram_business_login está no .env '
+                    . 'e que as permissões instagram_business_basic e instagram_business_content_publish '
+                    . 'estão aprovadas no seu app Meta. Rode: php artisan optimize:clear'
                 );
             }
 
-            throw new \RuntimeException("Acesso negado pelo Meta: {$errorDesc}");
+            throw new \RuntimeException("Acesso negado pelo Meta/Instagram: {$errorDesc}");
         }
 
         // ── 2. Validate code ─────────────────────────────────────────────────
@@ -161,11 +182,11 @@ class MetaInstagramAuthService
                 'redirect_uri'    => config('meta.redirect_uri'),
             ]);
             throw new \RuntimeException(
-                'A Meta não retornou o código de autorização. ' .
-                'Parâmetros recebidos: [' . ($receivedKeys ?: 'nenhum') . ']. ' .
-                'Confirme que a autorização foi concluída e que a Redirect URI ' .
-                config('meta.redirect_uri') .
-                ' está cadastrada exatamente em "Valid OAuth Redirect URIs" no app Meta.'
+                'A Meta/Instagram não retornou o código de autorização. '
+                . 'Parâmetros recebidos: [' . ($receivedKeys ?: 'nenhum') . ']. '
+                . 'Confirme que a autorização foi concluída e que a Redirect URI '
+                . config('meta.redirect_uri')
+                . ' está cadastrada exatamente em "Valid OAuth Redirect URIs" no app Meta.'
             );
         }
 
@@ -173,17 +194,15 @@ class MetaInstagramAuthService
         $receivedState = $query['state'] ?? null;
         if (empty($receivedState)) {
             $this->logActivity('instagram_oauth_invalid_state', $user, ['reason' => 'state_missing']);
-            $channel = $this->ensureChannel();
-            $channel?->update(['last_error' => 'Estado OAuth ausente no callback.']);
+            $this->ensureChannel()?->update(['last_error' => 'Estado OAuth ausente no callback.']);
             throw new \RuntimeException('Estado OAuth ausente. Tente conectar novamente.');
         }
 
-        $stateHash   = hash('sha256', $receivedState);
-        $oauthState  = InstagramOAuthState::findValid($stateHash);
+        $stateHash  = hash('sha256', $receivedState);
+        $oauthState = InstagramOAuthState::findValid($stateHash);
         $stateSource = 'database';
 
         if (!$oauthState) {
-            // Fallback: session
             $sessionState = session('instagram_oauth_state');
             if (!empty($sessionState) && hash_equals($sessionState, $receivedState)) {
                 $stateSource = 'session_fallback';
@@ -192,27 +211,83 @@ class MetaInstagramAuthService
                     'reason'     => 'state_not_found',
                     'state_hash' => substr($stateHash, 0, 8) . '...',
                 ]);
-                $channel = $this->ensureChannel();
-                $channel?->update(['last_error' => 'Estado OAuth inválido ou expirado.']);
+                $this->ensureChannel()?->update(['last_error' => 'Estado OAuth inválido ou expirado.']);
                 throw new \RuntimeException(
-                    'Estado OAuth inválido ou expirado. O estado de segurança do login expirou (15 min) ' .
-                    'ou a sessão mudou. Tente conectar novamente a partir da tela de Conexão Instagram.'
+                    'Estado OAuth inválido ou expirado. O estado de segurança do login expirou (15 min) '
+                    . 'ou a sessão mudou. Tente conectar novamente a partir da tela de Conexão Instagram.'
                 );
             }
         }
 
-        // Mark state as used
         if ($oauthState) {
             $oauthState->markUsed();
         }
         session()->forget('instagram_oauth_state');
 
-        // ── 4. Exchange code for tokens ───────────────────────────────────────
-        $tokenData = $this->exchangeCodeForToken($query['code']);
-        $longToken = $this->getLongLivedToken($tokenData['access_token']);
+        // ── 4. Exchange code and get profile (mode-aware) ─────────────────────
+        $authMode = config('meta.auth_mode', 'instagram_business_login');
 
-        // ── 5. Discover Instagram Business Account ────────────────────────────
-        $pages = $this->getUserPages($longToken['access_token']);
+        if ($authMode === 'instagram_business_login') {
+            return $this->handleInstagramBusinessLoginCallback($query['code'], $user, $stateSource);
+        }
+
+        return $this->handleFacebookLoginCallback($query['code'], $user, $stateSource);
+    }
+
+    // ── Instagram Business Login flow ──────────────────────────────────────────
+
+    private function handleInstagramBusinessLoginCallback(string $code, User $user, string $stateSource): SocialChannel
+    {
+        // Step 1: Exchange code for short-lived token via api.instagram.com
+        $tokenData = $this->exchangeInstagramCodeForToken($code);
+        $shortToken = $tokenData['access_token'];
+        $igUserId   = (string) ($tokenData['user_id'] ?? '');
+
+        // Step 2: Get long-lived token via graph.instagram.com
+        $longToken  = $this->getInstagramLongLivedToken($shortToken);
+
+        // Step 3: Get Instagram profile directly
+        $profile = $this->getInstagramProfile($longToken['access_token']);
+
+        $expiresAt    = isset($longToken['expires_in'])
+            ? now()->addSeconds((int) $longToken['expires_in'])
+            : now()->addDays(60);
+        $refreshDueAt = $expiresAt->copy()->subDays(15);
+
+        $channel = $this->saveChannelConnection([
+            'access_token'        => $longToken['access_token'],
+            'token_expires_at'    => $expiresAt,
+            'refresh_due_at'      => $refreshDueAt,
+            'last_refreshed_at'   => now(),
+            'instagram_user_id'   => $profile['id'] ?? $igUserId ?: null,
+            'facebook_page_id'    => null,
+            'account_name'        => '@' . ($profile['username'] ?? 'lymity.ia'),
+            'account_url'         => 'https://instagram.com/' . ($profile['username'] ?? 'lymity.ia'),
+            'profile_picture_url' => $profile['profile_picture_url'] ?? null,
+            'permissions'         => null,
+            'metadata'            => [
+                'auth_mode'    => 'instagram_business_login',
+                'state_source' => $stateSource,
+                'account_type' => $profile['account_type'] ?? null,
+            ],
+        ], $user);
+
+        $this->logActivity('instagram_oauth_connected', $user, [
+            'channel_id'   => $channel->id,
+            'account_name' => $channel->account_name,
+            'auth_mode'    => 'instagram_business_login',
+        ]);
+
+        return $channel;
+    }
+
+    // ── Facebook Business Login flow ───────────────────────────────────────────
+
+    private function handleFacebookBusinessLoginCallback(string $code, User $user, string $stateSource): SocialChannel
+    {
+        $tokenData = $this->exchangeFacebookCodeForToken($code);
+        $longToken = $this->getFacebookLongLivedToken($tokenData['access_token']);
+        $pages     = $this->getUserPages($longToken['access_token']);
 
         $instagramAccount = null;
         $pageData         = null;
@@ -234,17 +309,15 @@ class MetaInstagramAuthService
         }
 
         if (!$instagramAccount) {
-            $channel = $this->ensureChannel();
-            $channel?->update([
+            $this->ensureChannel()?->update([
                 'last_error' => 'Nenhuma conta Instagram profissional vinculada à Página do Facebook foi encontrada.',
             ]);
             throw new \RuntimeException(
-                'Nenhuma conta Instagram profissional vinculada à Página do Facebook foi encontrada. ' .
-                'Certifique-se de que sua conta @lymity.ia é do tipo Business ou Creator e está vinculada a uma Página do Facebook.'
+                'Nenhuma conta Instagram profissional vinculada à Página do Facebook foi encontrada. '
+                . 'Certifique-se de que sua conta é do tipo Business ou Creator e está vinculada a uma Página do Facebook.'
             );
         }
 
-        // ── 6. Save channel ───────────────────────────────────────────────────
         $expiresAt    = isset($longToken['expires_in'])
             ? now()->addSeconds((int) $longToken['expires_in'])
             : now()->addDays(60);
@@ -263,7 +336,7 @@ class MetaInstagramAuthService
             'permissions'         => $tokenData['permissions'] ?? null,
             'metadata'            => [
                 'page_name'    => $pageData['name'] ?? null,
-                'auth_mode'    => config('meta.auth_mode', 'facebook_login'),
+                'auth_mode'    => 'facebook_business_login',
                 'state_source' => $stateSource,
             ],
         ], $user);
@@ -271,14 +344,75 @@ class MetaInstagramAuthService
         $this->logActivity('instagram_oauth_connected', $user, [
             'channel_id'   => $channel->id,
             'account_name' => $channel->account_name,
+            'auth_mode'    => 'facebook_business_login',
         ]);
 
         return $channel;
     }
 
-    // ── Token exchange ─────────────────────────────────────────────────────────
+    // Alias to keep internal call consistent
+    private function handleFacebookLoginCallback(string $code, User $user, string $stateSource): SocialChannel
+    {
+        return $this->handleFacebookBusinessLoginCallback($code, $user, $stateSource);
+    }
 
-    public function exchangeCodeForToken(string $code): array
+    // ── Instagram Business Login — token endpoints ─────────────────────────────
+
+    public function exchangeInstagramCodeForToken(string $code): array
+    {
+        $response = Http::asForm()->post("{$this->instagramApiBase}/oauth/access_token", [
+            'client_id'     => config('meta.app_id'),
+            'client_secret' => config('meta.app_secret'),
+            'grant_type'    => 'authorization_code',
+            'redirect_uri'  => config('meta.redirect_uri'),
+            'code'          => $code,
+        ]);
+
+        $this->assertSuccess($response, 'Falha ao trocar código Instagram por token');
+
+        return $response->json();
+    }
+
+    public function getInstagramLongLivedToken(string $shortLivedToken): array
+    {
+        $response = Http::get("{$this->instagramBase}/access_token", [
+            'grant_type'    => 'ig_exchange_token',
+            'client_secret' => config('meta.app_secret'),
+            'access_token'  => $shortLivedToken,
+        ]);
+
+        $this->assertSuccess($response, 'Falha ao obter token de longa duração do Instagram');
+
+        return $response->json();
+    }
+
+    public function refreshInstagramToken(string $longLivedToken): array
+    {
+        $response = Http::get("{$this->instagramBase}/refresh_access_token", [
+            'grant_type'   => 'ig_refresh_token',
+            'access_token' => $longLivedToken,
+        ]);
+
+        $this->assertSuccess($response, 'Falha ao renovar token do Instagram');
+
+        return $response->json();
+    }
+
+    public function getInstagramProfile(string $accessToken): array
+    {
+        $response = Http::get("{$this->instagramBase}/me", [
+            'fields'       => 'id,username,name,profile_picture_url,account_type',
+            'access_token' => $accessToken,
+        ]);
+
+        $this->assertSuccess($response, 'Falha ao buscar perfil do Instagram');
+
+        return $response->json();
+    }
+
+    // ── Facebook Business Login — token endpoints ──────────────────────────────
+
+    public function exchangeFacebookCodeForToken(string $code): array
     {
         $response = Http::get("{$this->graphBase}/oauth/access_token", [
             'client_id'     => config('meta.app_id'),
@@ -287,12 +421,12 @@ class MetaInstagramAuthService
             'code'          => $code,
         ]);
 
-        $this->assertSuccess($response, 'Falha ao trocar código por token');
+        $this->assertSuccess($response, 'Falha ao trocar código Facebook por token');
 
         return $response->json();
     }
 
-    public function getLongLivedToken(string $shortLivedToken): array
+    public function getFacebookLongLivedToken(string $shortLivedToken): array
     {
         $response = Http::get("{$this->graphBase}/oauth/access_token", [
             'grant_type'        => 'fb_exchange_token',
@@ -301,10 +435,27 @@ class MetaInstagramAuthService
             'fb_exchange_token' => $shortLivedToken,
         ]);
 
-        $this->assertSuccess($response, 'Falha ao obter token de longa duração');
+        $this->assertSuccess($response, 'Falha ao obter token de longa duração do Facebook');
 
         return $response->json();
     }
+
+    // Keep old name for backwards-compat in code that calls this directly
+    public function exchangeCodeForToken(string $code): array
+    {
+        return $this->isInstagramBusinessLoginMode()
+            ? $this->exchangeInstagramCodeForToken($code)
+            : $this->exchangeFacebookCodeForToken($code);
+    }
+
+    public function getLongLivedToken(string $shortLivedToken): array
+    {
+        return $this->isInstagramBusinessLoginMode()
+            ? $this->getInstagramLongLivedToken($shortLivedToken)
+            : $this->getFacebookLongLivedToken($shortLivedToken);
+    }
+
+    // ── Facebook pages (only used by Facebook Login flow) ──────────────────────
 
     public function getUserPages(string $accessToken): array
     {
@@ -384,16 +535,17 @@ class MetaInstagramAuthService
         }
 
         try {
-            $response = Http::get("{$this->graphBase}/debug_token", [
-                'input_token'  => $channel->access_token,
-                'access_token' => config('meta.app_id') . '|' . config('meta.app_secret'),
-            ]);
+            if ($this->isInstagramBusinessLoginMode()) {
+                // Instagram Business Login: validate via graph.instagram.com/me
+                $response = Http::get("{$this->instagramBase}/me", [
+                    'fields'       => 'id,username',
+                    'access_token' => $channel->access_token,
+                ]);
 
-            if ($response->successful()) {
-                $tokenData = $response->json('data', []);
-
-                if (($tokenData['is_valid'] ?? false) === false) {
-                    $errorMsg = $tokenData['error']['message'] ?? 'Token inválido.';
+                if ($response->successful() && !empty($response->json('id'))) {
+                    $channel->markConnected(['last_checked_at' => now()]);
+                } else {
+                    $errorMsg = $response->json('error.message') ?? 'Token inválido.';
                     $safe     = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $errorMsg);
 
                     if ($this->isSessionExpiredError($errorMsg)) {
@@ -402,17 +554,39 @@ class MetaInstagramAuthService
                         $channel->markExpired();
                         $channel->update(['last_error' => $safe]);
                     }
-                } else {
-                    $channel->markConnected(['last_checked_at' => now()]);
                 }
             } else {
-                $errorBody = $response->json('error.message') ?? $response->body();
-                $safe      = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', (string) $errorBody);
+                // Facebook Login: validate via debug_token
+                $response = Http::get("{$this->graphBase}/debug_token", [
+                    'input_token'  => $channel->access_token,
+                    'access_token' => config('meta.app_id') . '|' . config('meta.app_secret'),
+                ]);
 
-                if ($this->isSessionExpiredError($errorBody)) {
-                    $channel->markNeedsReconnect($safe);
+                if ($response->successful()) {
+                    $tokenData = $response->json('data', []);
+
+                    if (($tokenData['is_valid'] ?? false) === false) {
+                        $errorMsg = $tokenData['error']['message'] ?? 'Token inválido.';
+                        $safe     = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', $errorMsg);
+
+                        if ($this->isSessionExpiredError($errorMsg)) {
+                            $channel->markNeedsReconnect($safe);
+                        } else {
+                            $channel->markExpired();
+                            $channel->update(['last_error' => $safe]);
+                        }
+                    } else {
+                        $channel->markConnected(['last_checked_at' => now()]);
+                    }
                 } else {
-                    $channel->markError('Falha ao verificar token: ' . $safe);
+                    $errorBody = $response->json('error.message') ?? $response->body();
+                    $safe      = preg_replace('/EAA[A-Za-z0-9]+/', '[TOKEN_REDACTED]', (string) $errorBody);
+
+                    if ($this->isSessionExpiredError($errorBody)) {
+                        $channel->markNeedsReconnect($safe);
+                    } else {
+                        $channel->markError('Falha ao verificar token: ' . $safe);
+                    }
                 }
             }
         } catch (\Throwable $e) {

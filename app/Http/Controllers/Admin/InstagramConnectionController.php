@@ -112,17 +112,19 @@ class InstagramConnectionController extends Controller
 
     private function buildDiagnostics(bool $configured): array
     {
-        $redirectUri    = config('meta.redirect_uri', '');
-        $expectedUri    = 'https://ia.lymity.com.br/admin/social/instagram/callback';
-        $scopes         = array_merge(
-            config('meta.facebook_scopes', []),
-            config('meta.instagram_scopes', [])
-        );
+        $authMode    = config('meta.auth_mode', 'instagram_business_login');
+        $redirectUri = config('meta.redirect_uri', '');
+        $expectedUri = 'https://ia.lymity.com.br/admin/social/instagram/callback';
+
+        // Show the scopes that will actually be used for the current auth_mode
+        $scopes = ($authMode === 'instagram_business_login')
+            ? config('meta.instagram_scopes', ['instagram_business_basic', 'instagram_business_content_publish'])
+            : config('meta.facebook_scopes', []);
 
         return [
             'app_id_set'        => !empty(config('meta.app_id')),
             'app_secret_set'    => !empty(config('meta.app_secret')),
-            'auth_mode'         => config('meta.auth_mode', 'facebook_login'),
+            'auth_mode'         => $authMode,
             'graph_version'     => config('meta.graph_version', 'v25.0'),
             'redirect_uri'      => $redirectUri,
             'redirect_uri_ok'   => $redirectUri === $expectedUri,

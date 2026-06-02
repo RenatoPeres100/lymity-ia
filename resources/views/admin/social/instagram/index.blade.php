@@ -61,7 +61,7 @@
                             </form>
                         </div>
                         <p class="mt-2 text-xs text-red-600 dark:text-red-400">
-                            Este fluxo usa login Meta/Facebook para conectar a conta Instagram profissional vinculada ao Business/Página. Isso é esperado para o modo <strong>facebook_business_login</strong>.
+                            Este fluxo usa o <strong>Instagram Business Login</strong> (instagram_business_login). Você será redirecionado para o Instagram para autorizar a conta @lymity.ia diretamente.
                         </p>
                     </div>
                 </div>
@@ -265,19 +265,27 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 <div>{!! $diag['app_id_set'] ? $ok : $err !!} META_APP_ID configurado</div>
                 <div>{!! $diag['app_secret_set'] ? $ok : $err !!} META_APP_SECRET configurado (valor oculto)</div>
                 @php
-                    $isLegacyMode = $diag['auth_mode'] === 'facebook_login';
-                    $isBusinessMode = $diag['auth_mode'] === 'facebook_business_login';
+                    $isIgMode       = $diag['auth_mode'] === 'instagram_business_login';
+                    $isFbMode       = in_array($diag['auth_mode'], ['facebook_business_login', 'facebook_login']);
                     $legacyScopesDetected = !empty(array_intersect($diag['scopes'] ?? [], ['instagram_basic','instagram_content_publish','pages_show_list','pages_read_engagement']));
                     $businessScopesOk = in_array('instagram_business_basic', $diag['scopes'] ?? []) && in_array('instagram_business_content_publish', $diag['scopes'] ?? []);
+                    $endpointOk = $isIgMode; // instagram_business_login is the required mode
                 @endphp
-                <div class="{{ $isBusinessMode ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400' }}">
-                    {!! $isBusinessMode ? $ok : '<span class="text-amber-600 font-semibold">[AVISO]</span>' !!} META_AUTH_MODE = {{ $diag['auth_mode'] }}
+                <div class="{{ $isIgMode ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400' }}">
+                    {!! $isIgMode ? $ok : $err !!} META_AUTH_MODE = {{ $diag['auth_mode'] }}
                 </div>
-                @if($isBusinessMode)
-                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Modo correto: o login aparece como Meta/Facebook porque a conta do Business administra o Instagram profissional. Isso é esperado.</div>
-                @elseif($isLegacyMode)
-                <div class="text-amber-700 dark:text-amber-400 pl-2 text-xs">⚠ auth_mode legado — pode gerar Invalid Scopes. Atualize para facebook_business_login.</div>
+                @if($isIgMode)
+                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Modo correto: Instagram Business Login usa <code>www.instagram.com/oauth/authorize</code> — compatível com instagram_business_* scopes.</div>
+                @elseif($isFbMode)
+                <div class="text-red-700 dark:text-red-400 pl-2 text-xs font-semibold">Modo errado: facebook_business_login usa facebook.com/dialog/oauth — INCOMPATÍVEL com instagram_business_* scopes (causa Invalid Scopes). Configure META_AUTH_MODE=instagram_business_login no .env e rode php artisan optimize:clear.</div>
                 @endif
+
+                @if($isIgMode)
+                <div class="text-green-700 dark:text-green-400 pl-2 text-xs">Endpoint OAuth: https://www.instagram.com/oauth/authorize</div>
+                @else
+                <div class="text-red-700 dark:text-red-400 pl-2 text-xs">Endpoint gerado: https://www.facebook.com/.../dialog/oauth (ERRADO para instagram_business_* scopes)</div>
+                @endif
+
                 <div class="text-gray-600 dark:text-gray-400">META_GRAPH_VERSION = {{ $diag['graph_version'] }}</div>
                 <div class="{{ $diag['redirect_uri_ok'] ? 'text-green-700' : 'text-red-700' }}">
                     {!! $diag['redirect_uri_ok'] ? $ok : $err !!} META_REDIRECT_URI = {{ $diag['redirect_uri'] ?: '(não definido)' }}
@@ -296,19 +304,18 @@ INSTAGRAM_PUBLISHING_ENABLED=false</pre>
                 @if($legacyScopesDetected)
                 <div class="text-red-700 dark:text-red-400 pl-6 text-xs font-semibold">
                     Escopos antigos detectados. Atualize .env para:<br>
-                    META_FACEBOOK_SCOPES=instagram_business_basic,instagram_business_content_publish
+                    META_INSTAGRAM_SCOPES=instagram_business_basic,instagram_business_content_publish
                 </div>
-                @elseif($businessScopesOk)
-                <div class="text-green-700 dark:text-green-400 pl-6 text-xs">Escopos business configurados corretamente.</div>
+                @elseif($businessScopesOk && $isIgMode)
+                <div class="text-green-700 dark:text-green-400 pl-6 text-xs">Escopos corretos para Instagram Business Login.</div>
                 @endif
                 @endif
 
-                {{-- Invalid Scopes warning --}}
-                @if($channel && str_contains(strtolower($channel->last_error ?? ''), 'escopo') || str_contains(strtolower($channel->last_error ?? ''), 'scope'))
-                <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded text-xs text-red-700 dark:text-red-300">
-                    <strong>Escopos recusados pela Meta.</strong> Se aparecer Invalid Scopes, confirme se o app Meta aprovado usa as permissões
-                    <code>instagram_business_basic</code> e <code>instagram_business_content_publish</code>.
-                    Atualize META_FACEBOOK_SCOPES no .env e rode <code>php artisan optimize:clear</code>.
+                {{-- Invalid Scopes error --}}
+                @if($isFbMode && $businessScopesOk)
+                <div class="mt-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 rounded text-xs text-red-700 dark:text-red-300 font-semibold">
+                    Configuração inválida: instagram_business_* scopes não devem ser enviados para facebook.com/dialog/oauth.<br>
+                    Configure <code>META_AUTH_MODE=instagram_business_login</code> no .env e rode <code>php artisan optimize:clear</code>.
                 </div>
                 @endif
             </div>
