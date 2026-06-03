@@ -2,6 +2,7 @@
 
 namespace App\Services\Approval;
 
+use App\Jobs\SendApprovalEmailNotificationJob;
 use App\Models\ActivityLog;
 use App\Models\AppNotification;
 use App\Models\ApprovalAction;
@@ -30,6 +31,23 @@ class ApprovalService
 
         $this->logApprovalAction($approval, Auth::user(), 'created', 'Solicitação criada.');
         $this->notifyRelevantUsers($approval, 'created');
+
+        // Dispatch email notification job (non-blocking — mail failure does not affect approval)
+        try {
+            SendApprovalEmailNotificationJob::dispatch($approval->id, 'created')
+                ->onQueue('default');
+            ActivityLog::create([
+                'user_id'     => Auth::id(),
+                'client_id'   => $approval->client_id,
+                'action'      => 'approval_email_queued',
+                'module'      => 'approvals',
+                'level'       => 'info',
+                'description' => "E-mail de aprovação enfileirado — #{$approval->id}",
+                'metadata'    => ['approval_request_id' => $approval->id],
+            ]);
+        } catch (\Throwable $e) {
+            // Never let email failure break approval creation
+        }
 
         return $approval;
     }

@@ -17,13 +17,17 @@ class ApprovalRequest extends Model
         'payload', 'due_at',
         'approved_by', 'approved_at',
         'rejected_by', 'rejected_at',
+        'notified_at', 'notification_status', 'reminder_count', 'last_reminder_at',
     ];
 
     protected $casts = [
-        'payload'     => 'array',
-        'due_at'      => 'datetime',
-        'approved_at' => 'datetime',
-        'rejected_at' => 'datetime',
+        'payload'          => 'array',
+        'due_at'           => 'datetime',
+        'approved_at'      => 'datetime',
+        'rejected_at'      => 'datetime',
+        'notified_at'      => 'datetime',
+        'last_reminder_at' => 'datetime',
+        'reminder_count'   => 'integer',
     ];
 
     public function client(): BelongsTo
@@ -66,6 +70,11 @@ class ApprovalRequest extends Model
         return $this->hasMany(ApprovalComment::class)->orderBy('created_at', 'asc');
     }
 
+    public function emailNotifications(): HasMany
+    {
+        return $this->hasMany(ApprovalEmailNotification::class)->orderByDesc('created_at');
+    }
+
     public function scopeVisibleTo($query, \App\Models\User $user)
     {
         return app(\App\Services\Auth\AccessScopeService::class)->scopeApprovals($user, $query);
@@ -84,6 +93,64 @@ class ApprovalRequest extends Model
     public function isRejected(): bool
     {
         return $this->status === 'rejected';
+    }
+
+    public function isChangesRequested(): bool
+    {
+        return $this->status === 'changes_requested';
+    }
+
+    public function needsEmailNotification(): bool
+    {
+        return $this->isPending()
+            && in_array($this->notification_status ?? 'not_sent', ['not_sent', 'failed']);
+    }
+
+    public function needsReminder(): bool
+    {
+        if (!$this->isPending()) {
+            return false;
+        }
+
+        $maxReminders = config('approval-notifications.max_reminders', 3);
+        if (($this->reminder_count ?? 0) >= $maxReminders) {
+            return false;
+        }
+
+        // Only remind if there's a due_at OR a scheduled content
+        $referenceDate = $this->due_at
+            ?? optional($this->approvable)->scheduled_at
+            ?? null;
+
+        if (!$referenceDate) {
+            return false;
+        }
+
+        $hoursBeforeDue = config('approval-notifications.reminder_hours_before_due', 24);
+        $windowStart    = $referenceDate->copy()->subHours($hoursBeforeDue + 1);
+        $windowEnd      = $referenceDate->copy()->subHours($hoursBeforeDue - 1);
+
+        if (now()->between($windowStart, $windowEnd)) {
+            return true;
+        }
+
+        // Also allow a general reminder if last was sent > 24h ago and approval is still pending
+        if ($this->last_reminder_at && $this->last_reminder_at->diffInHours(now()) < 24) {
+            return false;
+        }
+
+        return $this->notified_at && $this->notified_at->diffInHours(now()) >= 24;
+    }
+
+    public function getPanelUrl(bool $isAdmin = true): string
+    {
+        try {
+            return $isAdmin
+                ? route('admin.approvals.show', $this->id)
+                : route('client.approvals.show', $this->id);
+        } catch (\Throwable) {
+            return route('admin.approvals.show', $this->id);
+        }
     }
 
     public function isCritical(): bool

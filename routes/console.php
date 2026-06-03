@@ -23,3 +23,6 @@ Schedule::command('social:publish-due')->everyMinute()->withoutOverlapping();
 
 // Real Phase Social — Instagram token auto-renewal (daily at 03:00)
 Schedule::command('instagram:refresh-tokens')->dailyAt('03:00')->withoutOverlapping();
+
+// Real Phase Email Notifications — Approval reminders (hourly)
+Schedule::command('approvals:send-pending-reminders')->hourly()->withoutOverlapping();

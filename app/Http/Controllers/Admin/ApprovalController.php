@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreApprovalCommentRequest;
 use App\Http\Requests\StoreApprovalRequestRequest;
+use App\Jobs\SendApprovalEmailNotificationJob;
+use App\Models\ActivityLog;
 use App\Models\ApprovalComment;
 use App\Models\ApprovalRequest;
 use App\Models\Client;
@@ -159,5 +161,29 @@ class ApprovalController extends Controller
         $this->service->logApprovalAction($approvalRequest, Auth::user(), 'commented', $request->comment);
 
         return back()->with('success', 'Comentário adicionado.');
+    }
+
+    public function resendEmail(ApprovalRequest $approvalRequest): RedirectResponse
+    {
+        $user = Auth::user();
+
+        if (!in_array($user->role, ['admin_geral', 'agencia_admin'])) {
+            return back()->withErrors(['error' => 'Sem permissão para reenviar e-mail.']);
+        }
+
+        SendApprovalEmailNotificationJob::dispatch($approvalRequest->id, 'created', true)
+            ->onQueue('default');
+
+        ActivityLog::create([
+            'user_id'     => $user->id,
+            'client_id'   => $approvalRequest->client_id,
+            'action'      => 'approval_email_resend_requested',
+            'module'      => 'approvals',
+            'level'       => 'info',
+            'description' => "Reenvio de e-mail solicitado — #{$approvalRequest->id}",
+            'metadata'    => ['approval_request_id' => $approvalRequest->id, 'requested_by' => $user->id],
+        ]);
+
+        return back()->with('success', 'E-mail de aprovação reenviado com sucesso.');
     }
 }

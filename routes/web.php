@@ -328,6 +328,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/approvals/{approvalRequest}/request-changes',     [AdminApprovalController::class, 'requestChanges'])->name('admin.approvals.request-changes');
         Route::post('/approvals/{approvalRequest}/cancel',              [AdminApprovalController::class, 'cancel'])->name('admin.approvals.cancel');
         Route::post('/approvals/{approvalRequest}/comments',            [AdminApprovalController::class, 'storeComment'])->name('admin.approvals.comments');
+        Route::post('/approvals/{approvalRequest}/resend-email',        [AdminApprovalController::class, 'resendEmail'])->name('admin.approvals.resend-email');
 
         // ─── Phase 4 — AI Employees (full CRUD + actions) ───────────────
         Route::get('/ai-employees',                            [AiEmployeeController::class, 'index'])->name('admin.ai-employees.index');
@@ -748,3 +749,14 @@ Route::prefix('app')->name('app.')->middleware(['auth', 'active', 'client.panel'
     Route::post('/approvals/{approvalRequest}/request-changes',  [AppApprovalController::class, 'requestChanges'])->name('approvals.request-changes');
     Route::post('/approvals/{approvalRequest}/comments',         [AppApprovalController::class, 'comment'])->name('approvals.comment');
 });
+
+// Real Phase Email Notifications — Signed approval action links (public, no auth required)
+Route::get(
+    '/approval-email/{approval}/confirm/{action}',
+    [App\Http\Controllers\ApprovalEmailActionController::class, 'confirm']
+)->name('approval.email.confirm');
+
+Route::post(
+    '/approval-email/{approval}/confirm/{action}',
+    [App\Http\Controllers\ApprovalEmailActionController::class, 'submit']
+)->name('approval.email.confirm.submit');

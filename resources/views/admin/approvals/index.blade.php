@@ -77,6 +77,7 @@
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Nível</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Vencimento</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Criado em</th>
+                <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;" title="Status do e-mail de notificação">E-mail</th>
                 <th style="text-align:right;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Ações</th>
             </tr>
         </thead>
@@ -106,6 +107,19 @@
                     @if($approval->isOverdue()) <span style="color:#f87171;">(vencida)</span> @endif
                 </td>
                 <td style="padding:12px 16px;font-size:.8rem;color:#94a3b8;">{{ $approval->created_at->format('d/m/Y H:i') }}</td>
+                <td style="padding:12px 16px;">
+                    @php
+                        $ns = $approval->notification_status ?? 'not_sent';
+                        $emailIndicators = [
+                            'sent'     => ['✉', '#059669', 'E-mail enviado'],
+                            'failed'   => ['✉', '#dc2626', 'E-mail com falha'],
+                            'not_sent' => ['✉', '#94a3b8', 'E-mail não enviado'],
+                            'disabled' => ['✉', '#d1d5db', 'E-mail desabilitado'],
+                        ];
+                        $ei = $emailIndicators[$ns] ?? $emailIndicators['not_sent'];
+                    @endphp
+                    <span title="{{ $ei[2] }}" style="color:{{ $ei[1] }};font-size:.9rem;">{{ $ei[0] }}</span>
+                </td>
                 <td style="padding:12px 16px;text-align:right;">
                     <a href="{{ route('admin.approvals.show', $approval->id) }}" style="background:#eff6ff;color:#4f46e5;border:1px solid #e0e7ff;font-size:.75rem;font-weight:600;padding:5px 12px;border-radius:6px;text-decoration:none;display:inline-block;">Ver</a>
                 </td>

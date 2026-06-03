@@ -174,6 +174,90 @@
             <p style="font-size:.8rem;color:#94a3b8;">Sem histórico.</p>
             @endforelse
         </div>
+
+        {{-- Email Notifications Section --}}
+        <div style="background:#ffffff;border:1px solid #e2e8f0;border-radius:14px;padding:24px;margin-top:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h2 style="font-size:.9rem;font-weight:700;color:#1e293b;">Notificações por E-mail</h2>
+                @if($approvalRequest->isPending())
+                <form method="POST" action="{{ route('admin.approvals.resend-email', $approvalRequest) }}" style="margin:0;">
+                    @csrf
+                    <button type="submit" style="background:#4f46e5;color:#fff;border:none;padding:7px 16px;border-radius:8px;font-size:.78rem;font-weight:600;cursor:pointer;">
+                        Reenviar e-mail de aprovação
+                    </button>
+                </form>
+                @endif
+            </div>
+
+            {{-- Status summary --}}
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+                @php
+                    $emailStatus = $approvalRequest->notification_status ?? 'not_sent';
+                    $statusColors = [
+                        'sent'     => ['bg' => '#f0fdf4', 'border' => '#86efac', 'text' => '#166534', 'label' => 'Enviado'],
+                        'failed'   => ['bg' => '#fef2f2', 'border' => '#fca5a5', 'text' => '#b91c1c', 'label' => 'Falha'],
+                        'not_sent' => ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#64748b', 'label' => 'Não enviado'],
+                        'disabled' => ['bg' => '#f8fafc', 'border' => '#e2e8f0', 'text' => '#94a3b8', 'label' => 'Desabilitado'],
+                    ];
+                    $sc = $statusColors[$emailStatus] ?? $statusColors['not_sent'];
+                @endphp
+                <span style="background:{{ $sc['bg'] }};border:1px solid {{ $sc['border'] }};color:{{ $sc['text'] }};font-size:.75rem;font-weight:600;padding:4px 12px;border-radius:12px;">
+                    Status: {{ $sc['label'] }}
+                </span>
+                @if($approvalRequest->notified_at)
+                <span style="background:#f8fafc;border:1px solid #e2e8f0;color:#64748b;font-size:.75rem;padding:4px 12px;border-radius:12px;">
+                    Notificado em: {{ $approvalRequest->notified_at->format('d/m/Y H:i') }}
+                </span>
+                @endif
+                @if($approvalRequest->reminder_count > 0)
+                <span style="background:#fef3c7;border:1px solid #fde68a;color:#92400e;font-size:.75rem;font-weight:600;padding:4px 12px;border-radius:12px;">
+                    Lembretes enviados: {{ $approvalRequest->reminder_count }}
+                </span>
+                @endif
+            </div>
+
+            {{-- Email log entries --}}
+            @php $emailLogs = $approvalRequest->emailNotifications()->limit(10)->get(); @endphp
+            @if($emailLogs->isNotEmpty())
+            <div style="border:1px solid #f1f5f9;border-radius:8px;overflow:hidden;">
+                <table style="width:100%;font-size:.75rem;border-collapse:collapse;">
+                    <thead>
+                        <tr style="background:#f8fafc;">
+                            <th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;">Destinatário</th>
+                            <th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;">Tipo</th>
+                            <th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;">Status</th>
+                            <th style="padding:8px 12px;text-align:left;color:#64748b;font-weight:600;border-bottom:1px solid #e2e8f0;">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($emailLogs as $log)
+                        @php
+                            $logColors = [
+                                'sent'    => '#166534',
+                                'failed'  => '#b91c1c',
+                                'pending' => '#92400e',
+                                'skipped' => '#64748b',
+                            ];
+                        @endphp
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:8px 12px;color:#334155;">{{ $log->email }}</td>
+                            <td style="padding:8px 12px;color:#64748b;">{{ ucfirst($log->notification_type) }}</td>
+                            <td style="padding:8px 12px;">
+                                <span style="color:{{ $logColors[$log->status] ?? '#64748b' }};font-weight:600;">{{ ucfirst($log->status) }}</span>
+                                @if($log->status === 'failed' && $log->error_message)
+                                <div style="color:#94a3b8;font-size:.7rem;margin-top:2px;">{{ Str::limit($log->error_message, 60) }}</div>
+                                @endif
+                            </td>
+                            <td style="padding:8px 12px;color:#94a3b8;">{{ ($log->sent_at ?? $log->failed_at ?? $log->created_at)?->format('d/m/Y H:i') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @else
+            <p style="font-size:.8rem;color:#94a3b8;">Nenhuma tentativa de e-mail registrada.</p>
+            @endif
+        </div>
     </div>
 
 </div>
