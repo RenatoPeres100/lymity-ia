@@ -132,15 +132,18 @@
 
         {{-- User Footer --}}
         <div class="sidebar-footer">
-            <div class="flex items-center gap-2.5 px-2 py-2">
+            <a href="{{ route('admin.profile.edit') }}" class="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-800 transition-colors group">
                 <div class="sidebar-avatar text-xs">
                     {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
                     <div class="text-sm font-medium text-slate-200 truncate">{{ auth()->user()->name }}</div>
-                    <div class="text-xs text-slate-500">{{ auth()->user()->role_label }}</div>
+                    <div class="text-xs text-slate-500 group-hover:text-slate-400">{{ auth()->user()->role_label }}</div>
                 </div>
-            </div>
+                <svg class="w-3.5 h-3.5 text-slate-600 group-hover:text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 18l6-6-6-6"/>
+                </svg>
+            </a>
         </div>
 
     </aside>
@@ -166,6 +169,11 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>
                     Fase 1 — Base SaaS
                 </span>
+
+                <a href="{{ route('admin.profile.edit') }}" title="Meu Perfil"
+                   class="flex items-center justify-center w-8 h-8 rounded-full bg-slate-800 border border-slate-700 text-xs font-bold text-indigo-300 hover:border-indigo-500 hover:text-indigo-200 transition-colors">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                </a>
 
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
 use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\FileController as AdminFileController;
 use App\Http\Controllers\Admin\ClientFileController as AdminClientFileController;
@@ -129,6 +130,10 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         // Phase 12 — System Health
         Route::get('/system-health', SystemHealthController::class)->name('admin.system-health');
+
+        Route::get('/profile',          [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
+        Route::put('/profile',          [AdminProfileController::class, 'update'])->name('admin.profile.update');
+        Route::put('/profile/password', [AdminProfileController::class, 'password'])->name('admin.profile.password');
 
         // Phase 7 — Content Command Center
         Route::get('/content-command-center', [App\Http\Controllers\Admin\ContentCommandCenterController::class, 'index'])->name('admin.content-command-center');

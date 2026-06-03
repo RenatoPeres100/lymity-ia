@@ -162,9 +162,12 @@ class ApprovalEmailNotificationService
 
     public function resolveAdminRecipients(ApprovalRequest $approval): Collection
     {
-        return User::whereIn('role', ['admin_geral', 'agencia_admin'])
+        // Only the primary admin_geral (lowest id = first created = real agency owner)
+        return User::where('role', 'admin_geral')
             ->where('status', 'active')
             ->whereNotNull('email')
+            ->orderBy('id')
+            ->limit(1)
             ->get();
     }
 
@@ -174,7 +177,7 @@ class ApprovalEmailNotificationService
 
         // Primary: client admins for this client
         $recipients = User::where('client_id', $clientId)
-            ->whereIn('role', ['cliente', 'cliente_admin'])
+            ->where('role', 'cliente_admin')
             ->where('status', 'active')
             ->whereNotNull('email')
             ->get();

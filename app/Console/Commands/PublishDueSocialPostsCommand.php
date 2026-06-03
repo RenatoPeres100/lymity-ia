@@ -98,8 +98,8 @@ class PublishDueSocialPostsCommand extends Command
                 continue;
             }
 
-            // Guard: outdated image
-            if ($post->isImageOutdated()) {
+            // Guard: outdated image — skip if post is already approved (admin reviewed content)
+            if ($post->isImageOutdated() && empty($post->approved_by)) {
                 $reason = "Post #{$post->id} com imagem desatualizada — texto foi editado após a imagem. Regenere a imagem.";
                 $this->warn("  SKIP #{$post->id} — {$reason}");
                 $publisher->blockPublish($post, $reason, $channel);

@@ -243,13 +243,13 @@ class SocialPost extends Model
         if (empty($this->main_caption)) {
             return false;
         }
-        $currentHash = md5(trim($this->main_caption));
-        return $currentHash !== $this->image_generated_from_caption_hash;
+        return $this->captionHash() !== $this->image_generated_from_caption_hash;
     }
 
     public function captionHash(): string
     {
-        return md5(trim($this->main_caption ?? ''));
+        // Normalize line endings before hashing to avoid false positives from \r\n vs \n
+        return md5(trim(str_replace("\r\n", "\n", $this->main_caption ?? '')));
     }
 
     public function hasEnoughValidAssetsForCarousel(): bool

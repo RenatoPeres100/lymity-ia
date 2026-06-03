@@ -30,6 +30,11 @@ class ApprovalEmailActionController extends Controller
             abort(400, 'Ação inválida.');
         }
 
+        // Test link (id=0) — just confirm the signature works
+        if ($approval === 0) {
+            return view('approval-email.test-ok', ['action' => $action]);
+        }
+
         $approvalRequest = ApprovalRequest::with(['client', 'aiEmployee', 'approvable'])->find($approval);
 
         if (!$approvalRequest) {
