@@ -291,6 +291,36 @@
             <a href="{{ route('admin.leads.index') }}" class="nav-item {{ request()->routeIs('admin.leads*') ? 'active' : '' }}">Leads/CRM</a>
             @endif
 
+            {{-- PROSPECÇÃO / SDR IA --}}
+            @if(config('features.prospecting_module') && !auth()->user()->isClientUser() && !auth()->user()->isAiEmployee() && auth()->user()->hasPermission('prospecting.view'))
+            <span class="nav-section-label">Prospecção</span>
+
+            <a href="{{ route('admin.prospecting.dashboard') }}" class="nav-item {{ request()->routeIs('admin.prospecting.dashboard') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Visão Geral
+            </a>
+
+            @if(auth()->user()->hasPermission('prospecting.pipeline.view'))
+            <a href="{{ route('admin.prospecting.pipeline') }}" class="nav-item {{ request()->routeIs('admin.prospecting.pipeline') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="4" height="18" rx="1"/><rect x="10" y="6" width="4" height="15" rx="1"/><rect x="17" y="9" width="4" height="12" rx="1"/>
+                </svg>
+                Pipeline
+            </a>
+            @endif
+
+            <a href="{{ route('admin.prospecting.leads.index') }}" class="nav-item {{ request()->routeIs('admin.prospecting.leads*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                    <rect x="8" y="2" width="8" height="4" rx="1"/>
+                </svg>
+                Leads
+            </a>
+            @endif
+
             @endif {{-- end agency/admin --}}
 
             {{-- ===================== CLIENTE ===================== --}}

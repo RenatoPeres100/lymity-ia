@@ -2,6 +2,13 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\ProfileController as AdminProfileController;
+use App\Http\Controllers\Admin\Prospecting\DashboardController as ProspectingDashboardController;
+use App\Http\Controllers\Admin\Prospecting\PipelineController as ProspectingPipelineController;
+use App\Http\Controllers\Admin\Prospecting\LeadController as ProspectingLeadController;
+use App\Http\Controllers\Admin\Prospecting\ActivityController as ProspectingActivityController;
+use App\Http\Controllers\Admin\Prospecting\NoteController as ProspectingNoteController;
+use App\Http\Controllers\Admin\Prospecting\AiAssistantController as ProspectingAiAssistantController;
+use App\Http\Controllers\Admin\Prospecting\MessageSuggestionController as ProspectingMessageController;
 use App\Http\Controllers\Admin\SystemHealthController;
 use App\Http\Controllers\Admin\FileController as AdminFileController;
 use App\Http\Controllers\Admin\ClientFileController as AdminClientFileController;
@@ -130,6 +137,43 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         // Phase 12 — System Health
         Route::get('/system-health', SystemHealthController::class)->name('admin.system-health');
+
+        // Prospecting / CRM / SDR IA
+        Route::prefix('prospecting')->group(function () {
+            Route::get('/',        ProspectingDashboardController::class)->name('admin.prospecting.dashboard');
+            Route::get('/pipeline', ProspectingPipelineController::class)->name('admin.prospecting.pipeline');
+
+            // Leads CRUD
+            Route::get('/leads',                     [ProspectingLeadController::class, 'index'])->name('admin.prospecting.leads.index');
+            Route::get('/leads/create',              [ProspectingLeadController::class, 'create'])->name('admin.prospecting.leads.create');
+            Route::post('/leads',                    [ProspectingLeadController::class, 'store'])->name('admin.prospecting.leads.store');
+            Route::get('/leads/{lead}',              [ProspectingLeadController::class, 'show'])->name('admin.prospecting.leads.show');
+            Route::get('/leads/{lead}/edit',         [ProspectingLeadController::class, 'edit'])->name('admin.prospecting.leads.edit');
+            Route::put('/leads/{lead}',              [ProspectingLeadController::class, 'update'])->name('admin.prospecting.leads.update');
+            Route::patch('/leads/{lead}/move-stage', [ProspectingLeadController::class, 'moveStage'])->name('admin.prospecting.leads.move-stage');
+            Route::patch('/leads/{lead}/archive',    [ProspectingLeadController::class, 'archive'])->name('admin.prospecting.leads.archive');
+            Route::delete('/leads/{lead}',           [ProspectingLeadController::class, 'destroy'])->name('admin.prospecting.leads.destroy');
+
+            // Activities
+            Route::post('/leads/{lead}/activities',          [ProspectingActivityController::class, 'store'])->name('admin.prospecting.activities.store');
+            Route::patch('/activities/{activity}/complete',  [ProspectingActivityController::class, 'complete'])->name('admin.prospecting.activities.complete');
+            Route::patch('/activities/{activity}/cancel',    [ProspectingActivityController::class, 'cancel'])->name('admin.prospecting.activities.cancel');
+
+            // Notes
+            Route::post('/leads/{lead}/notes', [ProspectingNoteController::class, 'store'])->name('admin.prospecting.notes.store');
+
+            // AI Assistant
+            Route::post('/leads/{lead}/ai/analyze',             [ProspectingAiAssistantController::class, 'analyze'])->name('admin.prospecting.ai.analyze');
+            Route::post('/leads/{lead}/ai/qualify',             [ProspectingAiAssistantController::class, 'qualify'])->name('admin.prospecting.ai.qualify');
+            Route::post('/leads/{lead}/ai/generate-message',    [ProspectingAiAssistantController::class, 'generateMessage'])->name('admin.prospecting.ai.generate-message');
+            Route::post('/leads/{lead}/ai/suggest-next-action', [ProspectingAiAssistantController::class, 'suggestNextAction'])->name('admin.prospecting.ai.suggest-next-action');
+            Route::post('/leads/{lead}/ai/summarize',           [ProspectingAiAssistantController::class, 'summarize'])->name('admin.prospecting.ai.summarize');
+
+            // Message Suggestions
+            Route::patch('/message-suggestions/{message}/approve',  [ProspectingMessageController::class, 'approve'])->name('admin.prospecting.messages.approve');
+            Route::patch('/message-suggestions/{message}/reject',   [ProspectingMessageController::class, 'reject'])->name('admin.prospecting.messages.reject');
+            Route::patch('/message-suggestions/{message}/mark-used',[ProspectingMessageController::class, 'markUsed'])->name('admin.prospecting.messages.mark-used');
+        });
 
         Route::get('/profile',          [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
         Route::put('/profile',          [AdminProfileController::class, 'update'])->name('admin.profile.update');

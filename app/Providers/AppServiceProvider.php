@@ -11,6 +11,11 @@ use App\Models\BlogPost;
 use App\Models\Client;
 use App\Models\ContentBrief;
 use App\Models\ExternalFile;
+use App\Models\ProspectActivity;
+use App\Models\ProspectAiInsight;
+use App\Models\ProspectLead;
+use App\Models\ProspectMessageSuggestion;
+use App\Models\ProspectPipeline;
 use App\Models\SocialPost;
 use App\Models\User;
 use App\Policies\ActivityLogPolicy;
@@ -22,6 +27,10 @@ use App\Policies\BrandContextPolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\ContentBriefPolicy;
 use App\Policies\ExternalFilePolicy;
+use App\Policies\ProspectActivityPolicy;
+use App\Policies\ProspectAiPolicy;
+use App\Policies\ProspectLeadPolicy;
+use App\Policies\ProspectPipelinePolicy;
 use App\Policies\SocialPostPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
@@ -44,5 +53,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(AgentRoutine::class,      AgentRoutinePolicy::class);
         Gate::policy(ExternalFile::class,      ExternalFilePolicy::class);
         Gate::policy(AgencyBrandContext::class, BrandContextPolicy::class);
+
+        // Prospecting
+        Gate::policy(ProspectLead::class,              ProspectLeadPolicy::class);
+        Gate::policy(ProspectPipeline::class,          ProspectPipelinePolicy::class);
+        Gate::policy(ProspectActivity::class,          ProspectActivityPolicy::class);
+        Gate::policy(ProspectMessageSuggestion::class, ProspectAiPolicy::class);
     }
 }

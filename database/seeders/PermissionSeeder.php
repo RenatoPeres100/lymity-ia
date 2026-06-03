@@ -143,6 +143,22 @@ class PermissionSeeder extends Seeder
             ['key' => 'client.social.approve',  'name' => 'Aprovar posts (cliente)',       'module' => 'client_social'],
             ['key' => 'client.social.schedule', 'name' => 'Agendar posts (cliente)',       'module' => 'client_social'],
             ['key' => 'client.social.comment',  'name' => 'Comentar posts (cliente)',      'module' => 'client_social'],
+
+            // prospecting / CRM / SDR IA
+            ['key' => 'prospecting.view',                   'name' => 'Ver prospecção',                          'module' => 'prospecting'],
+            ['key' => 'prospecting.create',                 'name' => 'Criar leads',                             'module' => 'prospecting'],
+            ['key' => 'prospecting.update',                 'name' => 'Editar leads',                            'module' => 'prospecting'],
+            ['key' => 'prospecting.delete',                 'name' => 'Excluir leads',                           'module' => 'prospecting'],
+            ['key' => 'prospecting.pipeline.view',          'name' => 'Ver pipeline de prospecção',              'module' => 'prospecting'],
+            ['key' => 'prospecting.pipeline.manage',        'name' => 'Gerenciar pipeline de prospecção',        'module' => 'prospecting'],
+            ['key' => 'prospecting.activities.view',        'name' => 'Ver atividades de prospecção',            'module' => 'prospecting'],
+            ['key' => 'prospecting.activities.create',      'name' => 'Criar atividades de prospecção',          'module' => 'prospecting'],
+            ['key' => 'prospecting.activities.update',      'name' => 'Editar atividades de prospecção',         'module' => 'prospecting'],
+            ['key' => 'prospecting.ai.analyze',             'name' => 'Analisar lead com IA',                    'module' => 'prospecting'],
+            ['key' => 'prospecting.ai.generate_message',    'name' => 'Gerar mensagem IA para lead',             'module' => 'prospecting'],
+            ['key' => 'prospecting.ai.suggest_next_action', 'name' => 'Sugerir próxima ação com IA',             'module' => 'prospecting'],
+            ['key' => 'prospecting.ai.qualify',             'name' => 'Qualificar lead com IA',                  'module' => 'prospecting'],
+            ['key' => 'prospecting.logs.view',              'name' => 'Ver logs de prospecção',                  'module' => 'prospecting'],
         ];
 
         foreach ($permissions as $perm) {

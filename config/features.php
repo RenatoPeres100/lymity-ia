@@ -45,6 +45,15 @@ return [
     'ai_image_logs'            => true,
     'ai_image_usage'           => true,
 
+    // === PROSPECÇÃO / CRM / SDR IA ===
+    'prospecting_module'       => true,
+    'crm_pipeline'             => true,
+    'sdr_ai_assistant'         => true,
+    'crm_auto_outreach'        => false,
+    'crm_whatsapp_integration' => false,
+    'crm_email_integration'    => false,
+    'crm_scraping'             => false,
+
     // === MÓDULOS DESATIVADOS ===
     'ads_module'          => false,
     'proposals_module'    => false,
