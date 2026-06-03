@@ -349,9 +349,9 @@ class AgentRoutineService
                "<p><em>Artigo gerado pelo agente Blog Writer IA da Lymity. Aguardando revisão e aprovação humana.</em></p>";
     }
 
-    private function generateBlogTags(AgencyBrandContext $ctx): string
+    private function generateBlogTags(AgencyBrandContext $ctx): array
     {
-        return 'IA, Automação, Marketing Digital, Lymity';
+        return ['IA', 'Automação', 'Marketing Digital', 'Lymity'];
     }
 
     // ── Activity log ───────────────────────────────────────────────────────────

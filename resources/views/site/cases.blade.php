@@ -51,7 +51,7 @@
                         @endif
                     </blockquote>
                     @endif
-                    @if($case->tags && count($case->tags))
+                    @if($case->tags && is_array($case->tags) && count($case->tags))
                     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:20px;">
                         @foreach($case->tags as $tag)
                         <span style="background:#eff6ff;color:#4a6cf7;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:20px;border:1px solid #bfdbfe;">{{ $tag }}</span>

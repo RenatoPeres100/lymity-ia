@@ -48,7 +48,11 @@ class BlogPostController extends Controller
             'seo_description'    => 'nullable|string|max:300',
             'focus_keyword'      => 'nullable|string|max:100',
             'secondary_keywords' => 'nullable|string',
+            'tags'               => 'nullable|string',
         ]);
+
+        $data['tags']               = $this->parseStringToArray($data['tags'] ?? null);
+        $data['secondary_keywords'] = $this->parseStringToArray($data['secondary_keywords'] ?? null);
 
         $post = $this->pipeline->createManualDraft($data, $request->user());
 
@@ -82,17 +86,30 @@ class BlogPostController extends Controller
             'seo_description'    => 'nullable|string|max:300',
             'focus_keyword'      => 'nullable|string|max:100',
             'secondary_keywords' => 'nullable|string',
+            'tags'               => 'nullable|string',
         ]);
 
         if (empty($data['slug'])) {
             $data['slug'] = \Illuminate\Support\Str::slug($data['title']);
         }
 
+        $data['tags']               = $this->parseStringToArray($data['tags'] ?? null);
+        $data['secondary_keywords'] = $this->parseStringToArray($data['secondary_keywords'] ?? null);
+
         $blogPost->update($data);
         $this->pipeline->registerLog($blogPost, 'edited', $request->user());
 
         return redirect()->route('admin.blog.posts.show', $blogPost)
             ->with('success', 'Post atualizado com sucesso.');
+    }
+
+    private function parseStringToArray(?string $value): ?array
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+        $items = array_values(array_filter(array_map('trim', explode(',', $value))));
+        return empty($items) ? null : $items;
     }
 
     public function destroy(BlogPost $blogPost): RedirectResponse

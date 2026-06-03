@@ -113,9 +113,9 @@ PROMPT;
         }
 
         $plan  = $planResponse->json ?? [];
-        // Gemini sometimes wraps values in arrays — flatten scalars
+        // Gemini sometimes wraps scalar values in arrays — flatten them, but keep tags as array
         foreach ($plan as $k => $v) {
-            if (is_array($v)) {
+            if (is_array($v) && $k !== 'tags') {
                 $plan[$k] = implode(', ', array_map('strval', $v));
             }
         }
@@ -158,8 +158,17 @@ PROMPT;
 
         $scheduledAt = $this->calculateTargetPublicationDate($routine);
 
-        $tagsStr = (string)($plan['tags'] ?? 'IA, Automação, Marketing Digital, Lymity');
-        $skwStr  = !empty($plan['secondary_keywords']) ? (string)$plan['secondary_keywords'] : null;
+        $rawTags = $plan['tags'] ?? 'IA, Automação, Marketing Digital, Lymity';
+        $tagsArr = is_array($rawTags)
+            ? array_values(array_filter(array_map('trim', $rawTags)))
+            : array_values(array_filter(array_map('trim', explode(',', (string)$rawTags))));
+
+        $skwRaw = $plan['secondary_keywords'] ?? null;
+        $skwArr = is_array($skwRaw)
+            ? array_values(array_filter(array_map('trim', $skwRaw)))
+            : (is_string($skwRaw) && !empty(trim($skwRaw))
+                ? array_values(array_filter(array_map('trim', explode(',', $skwRaw))))
+                : null);
 
         return BlogPost::create([
             'title'           => $title,
@@ -169,8 +178,9 @@ PROMPT;
             'content'         => $contentResponse->text,
             'seo_title'       => is_string($plan['seo_title'] ?? null) ? $plan['seo_title'] : $title,
             'seo_description' => is_string($plan['seo_description'] ?? null) ? $plan['seo_description'] : null,
-            'focus_keyword'   => is_string($plan['focus_keyword'] ?? null) ? $plan['focus_keyword'] : null,
-            'tags'            => $tagsStr,
+            'focus_keyword'      => is_string($plan['focus_keyword'] ?? null) ? $plan['focus_keyword'] : null,
+            'secondary_keywords' => $skwArr,
+            'tags'               => $tagsArr,
             'ai_employee_id'  => $routine->ai_employee_id,
             'client_id'       => $routine->client_id,
             'company_id'      => $routine->company_id,

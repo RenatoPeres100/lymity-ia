@@ -36,7 +36,7 @@
                 {!! nl2br(e($blogPost->content)) !!}
             </div>
 
-            @if($blogPost->tags && count($blogPost->tags))
+            @if($blogPost->tags && is_array($blogPost->tags) && count($blogPost->tags))
             <div class="mt-6 flex flex-wrap gap-2">
                 @foreach($blogPost->tags as $tag)
                 <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-full">#{{ $tag }}</span>

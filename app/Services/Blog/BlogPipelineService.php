@@ -63,8 +63,8 @@ class BlogPipelineService
             'status'          => 'draft',
             'author_id'       => $user->id,
             'ai_employee_id'  => $blogWriter->id,
-            'focus_keyword'   => $data['keyword'] ?? null,
-            'secondary_keywords' => $data['keywords_sec'] ?? null,
+            'focus_keyword'      => $data['keyword'] ?? null,
+            'secondary_keywords' => $this->parseStringToArray($data['keywords_sec'] ?? null),
             'content'         => '',
             'excerpt'         => '',
         ]);
@@ -102,7 +102,8 @@ class BlogPipelineService
             'seo_title'          => $data['seo_title'] ?? null,
             'seo_description'    => $data['seo_description'] ?? null,
             'focus_keyword'      => $data['focus_keyword'] ?? null,
-            'secondary_keywords' => $data['secondary_keywords'] ?? null,
+            'secondary_keywords' => $this->parseStringToArray($data['secondary_keywords'] ?? null),
+            'tags'               => $this->parseStringToArray($data['tags'] ?? null),
         ]);
 
         $this->registerLog($post, 'draft_created', $user);
@@ -335,6 +336,15 @@ class BlogPipelineService
         }
 
         return ['published' => $published, 'failed' => $failed];
+    }
+
+    private function parseStringToArray(?string $value): ?array
+    {
+        if ($value === null || trim($value) === '') {
+            return null;
+        }
+        $items = array_values(array_filter(array_map('trim', explode(',', $value))));
+        return empty($items) ? null : $items;
     }
 
     // ── Logging ────────────────────────────────────────────────────────────────

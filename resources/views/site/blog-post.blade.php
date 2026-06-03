@@ -1,4 +1,4 @@
-<x-layouts.public :title="$post->title" :meta-description="$post->meta_description ?? $post->excerpt ?? Str::limit(strip_tags($post->content), 160)">
+<x-layouts.public :title="$post->title" :meta-description="$post->seo_description ?? $post->excerpt ?? Str::limit(strip_tags($post->content), 160)">
 
 <article>
 
@@ -21,7 +21,7 @@
             @endif
             <span style="color:#1e3a5f;">·</span>
             <span style="font-size:.8rem;color:#64748b;">{{ $post->read_time }} min de leitura</span>
-            @if($post->tags && count($post->tags))
+            @if($post->tags && is_array($post->tags) && count($post->tags))
             <span style="color:#1e3a5f;">·</span>
             <div style="display:flex;gap:6px;flex-wrap:wrap;">
                 @foreach($post->tags as $tag)
@@ -39,7 +39,7 @@
             {!! $post->content !!}
         </div>
 
-        @if($post->tags && count($post->tags))
+        @if($post->tags && is_array($post->tags) && count($post->tags))
         <div style="margin-top:48px;padding-top:24px;border-top:1px solid #e2e8f0;">
             <div style="font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:10px;">Tags</div>
             <div style="display:flex;flex-wrap:wrap;gap:8px;">
