@@ -62,7 +62,7 @@ class ProspectingService
 
         $lead->update([
             'prospect_stage_id' => $stage->id,
-            'status' => $stage->is_won ? 'won' : ($stage->is_lost ? 'lost' : $lead->status),
+            'status' => $stage->is_won ? 'won' : ($stage->is_lost ? 'lost' : 'open'),
         ]);
 
         $this->logger->log('prospect.lead.stage_moved', $lead, $user, [

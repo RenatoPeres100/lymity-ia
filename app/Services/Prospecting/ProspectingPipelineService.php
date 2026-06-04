@@ -44,7 +44,7 @@ class ProspectingPipelineService
         return $stages->map(function (ProspectStage $stage) use ($user) {
             $leads = ProspectLead::visibleTo($user)
                 ->where('prospect_stage_id', $stage->id)
-                ->where('status', 'open')
+                ->where('status', '!=', 'archived')
                 ->with('owner')
                 ->orderByDesc('updated_at')
                 ->get();

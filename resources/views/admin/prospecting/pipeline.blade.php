@@ -105,6 +105,11 @@
                             {{ $lead->interest_label }}
                         </span>
                         @endif
+                        @if($lead->status === 'won')
+                        <span style="font-size:.7rem;background:#f0fdf4;color:#16a34a;padding:.15rem .4rem;border-radius:999px;font-weight:600;">✓ Fechado</span>
+                        @elseif($lead->status === 'lost')
+                        <span style="font-size:.7rem;background:#f1f5f9;color:#64748b;padding:.15rem .4rem;border-radius:999px;font-weight:600;">✗ Perdido</span>
+                        @endif
                     </div>
 
                     @if($lead->next_follow_up_at)
