@@ -1,123 +1,127 @@
-@extends('components.layouts.app')
-@section('title', $lead->name . ' — Lead')
+<x-layouts.app title="{{ $lead->name }} — Lead">
 
-@section('content')
-<div class="page-header">
+@if(session('success'))
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('error') }}</div>
+@endif
+
+{{-- Header --}}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
     <div>
-        <h1 class="page-title">{{ $lead->name }}</h1>
-        <p class="page-subtitle">
+        <h1 style="font-size:1.5rem;font-weight:700;color:#0f172a;margin:0 0 .25rem;">{{ $lead->name }}</h1>
+        <p style="color:#64748b;font-size:.9rem;margin:0;">
             {{ $lead->company_name ?: '' }}
             @if($lead->segment) · {{ $lead->segment }} @endif
         </p>
     </div>
-    <div class="flex gap-2 flex-wrap">
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
         @can('update', $lead)
-        <a href="{{ route('admin.prospecting.leads.edit', $lead) }}" class="btn btn-secondary">Editar</a>
+        <a href="{{ route('admin.prospecting.leads.edit', $lead) }}"
+           style="background:#f1f5f9;color:#374151;padding:.5rem 1rem;border-radius:.5rem;text-decoration:none;font-size:.875rem;border:1px solid #e2e8f0;">
+            Editar
+        </a>
         @endcan
         @can('archive', $lead)
         @if($lead->status === 'open')
-        <form action="{{ route('admin.prospecting.leads.archive', $lead) }}" method="POST">
+        <form action="{{ route('admin.prospecting.leads.archive', $lead) }}" method="POST" style="display:inline;">
             @csrf @method('PATCH')
-            <button type="submit" onclick="return confirm('Arquivar este lead?')" class="btn btn-secondary">Arquivar</button>
+            <button type="submit" onclick="return confirm('Arquivar este lead?')"
+                    style="background:#f1f5f9;color:#374151;padding:.5rem 1rem;border-radius:.5rem;border:1px solid #e2e8f0;cursor:pointer;font-size:.875rem;">
+                Arquivar
+            </button>
         </form>
         @endif
         @endcan
-        <a href="{{ route('admin.prospecting.leads.index') }}" class="btn btn-ghost">← Leads</a>
+        <a href="{{ route('admin.prospecting.leads.index') }}"
+           style="color:#6366f1;padding:.5rem .75rem;font-size:.875rem;text-decoration:none;">
+            ← Leads
+        </a>
     </div>
 </div>
 
-@if(session('success'))
-<div class="alert alert-success mb-4">{{ session('success') }}</div>
-@endif
-@if(session('error'))
-<div class="alert alert-error mb-4">{{ session('error') }}</div>
-@endif
-
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div style="display:grid;grid-template-columns:2fr 1fr;gap:1.5rem;">
 
     {{-- Coluna principal --}}
-    <div class="lg:col-span-2 space-y-6">
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
 
         {{-- Dados principais --}}
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Dados do Lead</h3>
-                <div class="flex items-center gap-2">
-                    <span class="badge {{ $lead->status === 'open' ? 'badge-blue' : ($lead->status === 'won' ? 'badge-green' : 'badge-slate') }}">
-                        {{ $lead->status_label }}
-                    </span>
-                </div>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+                <h3 style="font-size:.95rem;font-weight:600;color:#0f172a;margin:0;">Dados do Lead</h3>
+                <span style="font-size:.75rem;padding:.2rem .5rem;border-radius:999px;font-weight:600;
+                    {{ $lead->status === 'open' ? 'background:#eff6ff;color:#2563eb;' : ($lead->status === 'won' ? 'background:#f0fdf4;color:#16a34a;' : 'background:#f1f5f9;color:#64748b;') }}">
+                    {{ $lead->status_label }}
+                </span>
             </div>
-            <div class="card-body">
-                <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+            <div style="padding:1.25rem;">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;font-size:.875rem;">
                     @if($lead->email)
-                    <div><span class="text-slate-400 block text-xs">E-mail</span>{{ $lead->email }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">E-mail</span>{{ $lead->email }}</div>
                     @endif
                     @if($lead->whatsapp)
-                    <div><span class="text-slate-400 block text-xs">WhatsApp</span>{{ $lead->whatsapp }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">WhatsApp</span>{{ $lead->whatsapp }}</div>
                     @endif
                     @if($lead->phone)
-                    <div><span class="text-slate-400 block text-xs">Telefone</span>{{ $lead->phone }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Telefone</span>{{ $lead->phone }}</div>
                     @endif
                     @if($lead->website)
-                    <div><span class="text-slate-400 block text-xs">Website</span>
-                        <a href="{{ $lead->website }}" target="_blank" class="text-indigo-600 hover:underline">{{ $lead->website }}</a>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Website</span>
+                        <a href="{{ $lead->website }}" target="_blank" style="color:#6366f1;">{{ $lead->website }}</a>
                     </div>
                     @endif
                     @if($lead->instagram)
-                    <div><span class="text-slate-400 block text-xs">Instagram</span>{{ $lead->instagram }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Instagram</span>{{ $lead->instagram }}</div>
                     @endif
                     @if($lead->linkedin)
-                    <div><span class="text-slate-400 block text-xs">LinkedIn</span>{{ $lead->linkedin }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">LinkedIn</span>{{ $lead->linkedin }}</div>
                     @endif
                     @if($lead->city || $lead->state)
-                    <div><span class="text-slate-400 block text-xs">Cidade/Estado</span>{{ $lead->city }}{{ $lead->city && $lead->state ? '/' : '' }}{{ $lead->state }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Localização</span>{{ $lead->city }}{{ $lead->city && $lead->state ? '/' : '' }}{{ $lead->state }}</div>
                     @endif
                     @if($lead->source)
-                    <div><span class="text-slate-400 block text-xs">Origem</span>{{ $lead->source }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Origem</span>{{ $lead->source }}</div>
                     @endif
                     @if($lead->estimated_budget)
-                    <div><span class="text-slate-400 block text-xs">Orçamento estimado</span>{{ $lead->estimated_budget }}</div>
-                    @endif
-                    @if($lead->potential_value)
-                    <div><span class="text-slate-400 block text-xs">Valor potencial</span>R$ {{ number_format($lead->potential_value, 2, ',', '.') }}</div>
+                    <div><span style="display:block;font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Orçamento</span>{{ $lead->estimated_budget }}</div>
                     @endif
                 </div>
 
                 @if($lead->pain_points)
-                <div class="mt-4 pt-4 border-t border-slate-100">
-                    <span class="text-xs text-slate-400 uppercase tracking-wide">Dores identificadas</span>
-                    <p class="mt-1 text-sm text-slate-700">{{ $lead->pain_points }}</p>
+                <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #f1f5f9;">
+                    <span style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;">Dores identificadas</span>
+                    <p style="margin:.3rem 0 0;font-size:.875rem;color:#374151;line-height:1.5;">{{ $lead->pain_points }}</p>
                 </div>
                 @endif
-
                 @if($lead->opportunity_summary)
-                <div class="mt-3">
-                    <span class="text-xs text-slate-400 uppercase tracking-wide">Resumo da oportunidade</span>
-                    <p class="mt-1 text-sm text-slate-700">{{ $lead->opportunity_summary }}</p>
+                <div style="margin-top:.75rem;">
+                    <span style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;">Resumo da oportunidade</span>
+                    <p style="margin:.3rem 0 0;font-size:.875rem;color:#374151;line-height:1.5;">{{ $lead->opportunity_summary }}</p>
                 </div>
                 @endif
-
                 @if($lead->notes)
-                <div class="mt-3">
-                    <span class="text-xs text-slate-400 uppercase tracking-wide">Observações</span>
-                    <p class="mt-1 text-sm text-slate-700">{{ $lead->notes }}</p>
+                <div style="margin-top:.75rem;">
+                    <span style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;">Observações</span>
+                    <p style="margin:.3rem 0 0;font-size:.875rem;color:#374151;line-height:1.5;">{{ $lead->notes }}</p>
                 </div>
                 @endif
             </div>
         </div>
 
         {{-- Atividades --}}
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Atividades & Follow-ups</h3>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;">
+            <div style="padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+                <h3 style="font-size:.95rem;font-weight:600;color:#0f172a;margin:0;">Atividades & Follow-ups</h3>
             </div>
-            <div class="card-body">
+            <div style="padding:1.25rem;">
                 @can('create', \App\Models\ProspectActivity::class)
-                <form action="{{ route('admin.prospecting.activities.store', $lead) }}" method="POST" class="mb-4 p-4 bg-slate-50 rounded-xl">
+                <form action="{{ route('admin.prospecting.activities.store', $lead) }}" method="POST"
+                      style="background:#f8fafc;border-radius:.5rem;padding:1rem;margin-bottom:1rem;">
                     @csrf
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                        <select name="activity_type" class="input-field" required>
+                    <div style="display:grid;grid-template-columns:1fr 2fr 1fr;gap:.5rem;margin-bottom:.5rem;">
+                        <select name="activity_type" required
+                                style="border:1px solid #e2e8f0;border-radius:.375rem;padding:.4rem .6rem;font-size:.8rem;">
                             <option value="">Tipo...</option>
                             <option value="call">Ligação</option>
                             <option value="whatsapp">WhatsApp</option>
@@ -129,83 +133,92 @@
                             <option value="task">Tarefa</option>
                             <option value="other">Outro</option>
                         </select>
-                        <input type="text" name="title" placeholder="Título da atividade" class="input-field md:col-span-2" required>
-                        <input type="datetime-local" name="due_at" class="input-field">
+                        <input type="text" name="title" placeholder="Título da atividade" required
+                               style="border:1px solid #e2e8f0;border-radius:.375rem;padding:.4rem .6rem;font-size:.8rem;">
+                        <input type="datetime-local" name="due_at"
+                               style="border:1px solid #e2e8f0;border-radius:.375rem;padding:.4rem .6rem;font-size:.8rem;">
                     </div>
-                    <div class="flex justify-end">
-                        <button type="submit" class="btn btn-primary btn-sm">Adicionar Atividade</button>
+                    <div style="display:flex;justify-content:flex-end;">
+                        <button type="submit"
+                                style="background:#6366f1;color:#fff;padding:.4rem .75rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.8rem;">
+                            + Adicionar Atividade
+                        </button>
                     </div>
                 </form>
                 @endcan
 
-                <div class="space-y-2">
+                <div style="display:flex;flex-direction:column;gap:.5rem;">
                     @forelse($lead->activities as $activity)
-                    <div class="flex items-start gap-3 p-3 rounded-xl {{ $activity->status === 'done' ? 'bg-green-50' : ($activity->status === 'canceled' ? 'bg-slate-50 opacity-60' : 'bg-white border border-slate-200') }}">
-                        <div class="w-8 h-8 rounded-full {{ $activity->status === 'done' ? 'bg-green-100' : 'bg-slate-100' }} flex items-center justify-center shrink-0 text-xs font-semibold">
+                    <div style="display:flex;align-items:flex-start;gap:.75rem;padding:.75rem;border-radius:.5rem;
+                        {{ $activity->status === 'done' ? 'background:#f0fdf4;' : ($activity->status === 'canceled' ? 'background:#f8fafc;opacity:.6;' : 'background:#fff;border:1px solid #e2e8f0;') }}">
+                        <div style="width:2rem;height:2rem;{{ $activity->status === 'done' ? 'background:#dcfce7;' : 'background:#f1f5f9;' }}border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#64748b;flex-shrink:0;">
                             {{ strtoupper(substr($activity->type_label, 0, 2)) }}
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-sm font-medium text-slate-800">{{ $activity->title }}</div>
-                            <div class="text-xs text-slate-500 mt-0.5">
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:.875rem;font-weight:500;color:#1e293b;">{{ $activity->title }}</div>
+                            <div style="font-size:.75rem;color:#94a3b8;margin-top:.1rem;">
                                 {{ $activity->type_label }}
                                 @if($activity->due_at) · {{ $activity->due_at->format('d/m/Y H:i') }} @endif
                                 @if($activity->user) · {{ $activity->user->name }} @endif
                             </div>
                             @if($activity->outcome)
-                            <div class="text-xs text-slate-600 mt-1 italic">{{ $activity->outcome }}</div>
+                            <div style="font-size:.75rem;color:#475569;margin-top:.25rem;font-style:italic;">{{ $activity->outcome }}</div>
                             @endif
                         </div>
-                        <div class="flex items-center gap-1 shrink-0">
+                        <div style="display:flex;gap:.25rem;flex-shrink:0;">
                             @if($activity->status === 'pending')
                             <form action="{{ route('admin.prospecting.activities.complete', $activity) }}" method="POST">
                                 @csrf @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-ghost text-green-600" title="Concluir">✓</button>
+                                <button type="submit" title="Concluir"
+                                        style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:.25rem .5rem;border-radius:.375rem;cursor:pointer;font-size:.75rem;">✓</button>
                             </form>
                             <form action="{{ route('admin.prospecting.activities.cancel', $activity) }}" method="POST">
                                 @csrf @method('PATCH')
-                                <button type="submit" class="btn btn-sm btn-ghost text-red-400" title="Cancelar">✕</button>
+                                <button type="submit" title="Cancelar"
+                                        style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:.25rem .5rem;border-radius:.375rem;cursor:pointer;font-size:.75rem;">✕</button>
                             </form>
                             @elseif($activity->status === 'done')
-                            <span class="badge badge-green text-xs">Concluída</span>
+                            <span style="font-size:.7rem;background:#f0fdf4;color:#16a34a;padding:.2rem .5rem;border-radius:999px;font-weight:600;">Concluída</span>
                             @else
-                            <span class="badge badge-slate text-xs">Cancelada</span>
+                            <span style="font-size:.7rem;background:#f1f5f9;color:#64748b;padding:.2rem .5rem;border-radius:999px;font-weight:600;">Cancelada</span>
                             @endif
                         </div>
                     </div>
                     @empty
-                    <p class="text-sm text-slate-400 text-center py-4">Nenhuma atividade registrada</p>
+                    <p style="text-align:center;color:#94a3b8;font-size:.875rem;padding:1.5rem 0;">Nenhuma atividade registrada</p>
                     @endforelse
                 </div>
             </div>
         </div>
 
         {{-- Notas --}}
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Notas</h3>
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;">
+            <div style="padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+                <h3 style="font-size:.95rem;font-weight:600;color:#0f172a;margin:0;">Notas</h3>
             </div>
-            <div class="card-body">
-                <form action="{{ route('admin.prospecting.notes.store', $lead) }}" method="POST" class="mb-4">
+            <div style="padding:1.25rem;">
+                <form action="{{ route('admin.prospecting.notes.store', $lead) }}" method="POST" style="margin-bottom:1rem;">
                     @csrf
-                    <textarea name="note" rows="2" placeholder="Adicionar nota..." class="input-field w-full mb-2"></textarea>
-                    <div class="flex justify-end">
-                        <button type="submit" class="btn btn-primary btn-sm">Adicionar Nota</button>
+                    <textarea name="note" rows="2" placeholder="Adicionar nota..."
+                              style="border:1px solid #e2e8f0;border-radius:.5rem;padding:.5rem .75rem;font-size:.875rem;width:100%;box-sizing:border-box;resize:vertical;margin-bottom:.4rem;"></textarea>
+                    <div style="display:flex;justify-content:flex-end;">
+                        <button type="submit"
+                                style="background:#6366f1;color:#fff;padding:.4rem .75rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.8rem;">
+                            Adicionar Nota
+                        </button>
                     </div>
                 </form>
 
-                <div class="space-y-3">
+                <div style="display:flex;flex-direction:column;gap:.75rem;">
                     @forelse($lead->noteEntries as $note)
-                    <div class="p-3 bg-yellow-50 rounded-xl border border-yellow-100">
-                        <p class="text-sm text-slate-700">{{ $note->note }}</p>
-                        <div class="text-xs text-slate-400 mt-1">
+                    <div style="background:#fefce8;border:1px solid #fef08a;border-radius:.5rem;padding:.75rem 1rem;">
+                        <p style="font-size:.875rem;color:#374151;margin:0 0 .4rem;line-height:1.5;">{{ $note->note }}</p>
+                        <div style="font-size:.7rem;color:#94a3b8;">
                             {{ $note->user?->name ?? '—' }} · {{ $note->created_at->format('d/m/Y H:i') }}
-                            @if($note->visibility === 'internal')
-                            <span class="ml-1 text-xs text-slate-400">· Interna</span>
-                            @endif
                         </div>
                     </div>
                     @empty
-                    <p class="text-sm text-slate-400 text-center py-4">Nenhuma nota registrada</p>
+                    <p style="text-align:center;color:#94a3b8;font-size:.875rem;padding:1rem 0;">Nenhuma nota registrada</p>
                     @endforelse
                 </div>
             </div>
@@ -217,65 +230,68 @@
     </div>
 
     {{-- Coluna lateral --}}
-    <div class="space-y-6">
+    <div style="display:flex;flex-direction:column;gap:1.5rem;">
 
-        {{-- Status & Pipeline --}}
-        <div class="card">
-            <div class="card-header">
-                <h3 class="card-title">Pipeline & Status</h3>
+        {{-- Pipeline & Status --}}
+        <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;">
+            <div style="padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+                <h3 style="font-size:.95rem;font-weight:600;color:#0f172a;margin:0;">Pipeline & Status</h3>
             </div>
-            <div class="card-body space-y-3">
+            <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;">
                 <div>
-                    <span class="text-xs text-slate-400 uppercase tracking-wide">Etapa atual</span>
-                    <div class="mt-1 flex items-center gap-2">
-                        <span class="w-3 h-3 rounded-full" style="background-color: {{ $lead->stage?->color ?? '#64748b' }}"></span>
-                        <span class="text-sm font-semibold text-slate-800">{{ $lead->stage?->name ?? '—' }}</span>
+                    <span style="font-size:.7rem;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;display:block;margin-bottom:.3rem;">Etapa atual</span>
+                    <div style="display:flex;align-items:center;gap:.4rem;">
+                        <span style="width:10px;height:10px;border-radius:50%;background:{{ $lead->stage?->color ?? '#64748b' }};flex-shrink:0;"></span>
+                        <span style="font-size:.9rem;font-weight:600;color:#1e293b;">{{ $lead->stage?->name ?? '—' }}</span>
                     </div>
                 </div>
 
                 @can('moveStage', $lead)
                 <form action="{{ route('admin.prospecting.leads.move-stage', $lead) }}" method="POST">
                     @csrf @method('PATCH')
-                    <label class="form-label">Mover para etapa</label>
-                    <select name="prospect_stage_id" class="input-field w-full mb-2">
+                    <label style="font-size:.75rem;font-weight:500;color:#374151;display:block;margin-bottom:.3rem;">Mover para etapa</label>
+                    <select name="prospect_stage_id"
+                            style="border:1px solid #e2e8f0;border-radius:.5rem;padding:.4rem .6rem;font-size:.8rem;width:100%;margin-bottom:.5rem;">
                         <option value="">Selecionar...</option>
                         @foreach($stages as $stage)
-                        <option value="{{ $stage->id }}" {{ $stage->id === $lead->prospect_stage_id ? 'disabled' : '' }}>
-                            {{ $stage->name }}
-                        </option>
+                        <option value="{{ $stage->id }}" {{ $stage->id === $lead->prospect_stage_id ? 'disabled' : '' }}>{{ $stage->name }}</option>
                         @endforeach
                     </select>
-                    <button type="submit" class="btn btn-secondary btn-sm w-full">Mover Etapa</button>
+                    <button type="submit"
+                            style="width:100%;background:#f1f5f9;color:#374151;padding:.4rem;border-radius:.375rem;border:1px solid #e2e8f0;cursor:pointer;font-size:.8rem;">
+                        Mover Etapa
+                    </button>
                 </form>
                 @endcan
 
-                <div class="pt-2 border-t border-slate-100 space-y-2 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Interesse</span>
+                <div style="padding-top:.5rem;border-top:1px solid #f1f5f9;display:flex;flex-direction:column;gap:.5rem;font-size:.875rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#94a3b8;font-size:.8rem;">Interesse</span>
                         @if($lead->interest_level)
-                        <span class="badge {{ $lead->interest_level === 'hot' ? 'badge-red' : ($lead->interest_level === 'warm' ? 'badge-yellow' : 'badge-blue') }}">
+                        <span style="font-size:.75rem;padding:.15rem .4rem;border-radius:999px;font-weight:600;
+                            {{ $lead->interest_level === 'hot' ? 'background:#fef2f2;color:#dc2626;' : ($lead->interest_level === 'warm' ? 'background:#fefce8;color:#a16207;' : 'background:#eff6ff;color:#2563eb;') }}">
                             {{ $lead->interest_label }}
                         </span>
-                        @else <span class="text-slate-400">—</span> @endif
+                        @else <span style="color:#94a3b8;">—</span> @endif
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Fit Score</span>
-                        <span class="font-semibold text-indigo-600">{{ $lead->fit_score !== null ? $lead->fit_score . '/100' : '—' }}</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#94a3b8;font-size:.8rem;">Fit Score</span>
+                        <span style="font-weight:700;color:#6366f1;">{{ $lead->fit_score !== null ? $lead->fit_score . '/100' : '—' }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Responsável</span>
-                        <span>{{ $lead->owner?->name ?? '—' }}</span>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#94a3b8;font-size:.8rem;">Responsável</span>
+                        <span style="font-size:.8rem;color:#374151;">{{ $lead->owner?->name ?? '—' }}</span>
                     </div>
                     @if($lead->next_action)
                     <div>
-                        <span class="text-slate-400">Próxima ação</span>
-                        <p class="mt-0.5 text-slate-700">{{ $lead->next_action }}</p>
+                        <span style="color:#94a3b8;font-size:.8rem;">Próxima ação</span>
+                        <p style="margin:.2rem 0 0;font-size:.8rem;color:#374151;">{{ $lead->next_action }}</p>
                     </div>
                     @endif
                     @if($lead->next_follow_up_at)
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Follow-up</span>
-                        <span class="{{ $lead->isOverdue() ? 'text-red-500 font-semibold' : 'text-slate-600' }}">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#94a3b8;font-size:.8rem;">Follow-up</span>
+                        <span style="font-size:.8rem;{{ $lead->isOverdue() ? 'color:#dc2626;font-weight:700;' : 'color:#374151;' }}">
                             {{ $lead->next_follow_up_at->format('d/m/Y') }}
                         </span>
                     </div>
@@ -284,9 +300,10 @@
             </div>
         </div>
 
-        {{-- SDR IA --}}
+        {{-- SDR IA Panel --}}
         @include('admin.prospecting.partials.ai-panel', ['lead' => $lead, 'canGenerateAi' => $canGenerateAi])
 
     </div>
 </div>
-@endsection
+
+</x-layouts.app>

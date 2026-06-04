@@ -1,87 +1,92 @@
-@extends('components.layouts.app')
-@section('title', 'Pipeline de Prospecção')
+<x-layouts.app title="Pipeline de Prospecção">
 
-@section('content')
-<div class="page-header">
+@if(session('success'))
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('success') }}</div>
+@endif
+@if(session('error'))
+<div style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:.75rem 1rem;border-radius:.5rem;margin-bottom:1rem;">{{ session('error') }}</div>
+@endif
+
+{{-- Header --}}
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:.75rem;">
     <div>
-        <h1 class="page-title">Pipeline Kanban</h1>
-        <p class="page-subtitle">Visualização das etapas de prospecção</p>
+        <h1 style="font-size:1.5rem;font-weight:700;color:#0f172a;margin:0 0 .25rem;">Pipeline Kanban</h1>
+        <p style="color:#64748b;font-size:.9rem;margin:0;">Visualização das etapas de prospecção</p>
     </div>
-    <div class="flex gap-2">
+    <div style="display:flex;gap:.5rem;">
         @can('create', \App\Models\ProspectLead::class)
-        <a href="{{ route('admin.prospecting.leads.create') }}" class="btn btn-primary">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        <a href="{{ route('admin.prospecting.leads.create') }}"
+           style="background:#6366f1;color:#fff;padding:.5rem 1rem;border-radius:.5rem;text-decoration:none;font-size:.875rem;display:flex;align-items:center;gap:.4rem;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
             Novo Lead
         </a>
         @endcan
-        <a href="{{ route('admin.prospecting.leads.index') }}" class="btn btn-secondary">Ver Lista</a>
+        <a href="{{ route('admin.prospecting.leads.index') }}"
+           style="background:#f1f5f9;color:#374151;padding:.5rem 1rem;border-radius:.5rem;text-decoration:none;font-size:.875rem;border:1px solid #e2e8f0;">
+            Ver Lista
+        </a>
     </div>
 </div>
 
 @if(empty($kanban))
-<div class="card">
-    <div class="card-body text-center py-12">
-        <p class="text-slate-500 mb-4">Nenhum pipeline configurado.</p>
-        <p class="text-sm text-slate-400">Execute: <code class="bg-slate-100 px-2 py-0.5 rounded">php artisan prospecting:install-default-pipeline</code></p>
-    </div>
+<div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:3rem;text-align:center;">
+    <p style="color:#64748b;margin-bottom:.5rem;">Nenhum pipeline configurado.</p>
+    <p style="font-size:.875rem;color:#94a3b8;">Execute: <code style="background:#f1f5f9;padding:.1rem .4rem;border-radius:.25rem;">php artisan prospecting:install-default-pipeline</code></p>
 </div>
 @else
-<div class="overflow-x-auto pb-4">
-    <div class="flex gap-4" style="min-width: max-content;">
+<div style="overflow-x:auto;padding-bottom:1rem;">
+    <div style="display:flex;gap:1rem;min-width:max-content;">
         @foreach($kanban as $col)
         @php $stage = $col['stage']; $leads = $col['leads']; @endphp
-        <div class="w-64 shrink-0">
-            <div class="flex items-center gap-2 mb-3 px-1">
-                <div class="w-3 h-3 rounded-full" style="background-color: {{ $stage->color ?? '#64748b' }}"></div>
-                <span class="text-sm font-semibold text-slate-700">{{ $stage->name }}</span>
-                <span class="ml-auto text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{{ $col['count'] }}</span>
+        <div style="width:240px;flex-shrink:0;">
+            {{-- Column header --}}
+            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem;padding:0 .25rem;">
+                <div style="width:10px;height:10px;border-radius:50%;background:{{ $stage->color ?? '#64748b' }};flex-shrink:0;"></div>
+                <span style="font-size:.8rem;font-weight:600;color:#374151;flex:1;">{{ $stage->name }}</span>
+                <span style="font-size:.7rem;background:#f1f5f9;color:#64748b;padding:.1rem .4rem;border-radius:999px;font-weight:600;">{{ $col['count'] }}</span>
             </div>
-            <div class="space-y-2">
+
+            {{-- Cards --}}
+            <div style="display:flex;flex-direction:column;gap:.5rem;">
                 @forelse($leads as $lead)
-                <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-sm hover:shadow-md transition-shadow">
-                    <div class="font-semibold text-sm text-slate-800 truncate">{{ $lead->name }}</div>
+                <div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;padding:.75rem;box-shadow:0 1px 3px rgba(0,0,0,.04);">
+                    <div style="font-weight:600;font-size:.875rem;color:#1e293b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $lead->name }}</div>
                     @if($lead->company_name)
-                    <div class="text-xs text-slate-500 mt-0.5 truncate">{{ $lead->company_name }}</div>
+                    <div style="font-size:.75rem;color:#64748b;margin-top:.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $lead->company_name }}</div>
                     @endif
                     @if($lead->segment)
-                    <div class="text-xs text-slate-400 truncate">{{ $lead->segment }}</div>
+                    <div style="font-size:.7rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $lead->segment }}</div>
                     @endif
 
-                    <div class="flex items-center gap-2 mt-2">
+                    <div style="display:flex;gap:.3rem;margin-top:.5rem;flex-wrap:wrap;">
                         @if($lead->fit_score !== null)
-                        <span class="text-xs bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full font-semibold">{{ $lead->fit_score }}%</span>
+                        <span style="font-size:.7rem;background:#eef2ff;color:#4f46e5;padding:.15rem .4rem;border-radius:999px;font-weight:600;">{{ $lead->fit_score }}%</span>
                         @endif
                         @if($lead->interest_level)
-                        <span class="text-xs px-2 py-0.5 rounded-full
-                            {{ $lead->interest_level === 'hot' ? 'bg-red-50 text-red-600' : ($lead->interest_level === 'warm' ? 'bg-yellow-50 text-yellow-600' : 'bg-blue-50 text-blue-600') }}">
+                        <span style="font-size:.7rem;padding:.15rem .4rem;border-radius:999px;font-weight:600;
+                            {{ $lead->interest_level === 'hot' ? 'background:#fef2f2;color:#dc2626;' : ($lead->interest_level === 'warm' ? 'background:#fefce8;color:#a16207;' : 'background:#eff6ff;color:#2563eb;') }}">
                             {{ $lead->interest_label }}
                         </span>
                         @endif
                     </div>
 
                     @if($lead->next_follow_up_at)
-                    <div class="text-xs mt-2 {{ $lead->isOverdue() ? 'text-red-500' : 'text-slate-400' }}">
-                        <svg class="w-3 h-3 inline mr-0.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                        {{ $lead->next_follow_up_at->format('d/m') }}
-                        @if($lead->isOverdue()) (atrasado) @endif
+                    <div style="font-size:.7rem;margin-top:.4rem;{{ $lead->isOverdue() ? 'color:#dc2626;font-weight:600;' : 'color:#94a3b8;' }}">
+                        📅 {{ $lead->next_follow_up_at->format('d/m') }}{{ $lead->isOverdue() ? ' (atrasado)' : '' }}
                     </div>
                     @endif
 
-                    <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
-                        @if($lead->owner)
-                        <span class="text-xs text-slate-400 truncate">{{ $lead->owner->name }}</span>
-                        @else
-                        <span></span>
-                        @endif
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:.6rem;padding-top:.5rem;border-top:1px solid #f1f5f9;">
+                        <span style="font-size:.7rem;color:#94a3b8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;">{{ $lead->owner?->name ?? '' }}</span>
                         <a href="{{ route('admin.prospecting.leads.show', $lead) }}"
-                           class="text-xs text-indigo-600 hover:text-indigo-800 font-medium shrink-0">Ver →</a>
+                           style="font-size:.75rem;color:#6366f1;text-decoration:none;font-weight:500;flex-shrink:0;">Ver →</a>
                     </div>
 
                     @can('moveStage', $lead)
-                    <form action="{{ route('admin.prospecting.leads.move-stage', $lead) }}" method="POST" class="mt-2">
+                    <form action="{{ route('admin.prospecting.leads.move-stage', $lead) }}" method="POST" style="margin-top:.5rem;">
                         @csrf @method('PATCH')
                         <select name="prospect_stage_id" onchange="this.form.submit()"
-                                class="w-full text-xs border border-slate-200 rounded-lg px-2 py-1 bg-slate-50 text-slate-600 focus:outline-none">
+                                style="width:100%;font-size:.7rem;border:1px solid #e2e8f0;border-radius:.375rem;padding:.25rem .4rem;background:#f8fafc;color:#475569;">
                             <option value="">Mover para...</option>
                             @foreach($col['stage']->pipeline->stages as $s)
                             <option value="{{ $s->id }}" {{ $s->id === $lead->prospect_stage_id ? 'disabled' : '' }}>{{ $s->name }}</option>
@@ -91,8 +96,8 @@
                     @endcan
                 </div>
                 @empty
-                <div class="bg-slate-50 rounded-xl border border-dashed border-slate-200 p-4 text-center text-xs text-slate-400">
-                    Sem leads nesta etapa
+                <div style="background:#f8fafc;border:1px dashed #e2e8f0;border-radius:.75rem;padding:1rem;text-align:center;font-size:.75rem;color:#94a3b8;">
+                    Sem leads
                 </div>
                 @endforelse
             </div>
@@ -101,4 +106,5 @@
     </div>
 </div>
 @endif
-@endsection
+
+</x-layouts.app>

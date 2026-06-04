@@ -1,84 +1,90 @@
-<div class="card">
-    <div class="card-header">
-        <h3 class="card-title">Mensagens IA</h3>
-        <span class="text-xs text-slate-400">{{ $lead->messageSuggestions->count() }} gerada(s)</span>
+<div style="background:#fff;border:1px solid #e2e8f0;border-radius:.75rem;overflow:hidden;">
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:1rem 1.25rem;border-bottom:1px solid #f1f5f9;">
+        <h3 style="font-size:.95rem;font-weight:600;color:#0f172a;margin:0;">Mensagens IA</h3>
+        <span style="font-size:.75rem;color:#94a3b8;">{{ $lead->messageSuggestions->count() }} gerada(s)</span>
     </div>
-    <div class="card-body">
+    <div style="padding:1.25rem;display:flex;flex-direction:column;gap:.75rem;">
         @forelse($lead->messageSuggestions as $msg)
-        <div class="p-4 border border-slate-200 rounded-xl mb-3 {{ $msg->status === 'approved' ? 'border-green-200 bg-green-50' : ($msg->status === 'rejected' ? 'border-red-100 bg-red-50 opacity-70' : 'bg-white') }}">
-            <div class="flex items-center justify-between mb-2">
-                <div class="flex items-center gap-2">
-                    <span class="text-xs font-semibold text-slate-600">{{ $msg->channel_label }}</span>
-                    <span class="text-xs text-slate-400">·</span>
-                    <span class="text-xs text-slate-500">{{ $msg->objective_label }}</span>
+        <div style="border:1px solid #e2e8f0;border-radius:.75rem;padding:1rem;
+            {{ $msg->status === 'approved' ? 'border-color:#bbf7d0;background:#f0fdf4;' : ($msg->status === 'rejected' ? 'background:#fef2f2;border-color:#fecaca;opacity:.8;' : 'background:#fff;') }}">
+
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
+                <div style="display:flex;align-items:center;gap:.4rem;">
+                    <span style="font-size:.75rem;font-weight:600;color:#374151;">{{ $msg->channel_label }}</span>
+                    <span style="font-size:.7rem;color:#94a3b8;">·</span>
+                    <span style="font-size:.75rem;color:#64748b;">{{ $msg->objective_label }}</span>
                 </div>
-                <span class="badge text-xs {{ $msg->status === 'approved' ? 'badge-green' : ($msg->status === 'rejected' ? 'badge-red' : ($msg->status === 'used' ? 'badge-slate' : 'badge-yellow')) }}">
+                <span style="font-size:.7rem;padding:.15rem .4rem;border-radius:999px;font-weight:600;
+                    {{ $msg->status === 'approved' ? 'background:#dcfce7;color:#16a34a;' : ($msg->status === 'rejected' ? 'background:#fef2f2;color:#dc2626;' : ($msg->status === 'used' ? 'background:#f1f5f9;color:#64748b;' : 'background:#fefce8;color:#a16207;')) }}">
                     {{ $msg->status_label }}
                 </span>
             </div>
 
-            <div class="text-sm text-slate-800 bg-white rounded-lg p-3 border border-slate-100 font-mono leading-relaxed" id="msg-{{ $msg->id }}">{{ $msg->message }}</div>
+            <div id="msg-{{ $msg->id }}"
+                 style="font-size:.875rem;color:#1e293b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:.375rem;padding:.75rem;font-family:monospace;line-height:1.6;white-space:pre-wrap;word-break:break-word;">{{ $msg->message }}</div>
 
-            @if($msg->metadata && ($msg->metadata['tone'] || $msg->metadata['notes']))
-            <div class="text-xs text-slate-400 mt-1">
-                @if($msg->metadata['tone']) Tom: {{ $msg->metadata['tone'] }} @endif
-                @if($msg->metadata['notes']) · {{ $msg->metadata['notes'] }} @endif
-            </div>
+            @if($msg->metadata && !empty($msg->metadata['tone']))
+            <div style="font-size:.7rem;color:#94a3b8;margin-top:.3rem;">Tom: {{ $msg->metadata['tone'] }}</div>
             @endif
 
-            <div class="flex items-center gap-2 mt-3 flex-wrap">
+            <div style="display:flex;align-items:center;gap:.4rem;margin-top:.75rem;flex-wrap:wrap;">
+
                 {{-- Copiar --}}
-                <button onclick="copyMessage({{ $msg->id }})" class="btn btn-ghost btn-sm text-slate-600">
-                    <svg class="w-3.5 h-3.5 inline mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    Copiar
+                <button onclick="copyMsg({{ $msg->id }})"
+                        style="background:#f1f5f9;color:#374151;border:1px solid #e2e8f0;padding:.3rem .6rem;border-radius:.375rem;cursor:pointer;font-size:.75rem;display:flex;align-items:center;gap:.3rem;">
+                    📋 Copiar
                 </button>
 
                 @if(in_array($msg->status, ['draft', 'rejected']))
                 @can('approveMessage', $msg)
-                <form action="{{ route('admin.prospecting.messages.approve', $msg) }}" method="POST">
+                <form action="{{ route('admin.prospecting.messages.approve', $msg) }}" method="POST" style="display:inline;">
                     @csrf @method('PATCH')
-                    <button type="submit" class="btn btn-sm btn-ghost text-green-600">✓ Aprovar</button>
+                    <button type="submit"
+                            style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:.3rem .6rem;border-radius:.375rem;cursor:pointer;font-size:.75rem;">✓ Aprovar</button>
                 </form>
                 @endcan
                 @endif
 
                 @if(in_array($msg->status, ['draft', 'approved']))
                 @can('approveMessage', $msg)
-                <form action="{{ route('admin.prospecting.messages.reject', $msg) }}" method="POST">
+                <form action="{{ route('admin.prospecting.messages.reject', $msg) }}" method="POST" style="display:inline;">
                     @csrf @method('PATCH')
-                    <button type="submit" class="btn btn-sm btn-ghost text-red-500">✕ Rejeitar</button>
+                    <button type="submit"
+                            style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:.3rem .6rem;border-radius:.375rem;cursor:pointer;font-size:.75rem;">✕ Rejeitar</button>
                 </form>
                 @endcan
                 @endif
 
                 @if($msg->status === 'approved')
-                <form action="{{ route('admin.prospecting.messages.mark-used', $msg) }}" method="POST">
+                <form action="{{ route('admin.prospecting.messages.mark-used', $msg) }}" method="POST" style="display:inline;">
                     @csrf @method('PATCH')
-                    <button type="submit" class="btn btn-sm btn-ghost text-blue-600">Marcar como usada</button>
+                    <button type="submit"
+                            style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;padding:.3rem .6rem;border-radius:.375rem;cursor:pointer;font-size:.75rem;">Marcar como usada</button>
                 </form>
                 @endif
 
-                <span class="text-xs text-slate-400 ml-auto">{{ $msg->created_at->format('d/m H:i') }}</span>
+                <span style="font-size:.7rem;color:#94a3b8;margin-left:auto;">{{ $msg->created_at->format('d/m H:i') }}</span>
             </div>
         </div>
         @empty
-        <p class="text-sm text-slate-400 text-center py-6">Nenhuma mensagem IA gerada ainda.<br>
-            <span class="text-xs">Use o painel SDR IA para gerar mensagens personalizadas.</span>
-        </p>
+        <div style="text-align:center;padding:2rem 0;color:#94a3b8;font-size:.875rem;">
+            Nenhuma mensagem gerada ainda.<br>
+            <span style="font-size:.8rem;">Use o painel SDR IA para gerar mensagens personalizadas.</span>
+        </div>
         @endforelse
     </div>
 </div>
 
 <script>
-function copyMessage(id) {
-    const el = document.getElementById('msg-' + id);
+function copyMsg(id) {
+    var el = document.getElementById('msg-' + id);
     if (!el) return;
-    navigator.clipboard.writeText(el.innerText).then(() => {
-        const btn = event.target.closest('button');
-        const orig = btn.innerHTML;
+    navigator.clipboard.writeText(el.innerText).then(function() {
+        var btn = event.target.closest('button');
+        var orig = btn.innerHTML;
         btn.innerHTML = '✓ Copiado!';
-        btn.classList.add('text-green-600');
-        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('text-green-600'); }, 2000);
+        btn.style.color = '#16a34a';
+        setTimeout(function() { btn.innerHTML = orig; btn.style.color = ''; }, 2000);
     });
 }
 </script>
