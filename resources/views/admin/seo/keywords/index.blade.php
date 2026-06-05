@@ -35,6 +35,7 @@
     <table style="width:100%;border-collapse:collapse;">
         <thead>
             <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                <th style="padding:.75rem 1rem;width:40px;"><input type="checkbox" id="bulk-select-all"></th>
                 <th style="padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Palavra-chave</th>
                 <th style="padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Cliente</th>
                 <th style="padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;">Intenção</th>
@@ -46,7 +47,8 @@
         </thead>
         <tbody>
             @forelse($keywords as $kw)
-            <tr style="border-bottom:1px solid #f1f5f9;">
+            <tr data-bulk-row style="border-bottom:1px solid #f1f5f9;cursor:pointer;">
+                <td style="padding:.75rem 1rem;"><input type="checkbox" class="bulk-cb" value="{{ $kw->id }}"></td>
                 <td style="padding:.75rem 1rem;font-size:.875rem;font-weight:500;color:#1e293b;">{{ $kw->keyword }}</td>
                 <td style="padding:.75rem 1rem;font-size:.875rem;color:#64748b;">{{ $kw->client?->name ?? '—' }}</td>
                 <td style="padding:.75rem 1rem;font-size:.875rem;color:#64748b;">{{ $kw->intent_label }}</td>
@@ -65,7 +67,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="7" style="padding:2rem;text-align:center;font-size:.875rem;color:#94a3b8;">Nenhuma palavra-chave cadastrada.</td>
+                <td colspan="8" style="padding:2rem;text-align:center;font-size:.875rem;color:#94a3b8;">Nenhuma palavra-chave cadastrada.</td>
             </tr>
             @endforelse
         </tbody>
@@ -74,5 +76,7 @@
     <div style="padding:.75rem 1rem;border-top:1px solid #f1f5f9;">{{ $keywords->withQueryString()->links() }}</div>
     @endif
 </div>
+
+<x-bulk-actions :action="route('admin.seo.keywords.bulk-delete')" />
 
 </x-layouts.app>

@@ -11,9 +11,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Traits\HasBulkDestroy;
 
 class BlogPostController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = BlogPost::class;
+    protected string $bulkDestroyScope  = 'company_id';
+
     public function __construct(private BlogPipelineService $pipeline) {}
 
     public function index(): View

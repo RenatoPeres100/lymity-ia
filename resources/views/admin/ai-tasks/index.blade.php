@@ -11,16 +11,19 @@
 @if(session('success'))
 <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#166534;font-size:.875rem;">✓ {{ session('success') }}</div>
 @endif
+@if(session('error'))
+<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#991b1b;font-size:.875rem;">✗ {{ session('error') }}</div>
+@endif
 
 <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
     <form method="GET" style="display:flex;gap:10px;align-items:center;">
-        <select name="status" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;font-size:.8rem;">
+        <select name="status" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;font-size:.8rem;">
             <option value="">Todos os status</option>
             @foreach(['queued'=>'Na fila','running'=>'Executando','waiting_approval'=>'Aguardando aprovação','completed'=>'Concluído','failed'=>'Falhou','canceled'=>'Cancelado','rejected'=>'Rejeitado'] as $val=>$label)
             <option value="{{ $val }}" {{ request('status')===$val?'selected':'' }}>{{ $label }}</option>
             @endforeach
         </select>
-        <select name="employee" style="background:#ffffff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;font-size:.8rem;">
+        <select name="employee" style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 12px;color:#334155;font-size:.8rem;">
             <option value="">Todos os funcionários</option>
             @foreach($employees as $emp)
             <option value="{{ $emp->id }}" {{ request('employee')==$emp->id?'selected':'' }}>{{ $emp->name }}</option>
@@ -36,7 +39,10 @@
 <div class="table-wrapper">
     <table style="width:100%;border-collapse:collapse;">
         <thead>
-            <tr style="border-bottom:1px solid #e2e8f0;">
+            <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                <th style="padding:12px 16px;width:40px;">
+                    <input type="checkbox" id="bulk-select-all" title="Selecionar todos">
+                </th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Tarefa</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Funcionário</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Status</th>
@@ -47,7 +53,10 @@
         </thead>
         <tbody>
             @forelse($tasks as $task)
-            <tr style="border-bottom:1px solid #f1f5f9;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <tr data-bulk-row style="border-bottom:1px solid #f1f5f9;transition:background .15s;cursor:pointer;">
+                <td style="padding:12px 16px;">
+                    <input type="checkbox" class="bulk-cb" value="{{ $task->id }}">
+                </td>
                 <td style="padding:12px 16px;">
                     <div style="font-size:.875rem;font-weight:600;color:#334155;">{{ $task->title }}</div>
                     @if($task->task_type)<div style="font-size:.72rem;color:#475569;">{{ $task->task_type }}</div>@endif
@@ -61,11 +70,17 @@
                 </td>
                 <td style="padding:12px 16px;font-size:.78rem;color:#475569;">{{ $task->created_at->format('d/m/Y H:i') }}</td>
                 <td style="padding:12px 16px;text-align:right;">
-                    <a href="{{ route('admin.ai-tasks.show', $task) }}" style="color:#6b8fff;font-size:.8rem;text-decoration:none;font-weight:600;">Ver</a>
+                    <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;">
+                        <a href="{{ route('admin.ai-tasks.show', $task) }}" style="color:#6b8fff;font-size:.78rem;font-weight:600;text-decoration:none;">Ver</a>
+                        <form action="{{ route('admin.ai-tasks.destroy', $task) }}" method="POST" style="display:inline;" onsubmit="return confirm('Excluir esta tarefa?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" style="color:#f87171;font-size:.78rem;font-weight:600;background:none;border:none;cursor:pointer;padding:0;">Excluir</button>
+                        </form>
+                    </div>
                 </td>
             </tr>
             @empty
-            <tr><td colspan="6" style="padding:48px;text-align:center;color:#475569;font-size:.875rem;">Nenhuma tarefa encontrada.</td></tr>
+            <tr><td colspan="7" style="padding:48px;text-align:center;color:#475569;font-size:.875rem;">Nenhuma tarefa encontrada.</td></tr>
             @endforelse
         </tbody>
     </table>
@@ -74,5 +89,7 @@
 @if($tasks->hasPages())
 <div style="margin-top:20px;">{{ $tasks->links() }}</div>
 @endif
+
+<x-bulk-actions :action="route('admin.ai-tasks.bulk-delete')" />
 
 </x-layouts.app>

@@ -58,6 +58,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/30">
+                            <th class="px-4 py-3 w-10"><input type="checkbox" id="bulk-select-all" class="bulk-cb-all"></th>
                             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">Tarefa</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">Funcionário</th>
                             <th class="px-4 py-3 text-left font-medium text-gray-600 dark:text-gray-400">Frequência</th>
@@ -68,7 +69,8 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($tasks as $task)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
+                            <tr data-bulk-row class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition cursor-pointer">
+                                <td class="px-4 py-3"><input type="checkbox" class="bulk-cb" value="{{ $task->id }}"></td>
                                 <td class="px-4 py-3">
                                     <div class="font-medium text-gray-900 dark:text-white">
                                         <a href="{{ route('admin.agent-tasks.show', $task) }}" class="hover:text-indigo-600">{{ $task->title }}</a>
@@ -116,6 +118,10 @@
                                             </form>
                                         @endif
                                         <a href="{{ route('admin.agent-tasks.edit', $task) }}" class="text-xs text-gray-500 hover:underline">Editar</a>
+                                        <form method="POST" action="{{ route('admin.agent-tasks.destroy', $task) }}" class="inline" onsubmit="return confirm('Excluir esta tarefa?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs text-red-500 hover:underline">Excluir</button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -126,5 +132,7 @@
             <div class="mt-4">{{ $tasks->links() }}</div>
         @endif
     </div>
+
+<x-bulk-actions :action="route('admin.agent-tasks.bulk-delete')" />
 
 </x-layouts.app>

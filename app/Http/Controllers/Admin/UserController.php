@@ -14,9 +14,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Traits\HasBulkDestroy;
 
 class UserController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = User::class;
+
     public function __construct(
         private UserManagementService $svc,
         private DashboardStatsService $dashStats,

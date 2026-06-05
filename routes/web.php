@@ -153,6 +153,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::patch('/leads/{lead}/move-stage', [ProspectingLeadController::class, 'moveStage'])->name('admin.prospecting.leads.move-stage');
             Route::patch('/leads/{lead}/archive',    [ProspectingLeadController::class, 'archive'])->name('admin.prospecting.leads.archive');
             Route::delete('/leads/{lead}',           [ProspectingLeadController::class, 'destroy'])->name('admin.prospecting.leads.destroy');
+            Route::post('/leads/bulk-delete',        [ProspectingLeadController::class, 'bulkDestroy'])->name('admin.prospecting.leads.bulk-delete');
 
             // Activities
             Route::post('/leads/{lead}/activities',          [ProspectingActivityController::class, 'store'])->name('admin.prospecting.activities.store');
@@ -219,6 +220,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/{agentRoutine}/run-now',        [App\Http\Controllers\Admin\AgentRoutineController::class, 'runNow'])->name('admin.agents.routines.run-now');
             Route::get('/{agentRoutine}/runs',            [App\Http\Controllers\Admin\AgentRoutineController::class, 'runs'])->name('admin.agents.routines.runs');
             Route::delete('/{agentRoutine}',              [App\Http\Controllers\Admin\AgentRoutineController::class, 'destroy'])->name('admin.agents.routines.destroy');
+            Route::post('/bulk-delete',                   [App\Http\Controllers\Admin\AgentRoutineController::class, 'bulkDestroy'])->name('admin.agents.routines.bulk-delete');
         });
 
         // Real Phase 3 — Instagram / Meta Connection
@@ -257,6 +259,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/posts/{blogPost}/archive',         [App\Http\Controllers\Admin\BlogPublicationController::class, 'archive'])->name('admin.blog.posts.archive');
             Route::get('/posts/{blogPost}/logs',             [App\Http\Controllers\Admin\BlogPublicationController::class, 'logs'])->name('admin.blog.posts.logs');
             Route::delete('/posts/{blogPost}',               [App\Http\Controllers\Admin\BlogPostController::class, 'destroy'])->name('admin.blog.posts.destroy');
+            Route::post('/posts/bulk-delete',                [App\Http\Controllers\Admin\BlogPostController::class, 'bulkDestroy'])->name('admin.blog.posts.bulk-delete');
 
             // === REAL PHASE — BLOG AUTOMATION (Gemini Text Only) ===
             // Automation dashboard
@@ -311,6 +314,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/users/{user}/deactivate',           [UserController::class,           'deactivate'])->name('admin.users.deactivate');
         Route::post('/users/{user}/block',                [UserController::class,           'block'])->name('admin.users.block');
         Route::delete('/users/{user}',                    [UserController::class,           'destroy'])->name('admin.users.destroy');
+        Route::post('/users/bulk-delete',                 [UserController::class,           'bulkDestroy'])->name('admin.users.bulk-delete');
         Route::get('/users/{user}/permissions',           [UserPermissionController::class, 'edit'])->name('admin.users.permissions.edit');
         Route::post('/users/{user}/permissions',          [UserPermissionController::class, 'update'])->name('admin.users.permissions.update');
         Route::post('/users/{user}/permissions/reset',    [UserPermissionController::class, 'reset'])->name('admin.users.permissions.reset');
@@ -331,6 +335,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::patch('/clients/{client}/activate',     [ClientController::class, 'activate'])->name('admin.clients.activate');
         Route::patch('/clients/{client}/archive',      [ClientController::class, 'archive'])->name('admin.clients.archive');
         Route::delete('/clients/{client}',             [ClientController::class, 'destroy'])->name('admin.clients.destroy');
+        Route::post('/clients/bulk-delete',            [ClientController::class, 'bulkDestroy'])->name('admin.clients.bulk-delete');
         // Backwards compat alias
         Route::get('/clients-list',                    [ClientController::class, 'index'])->name('admin.clients');
         Route::get('/settings', [SettingController::class,'index'])
@@ -344,6 +349,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/blog-posts/{blogPost}/edit',  [BlogPostController::class, 'edit'])->name('admin.blog-posts.edit');
         Route::put('/blog-posts/{blogPost}',       [BlogPostController::class, 'update'])->name('admin.blog-posts.update');
         Route::delete('/blog-posts/{blogPost}',    [BlogPostController::class, 'destroy'])->name('admin.blog-posts.destroy');
+        Route::post('/blog-posts/bulk-delete',     [BlogPostController::class, 'bulkDestroy'])->name('admin.blog-posts.bulk-delete');
 
         // Blog Categories
         Route::get('/blog-categories',                       [BlogCategoryController::class, 'index'])->name('admin.blog-categories.index');
@@ -387,6 +393,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/ai-employees/{aiEmployee}/edit',          [AiEmployeeController::class, 'edit'])->name('admin.ai-employees.edit');
         Route::put('/ai-employees/{aiEmployee}',               [AiEmployeeController::class, 'update'])->name('admin.ai-employees.update');
         Route::delete('/ai-employees/{aiEmployee}',            [AiEmployeeController::class, 'destroy'])->name('admin.ai-employees.destroy');
+        Route::post('/ai-employees/bulk-delete',               [AiEmployeeController::class, 'bulkDestroy'])->name('admin.ai-employees.bulk-delete');
         Route::post('/ai-employees/{aiEmployee}/pause',        [AiEmployeeController::class, 'pause'])->name('admin.ai-employees.pause');
         Route::post('/ai-employees/{aiEmployee}/activate',     [AiEmployeeController::class, 'activate'])->name('admin.ai-employees.activate');
         Route::post('/ai-employees/{aiEmployee}/disable',      [AiEmployeeController::class, 'disable'])->name('admin.ai-employees.disable');
@@ -401,6 +408,8 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/ai-tasks/{aiTask}/reject',         [AiTaskController::class, 'reject'])->name('admin.ai-tasks.reject');
         Route::post('/ai-tasks/{aiTask}/cancel',         [AiTaskController::class, 'cancel'])->name('admin.ai-tasks.cancel');
         Route::post('/ai-tasks/{aiTask}/feedback',       [AiTaskController::class, 'storeFeedback'])->name('admin.ai-tasks.feedback');
+        Route::delete('/ai-tasks/{aiTask}',              [AiTaskController::class, 'destroy'])->name('admin.ai-tasks.destroy');
+        Route::post('/ai-tasks/bulk-delete',             [AiTaskController::class, 'bulkDestroy'])->name('admin.ai-tasks.bulk-delete');
 
         // AI Logs
         Route::get('/ai-logs', [AiTaskLogController::class, 'index'])->name('admin.ai-logs.index');
@@ -438,6 +447,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/social/posts/{post}/edit',                [AdminSocialPostController::class, 'edit'])->name('admin.social.posts.edit');
         Route::patch('/social/posts/{post}',                   [AdminSocialPostController::class, 'update'])->name('admin.social.posts.update');
         Route::delete('/social/posts/{post}',                  [AdminSocialPostController::class, 'destroy'])->name('admin.social.posts.destroy');
+        Route::post('/social/posts/bulk-delete',               [AdminSocialPostController::class, 'bulkDestroy'])->name('admin.social.posts.bulk-delete');
         Route::post('/social/posts/{post}/send-approval',      [AdminSocialPostController::class, 'sendToApproval'])->name('admin.social.posts.send-approval');
         Route::post('/social/posts/{post}/approve',            [AdminSocialPostController::class, 'approve'])->name('admin.social.posts.approve');
         Route::post('/social/posts/{post}/reject',             [AdminSocialPostController::class, 'reject'])->name('admin.social.posts.reject');
@@ -502,6 +512,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/seo/keywords/{seoKeyword}/edit',               [SeoKeywordController::class, 'edit'])->name('admin.seo.keywords.edit');
         Route::put('/seo/keywords/{seoKeyword}',                    [SeoKeywordController::class, 'update'])->name('admin.seo.keywords.update');
         Route::delete('/seo/keywords/{seoKeyword}',                 [SeoKeywordController::class, 'destroy'])->name('admin.seo.keywords.destroy');
+        Route::post('/seo/keywords/bulk-delete',                    [SeoKeywordController::class, 'bulkDestroy'])->name('admin.seo.keywords.bulk-delete');
 
         // Clusters
         Route::get('/seo/clusters',                                 [SeoClusterController::class, 'index'])->name('admin.seo.clusters.index');
@@ -510,6 +521,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/seo/clusters/{seoCluster}/edit',               [SeoClusterController::class, 'edit'])->name('admin.seo.clusters.edit');
         Route::put('/seo/clusters/{seoCluster}',                    [SeoClusterController::class, 'update'])->name('admin.seo.clusters.update');
         Route::delete('/seo/clusters/{seoCluster}',                 [SeoClusterController::class, 'destroy'])->name('admin.seo.clusters.destroy');
+        Route::post('/seo/clusters/bulk-delete',                    [SeoClusterController::class, 'bulkDestroy'])->name('admin.seo.clusters.bulk-delete');
 
         // Content Plans
         Route::get('/seo/content-plans',                            [SeoContentPlanController::class, 'index'])->name('admin.seo.content-plans.index');
@@ -669,6 +681,8 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::patch('/{agentTask}/pause',                [\App\Http\Controllers\Admin\AgentTaskController::class, 'pause'])->name('admin.agent-tasks.pause');
             Route::patch('/{agentTask}/activate',             [\App\Http\Controllers\Admin\AgentTaskController::class, 'activate'])->name('admin.agent-tasks.activate');
             Route::patch('/{agentTask}/archive',              [\App\Http\Controllers\Admin\AgentTaskController::class, 'archive'])->name('admin.agent-tasks.archive');
+            Route::delete('/{agentTask}',                     [\App\Http\Controllers\Admin\AgentTaskController::class, 'destroy'])->name('admin.agent-tasks.destroy');
+            Route::post('/bulk-delete',                       [\App\Http\Controllers\Admin\AgentTaskController::class, 'bulkDestroy'])->name('admin.agent-tasks.bulk-delete');
             Route::get('/{agentTask}/runs',                   [\App\Http\Controllers\Admin\AgentTaskController::class, 'runs'])->name('admin.agent-tasks.runs');
             Route::get('/{agentTask}/packages',               [\App\Http\Controllers\Admin\AgentTaskController::class, 'packages'])->name('admin.agent-tasks.packages');
         });
@@ -683,6 +697,7 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::patch('/{aiMemory}/deactivate',            [AiMemoryController::class, 'deactivate'])->name('admin.ai-memory.deactivate');
             Route::patch('/{aiMemory}/activate',              [AiMemoryController::class, 'activate'])->name('admin.ai-memory.activate');
             Route::delete('/{aiMemory}',                      [AiMemoryController::class, 'destroy'])->name('admin.ai-memory.destroy');
+            Route::post('/bulk-delete',                       [AiMemoryController::class, 'bulkDestroy'])->name('admin.ai-memory.bulk-delete');
         });
 
         // ─── AI Image Studio ──────────────────────────────────────────────

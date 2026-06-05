@@ -15,7 +15,8 @@
 <div class="table-wrapper">
     <table style="width:100%;border-collapse:collapse;">
         <thead>
-            <tr style="border-bottom:1px solid #e2e8f0;">
+            <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                <th style="padding:12px 16px;width:40px;"><input type="checkbox" id="bulk-select-all"></th>
                 <th style="text-align:left;padding:12px 16px;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Título</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Categoria</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Status</th>
@@ -25,7 +26,8 @@
         </thead>
         <tbody>
             @forelse($posts as $post)
-            <tr style="border-bottom:1px solid #f1f5f9;transition:background .15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <tr data-bulk-row style="border-bottom:1px solid #f1f5f9;transition:background .15s;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                <td style="padding:14px 16px;"><input type="checkbox" class="bulk-cb" value="{{ $post->id }}"></td>
                 <td style="padding:14px 16px;">
                     <div style="font-size:.875rem;font-weight:600;color:#334155;margin-bottom:2px;">{{ $post->title }}</div>
                     <div style="font-size:.75rem;color:#475569;">{{ $post->slug }}</div>
@@ -57,7 +59,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="5" style="padding:48px 16px;text-align:center;color:#475569;font-size:.875rem;">Nenhum post encontrado.</td>
+                <td colspan="6" style="padding:48px 16px;text-align:center;color:#475569;font-size:.875rem;">Nenhum post encontrado.</td>
             </tr>
             @endforelse
         </tbody>
@@ -66,6 +68,12 @@
 
 @if($posts->hasPages())
 <div style="margin-top:20px;">{{ $posts->links() }}</div>
+@endif
+
+@if(Route::has('admin.blog-posts.bulk-delete'))
+<x-bulk-actions :action="route('admin.blog-posts.bulk-delete')" />
+@elseif(Route::has('admin.blog.posts.bulk-delete'))
+<x-bulk-actions :action="route('admin.blog.posts.bulk-delete')" />
 @endif
 
 </x-layouts.app>

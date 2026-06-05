@@ -33,6 +33,7 @@
                 <table class="w-full text-sm">
                     <thead class="bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
                         <tr>
+                            <th class="px-4 py-3 w-10"><input type="checkbox" id="bulk-select-all" class="bulk-cb-all"></th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Agente</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Tipo / Título</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">Frequência</th>
@@ -44,7 +45,8 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($routines as $routine)
-                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition">
+                        <tr data-bulk-row class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition cursor-pointer">
+                            <td class="px-4 py-3"><input type="checkbox" class="bulk-cb" value="{{ $routine->id }}"></td>
                             <td class="px-4 py-3">
                                 <div class="font-medium text-gray-900 dark:text-white text-xs">{{ $routine->aiEmployee?->name ?? '—' }}</div>
                             </td>
@@ -159,5 +161,7 @@
         @endif
 
     </div>
+
+<x-bulk-actions :action="route('admin.agents.routines.bulk-delete')" />
 
 </x-layouts.app>

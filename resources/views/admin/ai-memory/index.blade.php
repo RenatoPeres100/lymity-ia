@@ -49,6 +49,7 @@
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="bg-gray-50 dark:bg-gray-900/30 border-b border-gray-200 dark:border-gray-700">
+                            <th class="px-4 py-3 w-10"><input type="checkbox" id="bulk-select-all"></th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Tipo</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Título</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-gray-500">Funcionário</th>
@@ -59,7 +60,8 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
                         @foreach($memories as $mem)
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                            <tr data-bulk-row class="hover:bg-gray-50 dark:hover:bg-gray-700/30 cursor-pointer">
+                                <td class="px-4 py-3"><input type="checkbox" class="bulk-cb" value="{{ $mem->id }}"></td>
                                 <td class="px-4 py-3">
                                     <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded">
                                         {{ $mem->memory_type_label }}
@@ -105,5 +107,7 @@
             <div class="mt-4">{{ $memories->links() }}</div>
         @endif
     </div>
+
+<x-bulk-actions :action="route('admin.ai-memory.bulk-delete')" />
 
 </x-layouts.app>

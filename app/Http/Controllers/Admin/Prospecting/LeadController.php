@@ -11,10 +11,16 @@ use App\Models\ProspectStage;
 use App\Models\User;
 use App\Services\Prospecting\ProspectingPipelineService;
 use App\Services\Prospecting\ProspectingService;
+use App\Traits\HasBulkDestroy;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel = \App\Models\ProspectLead::class;
+    protected string $bulkDestroyScope = 'company_id';
+
     public function __construct(
         private ProspectingService        $service,
         private ProspectingPipelineService $pipelineService,

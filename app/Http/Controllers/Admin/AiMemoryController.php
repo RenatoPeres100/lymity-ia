@@ -12,9 +12,15 @@ use App\Services\Ai\AiMemoryService as LegacyMemoryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Traits\HasBulkDestroy;
 
 class AiMemoryController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = AiMemory::class;
+    protected string $bulkDestroyScope  = 'company_id';
+
     public function __construct(
         private AIMemoryService     $memoryService,
     ) {}

@@ -16,11 +16,25 @@
 @if(session('success'))
 <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#166534;font-size:.875rem;">✓ {{ session('success') }}</div>
 @endif
+@if(session('error'))
+<div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:10px;padding:14px 18px;margin-bottom:20px;color:#991b1b;font-size:.875rem;">✗ {{ session('error') }}</div>
+@endif
+
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+    <label style="display:flex;align-items:center;gap:6px;font-size:.82rem;color:#64748b;cursor:pointer;">
+        <input type="checkbox" id="bulk-select-all" style="accent-color:#6366f1;width:15px;height:15px;">
+        Selecionar todos
+    </label>
+</div>
 
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">
     @forelse($employees as $employee)
-    <a href="{{ route('admin.ai-employees.show', $employee) }}" style="text-decoration:none;">
-        <div style="background:#111827;border:1px solid #1e293b;border-radius:14px;padding:24px;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#4a6cf7'" onmouseout="this.style.borderColor='#1e293b'">
+    <div style="position:relative;">
+        <label style="position:absolute;top:12px;left:12px;z-index:10;cursor:pointer;" onclick="event.stopPropagation()">
+            <input type="checkbox" class="bulk-cb" value="{{ $employee->id }}" style="accent-color:#6366f1;width:16px;height:16px;">
+        </label>
+        <a href="{{ route('admin.ai-employees.show', $employee) }}" style="text-decoration:none;">
+        <div style="background:#111827;border:1px solid #1e293b;border-radius:14px;padding:24px;padding-left:36px;cursor:pointer;transition:border-color .2s;" onmouseover="this.style.borderColor='#4a6cf7'" onmouseout="this.style.borderColor='#1e293b'">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
                 <div style="display:flex;align-items:center;gap:12px;">
                     <div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#1e3a5f,#1a1a40);display:flex;align-items:center;justify-content:center;font-size:1.3rem;">{{ $employee->avatar_emoji }}</div>
@@ -41,10 +55,13 @@
                 @endif
             </div>
         </div>
-    </a>
+        </a>
+    </div>
     @empty
     <div style="grid-column:1/-1;text-align:center;padding:48px;color:#475569;font-size:.875rem;">Nenhum funcionário IA cadastrado.</div>
     @endforelse
 </div>
+
+<x-bulk-actions :action="route('admin.ai-employees.bulk-delete')" :confirmMsg="'Excluir os funcionários IA selecionados?'" />
 
 </x-layouts.app>

@@ -11,9 +11,15 @@ use App\Services\Agents\AgentRoutineExecutionService;
 use App\Services\Agents\AgentRoutineService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\HasBulkDestroy;
 
 class AgentRoutineController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = AgentRoutine::class;
+    protected string $bulkDestroyScope  = 'company_id';
+
     public function __construct(
         private AgentRoutineService          $service,
         private AgentRoutineExecutionService $engine,

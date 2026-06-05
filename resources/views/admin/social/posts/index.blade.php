@@ -38,6 +38,7 @@
             <table style="width:100%;border-collapse:collapse;">
                 <thead>
                     <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                        <th style="padding:.75rem 1rem;width:40px;"><input type="checkbox" id="bulk-select-all"></th>
                         @foreach(['Título','Objetivo','Tipo','Cliente','Status','Agendado','Ações'] as $h)
                         <th style="text-align:left;padding:.75rem 1rem;color:#64748b;font-size:.8rem;font-weight:600;text-transform:uppercase;">{{ $h }}</th>
                         @endforeach
@@ -45,7 +46,8 @@
                 </thead>
                 <tbody>
                     @forelse($posts as $post)
-                    <tr style="border-bottom:1px solid #e2e8f0;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                    <tr data-bulk-row style="border-bottom:1px solid #e2e8f0;cursor:pointer;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:.75rem 1rem;"><input type="checkbox" class="bulk-cb" value="{{ $post->id }}"></td>
                         <td style="padding:.75rem 1rem;color:#0f172a;font-size:.9rem;">{{ Str::limit($post->title, 35) }}</td>
                         <td style="padding:.75rem 1rem;color:#94a3b8;font-size:.85rem;">{{ $post->objective_label }}</td>
                         <td style="padding:.75rem 1rem;color:#94a3b8;font-size:.85rem;">{{ $post->content_type_label }}</td>
@@ -59,7 +61,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="7" style="padding:2rem;text-align:center;color:#64748b;">Nenhum post encontrado.</td></tr>
+                    <tr><td colspan="8" style="padding:2rem;text-align:center;color:#64748b;">Nenhum post encontrado.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -67,4 +69,7 @@
 
         <div style="margin-top:1rem;">{{ $posts->links() }}</div>
     </div>
+
+<x-bulk-actions :action="route('admin.social.posts.bulk-delete')" />
+
 </x-layouts.app>

@@ -12,9 +12,14 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
+use App\Traits\HasBulkDestroy;
 
 class ClientController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = Client::class;
+
     public function __construct(private ClientManagementService $svc) {}
 
     public function index(Request $request): View

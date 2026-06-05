@@ -63,6 +63,7 @@
         <table style="width:100%;border-collapse:collapse;font-size:.875rem;">
             <thead>
                 <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                    <th style="padding:.75rem 1rem;width:40px;"><input type="checkbox" id="bulk-select-all"></th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Lead</th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Empresa</th>
                     <th style="padding:.75rem 1rem;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;">Etapa</th>
@@ -75,7 +76,8 @@
             </thead>
             <tbody>
                 @forelse($leads as $lead)
-                <tr style="border-bottom:1px solid #f1f5f9;transition:background .1s;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+                <tr data-bulk-row style="border-bottom:1px solid #f1f5f9;transition:background .1s;cursor:pointer;" onmouseover="this.style.background='#fafafa'" onmouseout="this.style.background=''">
+                    <td style="padding:.75rem 1rem;"><input type="checkbox" class="bulk-cb" value="{{ $lead->id }}"></td>
                     <td style="padding:.75rem 1rem;">
                         <div style="font-weight:500;color:#1e293b;">{{ $lead->name }}</div>
                         @if($lead->segment)<div style="font-size:.75rem;color:#94a3b8;">{{ $lead->segment }}</div>@endif
@@ -132,5 +134,7 @@
     </div>
     @endif
 </div>
+
+<x-bulk-actions :action="route('admin.prospecting.leads.bulk-delete')" />
 
 </x-layouts.app>

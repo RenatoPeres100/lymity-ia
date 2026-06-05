@@ -7,9 +7,14 @@ use App\Http\Requests\StoreSeoKeywordRequest;
 use App\Models\Client;
 use App\Models\SeoKeyword;
 use App\Services\Seo\SeoContentService;
+use App\Traits\HasBulkDestroy;
 
 class SeoKeywordController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = SeoKeyword::class;
+
     public function __construct(private SeoContentService $service) {}
 
     public function index()

@@ -82,7 +82,8 @@
 <div class="table-wrapper">
     <table style="width:100%;border-collapse:collapse;">
         <thead>
-            <tr style="border-bottom:1px solid #e2e8f0;">
+            <tr style="border-bottom:1px solid #e2e8f0;background:#f8fafc;">
+                <th style="padding:12px 16px;width:40px;"><input type="checkbox" id="bulk-select-all"></th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Usuário</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Perfil</th>
                 <th style="text-align:left;padding:12px 16px;font-size:.72rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.06em;">Tipo</th>
@@ -94,7 +95,8 @@
         </thead>
         <tbody>
         @forelse($users as $user)
-            <tr style="border-bottom:1px solid #f1f5f9;">
+            <tr data-bulk-row style="border-bottom:1px solid #f1f5f9;cursor:pointer;">
+                <td style="padding:12px 16px;"><input type="checkbox" class="bulk-cb" value="{{ $user->id }}"></td>
                 <td style="padding:12px 16px;">
                     <div style="display:flex;align-items:center;gap:10px;">
                         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4a6cf7,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem;font-weight:700;flex-shrink:0;">
@@ -199,7 +201,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="7" style="padding:48px;text-align:center;color:#94a3b8;">
+                <td colspan="8" style="padding:48px;text-align:center;color:#94a3b8;">
                     <svg width="40" height="40" style="margin:0 auto 12px;display:block;opacity:.4;" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                     <div style="font-size:.875rem;font-weight:500;">Nenhum usuário encontrado</div>
                 </td>
@@ -215,5 +217,7 @@
     </div>
     @endif
 </div>
+
+<x-bulk-actions :action="route('admin.users.bulk-delete')" :confirmMsg="'Excluir os usuários selecionados? Esta ação não pode ser desfeita.'" />
 
 </x-layouts.app>

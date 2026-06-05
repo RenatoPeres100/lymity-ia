@@ -7,9 +7,14 @@ use App\Http\Requests\StoreSeoClusterRequest;
 use App\Models\Client;
 use App\Models\SeoCluster;
 use App\Services\Seo\SeoContentService;
+use App\Traits\HasBulkDestroy;
 
 class SeoClusterController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = SeoCluster::class;
+
     public function __construct(private SeoContentService $service) {}
 
     public function index()

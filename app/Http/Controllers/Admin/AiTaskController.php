@@ -11,6 +11,7 @@ use App\Models\AiTask;
 use App\Models\AiFeedback;
 use App\Models\Client;
 use App\Services\Ai\AiTaskService;
+use App\Traits\HasBulkDestroy;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,6 +19,11 @@ use Illuminate\View\View;
 
 class AiTaskController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = AiTask::class;
+    protected string $bulkDestroyScope  = 'company_id';
+
     public function __construct(private AiTaskService $service) {}
 
     public function index(Request $request): View
@@ -112,5 +118,11 @@ class AiTaskController extends Controller
         );
 
         return back()->with('success', 'Feedback registrado.');
+    }
+
+    public function destroy(AiTask $aiTask): RedirectResponse
+    {
+        $aiTask->delete();
+        return redirect()->route('admin.ai-tasks.index')->with('success', 'Tarefa excluída.');
     }
 }

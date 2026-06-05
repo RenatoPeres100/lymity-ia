@@ -38,3 +38,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+.env.backup*
+activate-*.sh
+1080,
+320,
+8,
+[

@@ -11,9 +11,14 @@ use App\Models\Client;
 use App\Services\Ai\AiEmployeeService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use App\Traits\HasBulkDestroy;
 
 class AiEmployeeController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = AiEmployee::class;
+
     public function __construct(private AiEmployeeService $service) {}
 
     public function index(): View

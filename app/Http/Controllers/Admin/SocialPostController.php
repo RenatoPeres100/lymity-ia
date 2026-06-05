@@ -13,9 +13,15 @@ use App\Services\Social\SocialPostService;
 use App\Services\Social\SocialPublishingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\HasBulkDestroy;
 
 class SocialPostController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = SocialPost::class;
+    protected string $bulkDestroyScope  = 'company_id';
+
     public function __construct(
         private SocialPostService $postService,
         private SocialPublishingService $publishingService,

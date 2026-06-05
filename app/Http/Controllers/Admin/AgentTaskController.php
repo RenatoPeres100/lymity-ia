@@ -14,9 +14,15 @@ use App\Services\Logs\ActivityLogService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use App\Traits\HasBulkDestroy;
 
 class AgentTaskController extends Controller
 {
+    use HasBulkDestroy;
+
+    protected string $bulkDestroyModel  = AgentTask::class;
+    protected string $bulkDestroyScope  = 'company_id';
+
     public function __construct(
         private AgentTaskContextService  $contextService,
         private ActivityLogService       $activityLog,
