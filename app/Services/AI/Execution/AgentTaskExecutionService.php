@@ -460,7 +460,7 @@ class AgentTaskExecutionService
             'approvable_id'   => $package->id,
             'title'           => $title,
             'description'     => $description,
-            'approval_type'   => 'ai_content',
+            'approval_type'   => 'ai_task',
             'sensitive_level' => 'medium',
             'payload'         => $payload,
         ]);
