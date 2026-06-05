@@ -520,15 +520,21 @@ class AgentTaskExecutionService
             $slug = $base . '-' . $i++;
         }
 
+        // secondary_keywords: text column — store as comma-separated string
         $secondaryKeywords = $payload['secondary_keywords'] ?? [];
         if (is_array($secondaryKeywords)) {
-            $secondaryKeywords = implode(',', $secondaryKeywords);
+            $secondaryKeywords = implode(',', array_filter($secondaryKeywords)) ?: null;
         }
 
+        // tags: json/array column — store as array
         $tags = $payload['tags'] ?? [];
-        if (is_array($tags)) {
-            $tags = implode(',', $tags);
+        if (is_string($tags)) {
+            $tags = array_values(array_filter(array_map('trim', explode(',', $tags))));
         }
+        $tags = empty($tags) ? null : $tags;
+
+        // type: enum('agency','client') — tasks created by AI are agency posts
+        $postType = $task->client_id ? 'client' : 'agency';
 
         $post = BlogPost::create([
             'company_id'         => $task->company_id,
@@ -544,11 +550,11 @@ class AgentTaskExecutionService
             'seo_title'          => $payload['seo_title'] ?? null,
             'seo_description'    => $payload['seo_description'] ?? null,
             'focus_keyword'      => $payload['focus_keyword'] ?? null,
-            'secondary_keywords' => $secondaryKeywords ?: null,
-            'tags'               => $tags ?: null,
+            'secondary_keywords' => $secondaryKeywords,
+            'tags'               => $tags,
             'status'             => 'pending_approval',
-            'type'               => 'article',
-            'ai_metadata'        => json_encode(['generated_by_task' => $task->id]),
+            'type'               => $postType,
+            'ai_metadata'        => ['generated_by_task' => $task->id, 'run_id' => $run->id],
             'scheduled_at'       => $task->auto_schedule_after_approval ? $this->calculateScheduledAt($task) : null,
         ]);
 
@@ -569,7 +575,7 @@ class AgentTaskExecutionService
             'main_caption'       => $payload['caption'] ?? '',
             'hashtags'           => implode(' ', $payload['hashtags'] ?? []),
             'cta'                => $payload['cta'] ?? null,
-            'content_type'       => $isCarousel ? 'carousel' : 'single',
+            'content_type'       => $isCarousel ? 'carousel' : 'feed',
             'creative_format'    => $isCarousel ? 'carousel' : 'feed',
             'creative_brief'     => $payload['creative_brief'] ?? null,
             'image_prompt'       => $payload['image_prompt'] ?? null,
