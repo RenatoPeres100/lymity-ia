@@ -15,17 +15,24 @@ class BrandContextSnapshotService
     {
         $query = AgencyBrandContext::where('active', true);
 
+        // 1. Client-specific context (most specific)
         if ($clientId) {
             $ctx = (clone $query)->where('client_id', $clientId)->first();
             if ($ctx) return $ctx;
         }
 
+        // 2. Company-specific context
         if ($companyId) {
             $ctx = (clone $query)->where('company_id', $companyId)->whereNull('client_id')->first();
             if ($ctx) return $ctx;
         }
 
-        return (clone $query)->whereNull('company_id')->whereNull('client_id')->first();
+        // 3. Global context (no company/client)
+        $ctx = (clone $query)->whereNull('company_id')->whereNull('client_id')->first();
+        if ($ctx) return $ctx;
+
+        // 4. Any active context (last resort fallback — takes whatever exists)
+        return (clone $query)->first();
     }
 
     public function generateContentHash(AgencyBrandContext $ctx): string

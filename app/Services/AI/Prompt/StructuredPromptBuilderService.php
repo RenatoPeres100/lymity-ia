@@ -145,21 +145,24 @@ class StructuredPromptBuilderService
     {
         $name = $employee->name ?? 'Funcionário IA';
         $role = $employee->role ?? 'Content Creator';
-        return "Você é {$name}, {$role} da Lymity IA. " .
-               "Gere conteúdo de alta qualidade, estratégico e alinhado com a marca. " .
-               "Responda APENAS em JSON válido, sem explicações fora do JSON.";
+        return "Você é {$name}, especialista em {$role} da Lymity IA — agência de marketing digital e automação inteligente.\n" .
+               "Sua missão é gerar conteúdo de alta qualidade, profundo, estratégico e 100% alinhado com a marca e as instruções da tarefa.\n" .
+               "IMPORTANTE: Responda APENAS com o JSON solicitado. Nenhum texto fora do JSON.";
     }
 
     private function buildBrandSection(AiExecutionContext $context): string
     {
-        $compact = $context->compact_brand_context ?? 'Contexto de marca não disponível.';
-        return "=== CONTEXTO DA MARCA ===\n{$compact}";
+        $compact = $context->compact_brand_context ?? '';
+        if (!$compact || str_contains($compact, 'não configurado')) {
+            return "=== CONTEXTO DA MARCA ===\nUse posicionamento profissional, linguagem especialista e estratégica.";
+        }
+        return "=== CONTEXTO DA MARCA (siga rigorosamente) ===\n{$compact}";
     }
 
     private function buildTaskSection(AiExecutionContext $context): string
     {
         $compact = $context->compact_task_context ?? 'Contexto da tarefa não disponível.';
-        return "=== TAREFA OPERACIONAL ===\n{$compact}";
+        return "=== TAREFA E INSTRUÇÕES OBRIGATÓRIAS (siga cada instrução) ===\n{$compact}";
     }
 
     private function buildResearchSection(array $research): string
@@ -175,21 +178,29 @@ class StructuredPromptBuilderService
     private function buildBlogOutputRules(): string
     {
         return <<<'JSON'
-=== FORMATO DE SAÍDA (JSON obrigatório) ===
-Retorne exatamente este JSON e nada mais:
+=== PADRÕES DE QUALIDADE OBRIGATÓRIOS ===
+- O artigo deve ter NO MÍNIMO 800 palavras no campo content_html
+- Use h2 para seções principais, h3 para subseções
+- Inclua introdução envolvente, desenvolvimento com dados/exemplos e conclusão com CTA
+- O conteúdo deve ser original, profundo e verdadeiramente útil para o leitor
+- Conecte o assunto ao posicionamento e serviços da marca sempre que natural
+- O CTA final deve ser específico e alinhado ao Brand Context
+- O image_prompt deve descrever uma imagem profissional e relevante para o artigo
+
+=== FORMATO DE SAÍDA (retorne APENAS este JSON) ===
 {
   "content_type": "blog_post",
-  "title": "título atraente e com keyword",
-  "slug": "slug-url-amigavel",
-  "subtitle": "subtítulo complementar",
-  "excerpt": "resumo de até 160 caracteres para SEO",
-  "seo_title": "título SEO com keyword (max 60 chars)",
-  "seo_description": "meta descrição com CTA (max 155 chars)",
-  "focus_keyword": "palavra-chave principal",
-  "secondary_keywords": ["keyword2", "keyword3"],
-  "content_html": "<article>conteúdo completo em HTML com subtítulos h2/h3, parágrafos, lista se aplicável</article>",
-  "cta_final": "chamada para ação final do artigo",
-  "image_prompt": "descrição detalhada para geração de imagem destacada",
+  "title": "título atraente, direto e com a keyword principal",
+  "slug": "slug-url-amigavel-sem-acentos",
+  "subtitle": "subtítulo que complementa e amplia o título",
+  "excerpt": "resumo atrativo de até 160 caracteres para SEO",
+  "seo_title": "título SEO com keyword no início (max 60 chars)",
+  "seo_description": "meta descrição com benefício + CTA (max 155 chars)",
+  "focus_keyword": "palavra-chave principal do artigo",
+  "secondary_keywords": ["keyword secundária 1", "keyword secundária 2", "keyword 3"],
+  "content_html": "<article><h2>Introdução</h2><p>...</p><h2>Seção 1</h2><p>...</p><h2>Conclusão</h2><p>...</p></article>",
+  "cta_final": "chamada para ação alinhada ao Brand Context",
+  "image_prompt": "descrição detalhada em inglês para geração de imagem destacada profissional",
   "sources_used": []
 }
 JSON;
@@ -252,11 +263,12 @@ JSON;
     private function buildSecurityRules(): string
     {
         return "=== REGRAS OBRIGATÓRIAS ===\n" .
-               "1. Nunca inventar fatos, dados, estatísticas ou notícias.\n" .
-               "2. Nunca prometer resultados garantidos ou milagrosos.\n" .
-               "3. Nunca usar termos proibidos da marca.\n" .
-               "4. Conteúdo deve ser original, estratégico e alinhado ao posicionamento da marca.\n" .
-               "5. Responda APENAS com JSON válido e nada mais.";
+               "1. Siga TODAS as instruções da tarefa acima — elas são mandatórias.\n" .
+               "2. Respeite o Brand Context — tom, público, CTAs e termos proibidos.\n" .
+               "3. Nunca inventar fatos, dados ou estatísticas sem base.\n" .
+               "4. Nunca prometer resultados garantidos ou linguagem de 'fórmula mágica'.\n" .
+               "5. O conteúdo deve ser original, profundo e genuinamente útil.\n" .
+               "6. Responda APENAS com JSON válido. Nenhum texto, comentário ou markdown fora do JSON.";
     }
 
     private function getMemoriesFromContext(AiExecutionContext $context): Collection

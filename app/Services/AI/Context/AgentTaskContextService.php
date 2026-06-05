@@ -46,8 +46,8 @@ class AgentTaskContextService
         }
 
         if ($task->operational_instructions) {
-            $instructions = mb_substr($task->operational_instructions, 0, 400);
-            $parts[] = "Instruções: {$instructions}";
+            // Keep full instructions — they are the core directive for the AI
+            $parts[] = "Instruções operacionais: {$task->operational_instructions}";
         }
 
         if ($task->content_channel) {

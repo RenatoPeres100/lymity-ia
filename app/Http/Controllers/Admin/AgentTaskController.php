@@ -63,7 +63,9 @@ class AgentTaskController extends Controller
 
         $user = auth()->user();
         $validated['created_by_user_id'] = $user->id;
-        if (!$user->role === 'admin_geral') {
+
+        // Always inherit company_id from the logged-in user when not explicitly set
+        if (empty($validated['company_id'])) {
             $validated['company_id'] = $user->company_id;
         }
 
