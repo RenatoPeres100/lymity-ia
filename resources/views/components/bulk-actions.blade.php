@@ -9,7 +9,6 @@
     'label'        => 'Excluir selecionados',
     'confirmMsg'   => 'Excluir os itens selecionados? Esta ação não pode ser desfeita.',
     'extraActions' => [],  // [['label'=>'...','value'=>'...','class'=>'...']]
-    'method'       => 'DELETE',
 ])
 
 {{-- Floating bulk bar --}}
@@ -54,7 +53,6 @@
 {{-- Hidden bulk form --}}
 <form id="bulk-form" method="POST" style="display:none;">
     @csrf
-    <input type="hidden" name="_method" id="bulk-method" value="{{ $method }}">
     <input type="hidden" name="_bulk_action" id="bulk-action-value" value="delete">
     <div id="bulk-ids"></div>
 </form>
