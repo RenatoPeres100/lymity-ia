@@ -16,8 +16,7 @@
      style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9999;
             background:#1e293b;border:1px solid #334155;border-radius:14px;
             padding:12px 20px;box-shadow:0 8px 40px rgba(0,0,0,.45);
-            display:flex;align-items:center;gap:14px;min-width:340px;max-width:600px;
-            animation:bulkSlideIn .18s ease-out;">
+            align-items:center;gap:14px;min-width:340px;max-width:600px;">
     <span id="bulk-count"
           style="font-size:.8rem;font-weight:700;color:#f1f5f9;white-space:nowrap;">
         0 selecionados
@@ -87,6 +86,7 @@
         if (n > 0) {
             countEl.textContent = n + ' selecionado' + (n > 1 ? 's' : '');
             bar.style.display = 'flex';
+            bar.style.animation = 'bulkSlideIn .18s ease-out';
         } else {
             bar.style.display = 'none';
         }
