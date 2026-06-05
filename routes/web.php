@@ -655,6 +655,35 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::get('/ai-settings/test',    [AiSettingsController::class, 'testForm'])->name('admin.ai-settings.test');
         Route::post('/ai-settings/test',   [AiSettingsController::class, 'testConnection'])->name('admin.ai-settings.test.run');
         Route::get('/ai-usage',            [AiUsageController::class, 'index'])->name('admin.ai-usage.index');
+        Route::get('/ai-usage/legacy',     [AiUsageController::class, 'legacyIndex'])->name('admin.ai-usage.legacy');
+
+        // ─── Agent Tasks (Real AI Employee Engine) ──────────────────────
+        Route::prefix('agent-tasks')->group(function () {
+            Route::get('/',                                    [\App\Http\Controllers\Admin\AgentTaskController::class, 'index'])->name('admin.agent-tasks.index');
+            Route::get('/create',                             [\App\Http\Controllers\Admin\AgentTaskController::class, 'create'])->name('admin.agent-tasks.create');
+            Route::post('/',                                   [\App\Http\Controllers\Admin\AgentTaskController::class, 'store'])->name('admin.agent-tasks.store');
+            Route::get('/{agentTask}',                        [\App\Http\Controllers\Admin\AgentTaskController::class, 'show'])->name('admin.agent-tasks.show');
+            Route::get('/{agentTask}/edit',                   [\App\Http\Controllers\Admin\AgentTaskController::class, 'edit'])->name('admin.agent-tasks.edit');
+            Route::put('/{agentTask}',                        [\App\Http\Controllers\Admin\AgentTaskController::class, 'update'])->name('admin.agent-tasks.update');
+            Route::post('/{agentTask}/run-now',               [\App\Http\Controllers\Admin\AgentTaskController::class, 'runNow'])->name('admin.agent-tasks.run-now');
+            Route::patch('/{agentTask}/pause',                [\App\Http\Controllers\Admin\AgentTaskController::class, 'pause'])->name('admin.agent-tasks.pause');
+            Route::patch('/{agentTask}/activate',             [\App\Http\Controllers\Admin\AgentTaskController::class, 'activate'])->name('admin.agent-tasks.activate');
+            Route::patch('/{agentTask}/archive',              [\App\Http\Controllers\Admin\AgentTaskController::class, 'archive'])->name('admin.agent-tasks.archive');
+            Route::get('/{agentTask}/runs',                   [\App\Http\Controllers\Admin\AgentTaskController::class, 'runs'])->name('admin.agent-tasks.runs');
+            Route::get('/{agentTask}/packages',               [\App\Http\Controllers\Admin\AgentTaskController::class, 'packages'])->name('admin.agent-tasks.packages');
+        });
+
+        // ─── AI Memory (new routes alongside legacy) ──────────────────────
+        Route::prefix('ai-memory')->group(function () {
+            Route::get('/',                                    [AiMemoryController::class, 'index'])->name('admin.ai-memory.index');
+            Route::get('/create',                             [AiMemoryController::class, 'create'])->name('admin.ai-memory.create');
+            Route::post('/',                                   [AiMemoryController::class, 'store'])->name('admin.ai-memory.store');
+            Route::get('/{aiMemory}/edit',                    [AiMemoryController::class, 'edit'])->name('admin.ai-memory.edit');
+            Route::put('/{aiMemory}',                         [AiMemoryController::class, 'update'])->name('admin.ai-memory.update');
+            Route::patch('/{aiMemory}/deactivate',            [AiMemoryController::class, 'deactivate'])->name('admin.ai-memory.deactivate');
+            Route::patch('/{aiMemory}/activate',              [AiMemoryController::class, 'activate'])->name('admin.ai-memory.activate');
+            Route::delete('/{aiMemory}',                      [AiMemoryController::class, 'destroy'])->name('admin.ai-memory.destroy');
+        });
 
         // ─── AI Image Studio ──────────────────────────────────────────────
         Route::prefix('ai-images')->group(function () {

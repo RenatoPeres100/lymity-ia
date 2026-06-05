@@ -158,6 +158,11 @@ class ApprovalService
 
         $modelClass = get_class($approvable);
 
+        if ($modelClass === \App\Models\GeneratedContentPackage::class) {
+            $this->syncGeneratedPackageStatus($approvable, $newStatus, $user, $approvalRequest);
+            return;
+        }
+
         if ($modelClass === \App\Models\AiTask::class) {
             $this->syncAiTaskStatus($approvable, $newStatus, $user);
             return;
@@ -191,6 +196,133 @@ class ApprovalService
         if ($modelClass === \App\Models\Budget::class) {
             $this->syncBudgetStatus($approvable, $newStatus, $user);
             return;
+        }
+    }
+
+    private function syncGeneratedPackageStatus(
+        \App\Models\GeneratedContentPackage $package,
+        string $newStatus,
+        ?User $user,
+        ApprovalRequest $approvalRequest
+    ): void {
+        $memoryService = app(\App\Services\AI\Memory\AIMemoryService::class);
+
+        if ($newStatus === 'approved') {
+            $package->update(['status' => 'approved']);
+
+            // Sync the underlying entity
+            if ($package->generated_entity_type && $package->generated_entity_id) {
+                $entity = $package->generatedEntity;
+                if ($entity) {
+                    $entityClass = get_class($entity);
+                    if (in_array($entityClass, [\App\Models\BlogPost::class, \App\Models\SocialPost::class])) {
+                        $futureScheduled = $entity->scheduled_at && $entity->scheduled_at->isFuture();
+                        $entity->update([
+                            'status'      => $futureScheduled ? 'scheduled' : 'approved',
+                            'approved_by' => $user?->id,
+                            'approved_at' => now(),
+                        ]);
+                    }
+                }
+            }
+
+            // Create approved_pattern memory
+            try {
+                $memoryService->createApprovedPatternFromApproval(
+                    $package->company_id,
+                    $package->client_id,
+                    $package->ai_employee_id,
+                    $package->agent_task_id,
+                    "Padrão aprovado: " . \Str::limit($package->title, 60),
+                    "Conteúdo aprovado em " . now()->format('d/m/Y') . ". Tipo: {$package->package_type}. Título: {$package->title}.",
+                    $approvalRequest->id
+                );
+                ActivityLog::create([
+                    'action' => 'memory.approved_pattern_created',
+                    'module' => 'ai_tasks',
+                    'level'  => 'info',
+                    'description' => "Padrão aprovado criado para pacote #{$package->id}",
+                    'metadata' => ['package_id' => $package->id],
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("[ApprovalService] Memory creation failed: " . $e->getMessage());
+            }
+
+            ActivityLog::create([
+                'user_id'     => $user?->id,
+                'action'      => 'approval.package_approved',
+                'module'      => 'approvals',
+                'description' => "Pacote #{$package->id} aprovado: {$package->title}",
+                'metadata'    => ['package_id' => $package->id, 'approval_request_id' => $approvalRequest->id],
+            ]);
+            return;
+        }
+
+        if ($newStatus === 'rejected') {
+            $package->update(['status' => 'rejected']);
+
+            if ($package->generated_entity_type && $package->generated_entity_id) {
+                $entity = $package->generatedEntity;
+                $entity?->update(['status' => 'draft']);
+            }
+
+            $notes = $approvalRequest->actions()->latest()->value('notes') ?? 'Sem feedback';
+            try {
+                $memoryService->createRejectedPatternFromRejection(
+                    $package->company_id,
+                    $package->client_id,
+                    $package->ai_employee_id,
+                    $package->agent_task_id,
+                    "Padrão rejeitado: " . \Str::limit($package->title, 60),
+                    "Rejeitado em " . now()->format('d/m/Y') . ". Tipo: {$package->package_type}. Feedback: {$notes}",
+                    $approvalRequest->id
+                );
+                ActivityLog::create([
+                    'action' => 'memory.rejected_pattern_created',
+                    'module' => 'ai_tasks',
+                    'level'  => 'info',
+                    'description' => "Padrão rejeitado registrado para pacote #{$package->id}",
+                    'metadata' => ['package_id' => $package->id],
+                ]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("[ApprovalService] Memory creation failed: " . $e->getMessage());
+            }
+
+            ActivityLog::create([
+                'user_id'     => $user?->id,
+                'action'      => 'approval.package_rejected',
+                'module'      => 'approvals',
+                'description' => "Pacote #{$package->id} rejeitado: {$package->title}",
+                'metadata'    => ['package_id' => $package->id, 'approval_request_id' => $approvalRequest->id],
+            ]);
+            return;
+        }
+
+        if ($newStatus === 'changes_requested') {
+            $package->update(['status' => 'draft']);
+
+            $notes = $approvalRequest->actions()->latest()->value('notes') ?? 'Sem feedback';
+            try {
+                $memoryService->createFeedbackMemoryFromChangesRequest(
+                    $package->company_id,
+                    $package->client_id,
+                    $package->ai_employee_id,
+                    $package->agent_task_id,
+                    "Ajuste solicitado: " . \Str::limit($package->title, 60),
+                    "Ajuste solicitado em " . now()->format('d/m/Y') . ". Feedback: {$notes}",
+                    $approvalRequest->id
+                );
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("[ApprovalService] Memory creation failed: " . $e->getMessage());
+            }
+
+            ActivityLog::create([
+                'user_id'     => $user?->id,
+                'action'      => 'approval.package_changes_requested',
+                'module'      => 'approvals',
+                'description' => "Ajuste solicitado para pacote #{$package->id}: {$package->title}",
+                'metadata'    => ['package_id' => $package->id, 'approval_request_id' => $approvalRequest->id],
+            ]);
         }
     }
 

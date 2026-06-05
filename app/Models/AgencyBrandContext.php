@@ -16,11 +16,13 @@ class AgencyBrandContext extends Model
         'content_guidelines', 'seo_rules',
         'visual_guidelines', 'active',
         'cached_context_key', 'cached_at',
+        'version', 'content_hash', 'compact_context', 'compact_context_generated_at',
     ];
 
     protected $casts = [
-        'active'    => 'boolean',
-        'cached_at' => 'datetime',
+        'active'                         => 'boolean',
+        'cached_at'                      => 'datetime',
+        'compact_context_generated_at'   => 'datetime',
     ];
 
     public function company(): BelongsTo
@@ -46,7 +48,6 @@ class AgencyBrandContext extends Model
             && !empty($this->target_audience);
     }
 
-    // Compact context string for AI prompts
     public function toCompactString(): string
     {
         $parts = [];
@@ -64,5 +65,13 @@ class AgencyBrandContext extends Model
         if ($this->preferred_terms)    $parts[] = "Termos preferidos: {$this->preferred_terms}";
 
         return implode("\n", $parts);
+    }
+
+    public function getEffectiveCompactContext(): string
+    {
+        if ($this->compact_context) {
+            return $this->compact_context;
+        }
+        return $this->toCompactString();
     }
 }

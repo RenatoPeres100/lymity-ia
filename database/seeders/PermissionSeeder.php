@@ -144,6 +144,29 @@ class PermissionSeeder extends Seeder
             ['key' => 'client.social.schedule', 'name' => 'Agendar posts (cliente)',       'module' => 'client_social'],
             ['key' => 'client.social.comment',  'name' => 'Comentar posts (cliente)',      'module' => 'client_social'],
 
+            // agent_tasks
+            ['key' => 'agent_tasks.view',    'name' => 'Ver tarefas operacionais',    'module' => 'agent_tasks'],
+            ['key' => 'agent_tasks.create',  'name' => 'Criar tarefas operacionais',  'module' => 'agent_tasks'],
+            ['key' => 'agent_tasks.update',  'name' => 'Editar tarefas operacionais', 'module' => 'agent_tasks'],
+            ['key' => 'agent_tasks.delete',  'name' => 'Excluir tarefas operacionais','module' => 'agent_tasks'],
+            ['key' => 'agent_tasks.run',     'name' => 'Executar tarefas operacionais','module' => 'agent_tasks'],
+            ['key' => 'agent_tasks.pause',   'name' => 'Pausar tarefas operacionais', 'module' => 'agent_tasks'],
+            ['key' => 'agent_tasks.archive', 'name' => 'Arquivar tarefas operacionais','module' => 'agent_tasks'],
+
+            // ai_memory
+            ['key' => 'ai_memory.view',   'name' => 'Ver memória IA',      'module' => 'ai_memory'],
+            ['key' => 'ai_memory.create', 'name' => 'Criar memória IA',    'module' => 'ai_memory'],
+            ['key' => 'ai_memory.update', 'name' => 'Editar memória IA',   'module' => 'ai_memory'],
+            ['key' => 'ai_memory.manage', 'name' => 'Gerenciar memória IA','module' => 'ai_memory'],
+
+            // ai_usage
+            ['key' => 'ai_usage.view', 'name' => 'Ver uso/consumo de IA', 'module' => 'ai_usage'],
+
+            // generated_packages
+            ['key' => 'generated_packages.view',    'name' => 'Ver pacotes gerados',    'module' => 'packages'],
+            ['key' => 'generated_packages.approve', 'name' => 'Aprovar pacotes gerados','module' => 'packages'],
+            ['key' => 'generated_packages.update',  'name' => 'Editar pacotes gerados', 'module' => 'packages'],
+
             // prospecting / CRM / SDR IA
             ['key' => 'prospecting.view',                   'name' => 'Ver prospecção',                          'module' => 'prospecting'],
             ['key' => 'prospecting.create',                 'name' => 'Criar leads',                             'module' => 'prospecting'],

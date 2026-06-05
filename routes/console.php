@@ -26,3 +26,6 @@ Schedule::command('instagram:refresh-tokens')->dailyAt('03:00')->withoutOverlapp
 
 // Real Phase Email Notifications — Approval reminders (hourly)
 Schedule::command('approvals:send-pending-reminders')->hourly()->withoutOverlapping();
+
+// Real AI Employee Engine — Agent tasks
+Schedule::command('agents:run-due-tasks')->everyMinute()->withoutOverlapping();

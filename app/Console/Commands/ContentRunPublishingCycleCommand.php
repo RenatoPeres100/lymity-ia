@@ -16,9 +16,18 @@ class ContentRunPublishingCycleCommand extends Command
         $this->info('=== CONTENT PUBLISHING CYCLE START ===');
         $start = now();
 
-        // 1. AI agent routines
+        // 0. Agent tasks (new engine)
         try {
-            $this->info('[1/3] Executando rotinas de agentes IA...');
+            $this->info('[0/4] Executando tarefas operacionais de agentes IA...');
+            Artisan::call('agents:run-due-tasks', [], $this->output);
+        } catch (\Throwable $e) {
+            $this->error('Erro em agents:run-due-tasks: ' . $e->getMessage());
+            Log::error('[content:run-publishing-cycle] agent-tasks error: ' . $e->getMessage());
+        }
+
+        // 1. AI agent routines (legacy)
+        try {
+            $this->info('[1/4] Executando rotinas de agentes IA (legacy)...');
             Artisan::call('agents:run-due-routines', [], $this->output);
         } catch (\Throwable $e) {
             $this->error('Erro em agents:run-due-routines: ' . $e->getMessage());

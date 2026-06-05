@@ -31,6 +31,22 @@ return [
     'agent_routines'       => true,
     'agency_brand_context' => true,
 
+    // === REAL AI EMPLOYEE TASK ENGINE ===
+    'ai_task_engine_real'          => true,
+    'ai_operational_memory'        => true,
+    'ai_context_snapshots'         => true,
+    'ai_task_recurring_execution'  => true,
+    'ai_cost_guard'                => true,
+    'ai_content_package_approval'  => true,
+
+    'blog_text_generation'    => true,
+    'blog_image_generation'   => false,
+    'social_text_generation'  => true,
+    'social_image_generation_tasks' => false,
+
+    'auto_publish_without_approval' => false,
+    'mock_content_generation'       => false,
+
     // === BLOG AUTOMATION — REAL PHASE ===
     'blog_text_pipeline'  => true,
     'blog_image_pipeline' => false,

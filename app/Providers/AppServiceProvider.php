@@ -38,7 +38,14 @@ use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
-    public function register(): void {}
+    public function register(): void
+    {
+        // Research provider binding
+        $this->app->bind(
+            \App\Services\Research\ExternalResearchProviderInterface::class,
+            \App\Services\Research\DisabledResearchProvider::class
+        );
+    }
 
     public function boot(): void
     {
