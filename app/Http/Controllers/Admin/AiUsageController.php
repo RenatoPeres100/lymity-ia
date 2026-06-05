@@ -46,7 +46,7 @@ class AiUsageController extends Controller
         $daily   = $this->costGuard->getDailyUsage();
         $monthly = $this->costGuard->getMonthlyUsage();
 
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
         $tasks     = AgentTask::orderBy('title')->get();
 
         $byEmployee = AiUsageRecord::selectRaw('ai_employee_id, SUM(input_tokens) as total_input, SUM(output_tokens) as total_output, SUM(estimated_cost_usd) as total_cost, COUNT(*) as requests')

@@ -39,14 +39,14 @@ class AgentTaskController extends Controller
         }
 
         $tasks     = $query->paginate(20)->withQueryString();
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
 
         return view('admin.agent-tasks.index', compact('tasks', 'employees'));
     }
 
     public function create(): View
     {
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
         $clients   = Client::orderBy('name')->get();
         return view('admin.agent-tasks.create', compact('employees', 'clients'));
     }
@@ -57,7 +57,7 @@ class AgentTaskController extends Controller
 
         $user = auth()->user();
         $validated['created_by_user_id'] = $user->id;
-        if (!$user->isSuperAdmin()) {
+        if (!$user->role === 'admin_geral') {
             $validated['company_id'] = $user->company_id;
         }
 
@@ -92,7 +92,7 @@ class AgentTaskController extends Controller
     public function edit(AgentTask $agentTask): View
     {
         $this->authorizeTask($agentTask);
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
         $clients   = Client::orderBy('name')->get();
         return view('admin.agent-tasks.edit', compact('agentTask', 'employees', 'clients'));
     }

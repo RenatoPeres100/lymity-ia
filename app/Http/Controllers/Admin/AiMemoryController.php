@@ -39,7 +39,7 @@ class AiMemoryController extends Controller
         }
 
         $memories  = $query->paginate(30)->withQueryString();
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
         $types     = [
             'brand_rule'          => 'Regra de Marca',
             'task_rule'           => 'Regra de Tarefa',
@@ -58,7 +58,7 @@ class AiMemoryController extends Controller
 
     public function create(): View
     {
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
         $tasks     = AgentTask::active()->orderBy('title')->get();
         $clients   = Client::orderBy('name')->get();
         return view('admin.ai-memory.create', compact('employees', 'tasks', 'clients'));
@@ -91,7 +91,7 @@ class AiMemoryController extends Controller
     public function edit(AiMemory $aiMemory): View
     {
         $this->authorizeMemory($aiMemory);
-        $employees = AiEmployee::where('active', true)->orderBy('name')->get();
+        $employees = AiEmployee::where('status', 'active')->orderBy('name')->get();
         $tasks     = AgentTask::active()->orderBy('title')->get();
         return view('admin.ai-memory.edit', compact('aiMemory', 'employees', 'tasks'));
     }

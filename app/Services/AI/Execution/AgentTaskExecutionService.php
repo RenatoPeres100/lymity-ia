@@ -95,7 +95,7 @@ class AgentTaskExecutionService
         $employee = $task->aiEmployee;
 
         // Guard: must have an active AI employee
-        if (!$employee || !$employee->active) {
+        if (!$employee || $employee->status !== 'active') {
             throw new \RuntimeException("Tarefa '{$task->title}' não possui funcionário IA ativo vinculado.");
         }
 
