@@ -168,6 +168,20 @@ class AgentTaskController extends Controller
         return back()->with('success', 'Tarefa ativada.');
     }
 
+    public function destroy(AgentTask $agentTask): RedirectResponse
+    {
+        $this->authorizeTask($agentTask);
+        $title = $agentTask->title;
+        $agentTask->delete();
+
+        $this->activityLog->info('agent_task.deleted', "Tarefa excluída: {$title}", [
+            'module' => 'ai_tasks',
+        ]);
+
+        return redirect()->route('admin.agent-tasks.index')
+            ->with('success', "Tarefa \"{$title}\" excluída.");
+    }
+
     public function archive(AgentTask $agentTask): RedirectResponse
     {
         $this->authorizeTask($agentTask);
