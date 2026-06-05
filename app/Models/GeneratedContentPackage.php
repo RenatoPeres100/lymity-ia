@@ -94,7 +94,7 @@ class GeneratedContentPackage extends Model
             'failed'           => 'Falhou',
             'archived'         => 'Arquivado',
             default            => $this->status ?? '—',
-        ];
+        };
     }
 
     public function getStatusColorAttribute(): string
@@ -105,7 +105,7 @@ class GeneratedContentPackage extends Model
             'rejected', 'failed'                 => 'red',
             'draft'                              => 'blue',
             default                              => 'gray',
-        ];
+        };
     }
 
     public function hasImage(): bool

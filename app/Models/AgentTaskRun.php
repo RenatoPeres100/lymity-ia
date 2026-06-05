@@ -95,7 +95,7 @@ class AgentTaskRun extends Model
             'failed'            => 'Falhou',
             'canceled'          => 'Cancelado',
             default             => $this->status ?? '—',
-        ];
+        };
     }
 
     public function getStatusColorAttribute(): string
@@ -107,7 +107,7 @@ class AgentTaskRun extends Model
             'failed' => 'red',
             'canceled' => 'gray',
             default => 'gray',
-        ];
+        };
     }
 
     public function isRunning(): bool

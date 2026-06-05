@@ -36,7 +36,7 @@ class GeneratedContentAsset extends Model
             'generated' => 'Gerado',
             'failed'    => 'Falhou',
             default     => $this->status ?? '—',
-        ];
+        };
     }
 
     public function isGenerated(): bool
