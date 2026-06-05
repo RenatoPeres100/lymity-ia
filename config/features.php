@@ -47,6 +47,14 @@ return [
     'auto_publish_without_approval' => false,
     'mock_content_generation'       => false,
 
+    // === MENU VISIBILITY ===
+    'agent_tasks_menu'          => true,
+    'ai_memory_menu'            => true,
+    'ai_usage_menu'             => true,
+    'legacy_ai_tasks_menu'      => false,  // AiTasks antigas — ocultas do menu principal
+    'legacy_ai_schedules_menu'  => false,  // AiWorkSchedules — ocultas do menu principal
+    'legacy_agent_routines_menu'=> false,  // Rotinas legadas — substituídas por AgentTasks
+
     // === BLOG AUTOMATION — REAL PHASE ===
     'blog_text_pipeline'  => true,
     'blog_image_pipeline' => false,

@@ -5,6 +5,7 @@ namespace App\Services\AI\Providers;
 use App\Services\AI\Contracts\AIProviderInterface;
 use App\Services\AI\DTO\AITextResponse;
 use App\Services\AI\DTO\TokenEstimate;
+use App\Services\AI\Response\AIJsonResponseNormalizerService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -41,8 +42,10 @@ class GoogleGeminiProvider implements AIProviderInterface
         $systemPrompt = $payload['system_prompt'] ?? '';
         $userMessage  = $payload['user_message'] ?? '';
         $jsonMode     = $payload['json_mode'] ?? false;
-        $maxTokens    = $payload['max_tokens'] ?? config('ai.max_output_tokens', 3500);
-        $temperature  = $payload['temperature'] ?? config('ai.temperature', 0.7);
+        $maxTokens    = $payload['max_tokens'] ?? config('ai.max_output_tokens', 4096);
+        // Lower temperature for JSON mode = more deterministic, less likely to produce invalid chars
+        $defaultTemp  = $jsonMode ? 0.35 : config('ai.temperature', 0.7);
+        $temperature  = $payload['temperature'] ?? $defaultTemp;
 
         $result = $this->callGemini($this->model, $systemPrompt, $userMessage, $jsonMode, $maxTokens, $temperature);
 
@@ -108,23 +111,21 @@ class GoogleGeminiProvider implements AIProviderInterface
             $outputTokens = $data['usageMetadata']['candidatesTokenCount'] ?? null;
             $cost         = $this->estimateCost($model, $inputTokens, $outputTokens);
 
-            $json = null;
+            // For JSON mode, pre-clean with normalizer so AITextResponse carries clean text
+            // Final JSON parsing happens in the execution service with full retry logic
             if ($jsonMode) {
-                $cleaned = $this->cleanJsonString($rawText);
-                $decoded = json_decode($cleaned, true);
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    Log::warning("[Gemini] JSON parse error: " . json_last_error_msg() . " | raw: " . substr($rawText, 0, 200));
-                    return AITextResponse::error('google', $model,
-                        'Resposta JSON inválida do Gemini: ' . json_last_error_msg());
-                }
-                $json = $decoded;
+                $normalizer  = app(AIJsonResponseNormalizerService::class);
+                $cleanedText = $normalizer->stripCodeFences($rawText);
+                $cleanedText = $normalizer->removeInvalidControlCharacters($cleanedText);
+                $cleanedText = $normalizer->fixCommonEncodingIssues($cleanedText);
+                $rawText     = $cleanedText;
             }
 
             return AITextResponse::success(
                 provider: 'google',
                 model: $model,
                 text: $rawText,
-                json: $json,
+                json: null, // JSON parsing delegated to execution service with retry
                 raw: null,
                 inputTokens: $inputTokens,
                 outputTokens: $outputTokens,

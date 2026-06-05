@@ -137,7 +137,8 @@
             @endif
 
             {{-- AGENTES IA --}}
-            @if(config('features.agent_routines'))
+            {{-- AGENTES IA — menu principal reorganizado --}}
+            @if(config('features.ai_task_engine_real'))
             <span class="nav-section-label">Agentes IA</span>
 
             @if(config('features.agency_brand_context'))
@@ -149,33 +150,40 @@
             </a>
             @endif
 
-            <a href="{{ route('admin.agents.routines.index') }}" class="nav-item {{ request()->routeIs('admin.agents.routines*') ? 'active' : '' }}">
-                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                Rotinas (Legado)
-            </a>
-
-            @if(config('features.ai_task_engine_real'))
+            @if(config('features.agent_tasks_menu'))
             <a href="{{ route('admin.agent-tasks.index') }}" class="nav-item {{ request()->routeIs('admin.agent-tasks*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                 </svg>
                 Tarefas Operacionais
             </a>
+            @endif
 
+            @if(config('features.ai_memory_menu'))
             <a href="{{ route('admin.ai-memory.index') }}" class="nav-item {{ request()->routeIs('admin.ai-memory*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0h10a2 2 0 002-2V9M9 21H5a2 2 0 01-2-2V9m0 0h18"/>
                 </svg>
                 Memória IA
             </a>
+            @endif
 
+            @if(config('features.ai_usage_menu'))
             <a href="{{ route('admin.ai-usage.index') }}" class="nav-item {{ request()->routeIs('admin.ai-usage*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
                 </svg>
                 Uso / Consumo IA
+            </a>
+            @endif
+
+            {{-- Rotinas legadas — visíveis apenas se feature flag ativa --}}
+            @if(config('features.legacy_agent_routines_menu'))
+            <a href="{{ route('admin.agents.routines.index') }}" class="nav-item {{ request()->routeIs('admin.agents.routines*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                Rotinas (Legado)
             </a>
             @endif
             @endif
@@ -221,12 +229,14 @@
                 Funcionários IA
             </a>
 
+            @if(config('features.legacy_ai_tasks_menu'))
             <a href="{{ route('admin.ai-tasks.index') }}" class="nav-item {{ request()->routeIs('admin.ai-tasks*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12l2 2 4-4"/>
                 </svg>
-                Tarefas IA
+                Tarefas IA (Legado)
             </a>
+            @endif
 
             <a href="{{ route('admin.ai-logs.index') }}" class="nav-item {{ request()->routeIs('admin.ai-logs*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

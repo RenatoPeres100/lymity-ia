@@ -43,7 +43,7 @@ class DiagnoseAgentTaskCommand extends Command
 
         // 2. Employee active?
         $employee    = $task->aiEmployee;
-        $employeeOk  = $employee && $employee->active;
+        $employeeOk  = $employee && $employee->status === 'active';
         $this->checkLine('Funcionário IA ativo', $employeeOk,
             $employeeOk ? ($employee->name ?? 'OK') : 'Nenhum funcionário ativo vinculado');
 

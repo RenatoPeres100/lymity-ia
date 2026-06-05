@@ -11,6 +11,7 @@ use App\Models\BlogPost;
 use App\Models\GeneratedContentPackage;
 use App\Models\SocialPost;
 use App\Models\User;
+use App\Exceptions\AIInvalidJsonResponseException;
 use App\Services\AI\AICostGuardService;
 use App\Services\AI\AIProviderManager;
 use App\Services\AI\Context\AgentTaskContextService;
@@ -18,9 +19,10 @@ use App\Services\AI\Context\BrandContextSnapshotService;
 use App\Services\AI\Images\ContentPackageImageGenerationService;
 use App\Services\AI\Memory\AIMemoryService;
 use App\Services\AI\Prompt\StructuredPromptBuilderService;
+use App\Services\AI\Response\AIContentPayloadValidatorService;
+use App\Services\AI\Response\AIJsonResponseNormalizerService;
 use App\Services\Approval\ApprovalService;
 use App\Services\Logs\ActivityLogService;
-use App\Services\Research\DisabledResearchProvider;
 use App\Services\Research\ExternalResearchProviderInterface;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -38,6 +40,9 @@ class AgentTaskExecutionService
         private ContentPackageImageGenerationService   $imageService,
         private ApprovalService                        $approvalService,
         private ActivityLogService                     $activityLog,
+        private AIJsonResponseNormalizerService        $jsonNormalizer,
+        private AIContentPayloadValidatorService       $payloadValidator,
+        private AIExecutionGuardService                $guard,
     ) {}
 
     // ── Public API ─────────────────────────────────────────────────────────────
@@ -94,10 +99,8 @@ class AgentTaskExecutionService
     {
         $employee = $task->aiEmployee;
 
-        // Guard: must have an active AI employee
-        if (!$employee || $employee->status !== 'active') {
-            throw new \RuntimeException("Tarefa '{$task->title}' não possui funcionário IA ativo vinculado.");
-        }
+        // Guard: validates task, employee and brand context — throws with clear message if invalid
+        $this->guard->assertCanGenerateFromTask($task, $employee, isManual: $user !== null);
 
         // Guard: cost/provider check
         $this->costGuard->assertCanGenerate($task->task_type, $employee);
@@ -212,14 +215,10 @@ class AgentTaskExecutionService
 
     public function prepareExecutionContext(AgentTask $task, AiEmployee $employee): AiExecutionContext
     {
-        $brandContext = $this->brandContextService->getActiveBrandContextForScope(
-            $task->company_id,
-            $task->client_id
-        );
+        // Guard ensures brand context exists — will throw if missing
+        $brandContext = $this->guard->assertCanGenerateFromTask($task, $employee, isManual: false);
 
-        $compactBrand = $brandContext
-            ? $this->brandContextService->getCompactContext($brandContext)
-            : 'Contexto de marca não configurado. Use posicionamento profissional padrão.';
+        $compactBrand = $this->brandContextService->getCompactContext($brandContext);
 
         $compactTask = $this->taskContextService->getCompactTaskContext($task);
 
@@ -262,19 +261,22 @@ class AgentTaskExecutionService
         $task     = $run->agentTask;
         $employee = $run->aiEmployee;
 
-        $prompt = $this->promptBuilder->buildForTaskExecution($task, $employee, $context);
-
+        $prompt      = $this->promptBuilder->buildForTaskExecution($task, $employee, $context);
         $previewHash = hash('sha256', $prompt);
         $preview     = $this->promptBuilder->sanitizePromptPreview($prompt);
+
         $context->update([
             'prompt_hash'    => $previewHash,
             'prompt_preview' => $preview,
             'status'         => 'running',
         ]);
 
-        $provider = $this->providerManager->provider();
+        $provider   = $this->providerManager->provider();
+        $schemaName = $task->task_type;
+
+        // ── Attempt 1 ─────────────────────────────────────────────────────────
         $response = $provider->generateText([
-            'system_prompt' => "Você é um assistente de conteúdo profissional. Responda APENAS com JSON válido.",
+            'system_prompt' => "Você é um assistente especialista em conteúdo. RESPONDA APENAS COM JSON VÁLIDO. Sem markdown, sem texto fora do JSON, sem blocos ```json. Escape todas as quebras de linha dentro de strings como \\n.",
             'user_message'  => $prompt,
             'json_mode'     => true,
             'max_tokens'    => config('ai.max_output_tokens', 4096),
@@ -285,14 +287,61 @@ class AgentTaskExecutionService
             throw new \RuntimeException("Geração de texto falhou: " . $response->error_message);
         }
 
-        $raw  = trim($response->text);
-        $raw  = preg_replace('/^```json\s*/i', '', $raw);
-        $raw  = preg_replace('/\s*```$/i', '', $raw);
-        $data = json_decode($raw, true);
+        // ── Parse with normalizer — retry once if JSON is invalid ─────────────
+        $data = null;
+        try {
+            $data = $this->jsonNormalizer->normalizeToArray($response->text, [], $schemaName);
+        } catch (AIInvalidJsonResponseException $e) {
+            $this->activityLog->warning('ai.generation.failed_json', "JSON inválido na tentativa 1 — iniciando retry", [
+                'run_id'  => $run->id,
+                'error'   => $e->getMessage(),
+                'preview' => $this->jsonNormalizer->sanitizeForLog($response->text, 300),
+                'module'  => 'ai_tasks',
+            ]);
 
-        if (!is_array($data)) {
-            $context->update(['status' => 'failed', 'error_message' => "Resposta não é JSON válido."]);
-            throw new \RuntimeException("A IA retornou conteúdo inválido (não é JSON). Tente novamente.");
+            // ── Retry: ask Gemini to fix the broken JSON ───────────────────────
+            $badPreview  = $this->jsonNormalizer->sanitizeForLog($response->text, 800);
+            $retryPrompt = "O JSON que você retornou é inválido. Corrija-o e retorne APENAS JSON válido, sem nenhum texto adicional.\n\n" .
+                           "Erro: {$e->getMessage()}\n\n" .
+                           "JSON com problema (início):\n{$badPreview}\n\n" .
+                           "Retorne o JSON corrigido e completo. Nenhum texto fora do JSON.";
+
+            $retryResponse = $provider->generateText([
+                'system_prompt' => "Você é um especialista em JSON. Retorne APENAS JSON válido, sem markdown, sem texto adicional.",
+                'user_message'  => $retryPrompt,
+                'json_mode'     => true,
+                'max_tokens'    => config('ai.max_output_tokens', 4096),
+                'temperature'   => 0.1, // muito baixo para retry de correção
+            ]);
+
+            if (!$retryResponse->success) {
+                $context->update(['status' => 'failed', 'error_message' => "Retry de JSON falhou: " . $retryResponse->error_message]);
+                $this->activityLog->error('ai.generation.failed_json', "Retry também falhou", ['run_id' => $run->id, 'module' => 'ai_tasks']);
+                throw new \RuntimeException("Geração falhou após retry: resposta JSON inválida do Gemini.");
+            }
+
+            try {
+                $data = $this->jsonNormalizer->normalizeToArray($retryResponse->text, [], $schemaName);
+                $this->activityLog->info('ai.generation.completed', "JSON recuperado via retry para '{$task->title}'", [
+                    'run_id' => $run->id, 'module' => 'ai_tasks',
+                ]);
+                // Use retry token counts
+                $response = $retryResponse;
+            } catch (AIInvalidJsonResponseException $e2) {
+                $context->update(['status' => 'failed', 'error_message' => "JSON inválido após retry: " . $e2->getMessage()]);
+                $this->activityLog->error('ai.generation.failed_json', "JSON inválido mesmo após retry — abortando", [
+                    'run_id' => $run->id, 'error' => $e2->getMessage(), 'module' => 'ai_tasks',
+                ]);
+                throw new \RuntimeException("Geração falhou: resposta JSON inválida do Gemini após retry. Tente novamente mais tarde.");
+            }
+        }
+
+        // ── Validate payload by task type ──────────────────────────────────────
+        try {
+            $data = $this->validateAndNormalizePayload($task, $data);
+        } catch (AIInvalidJsonResponseException $e) {
+            $context->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+            throw new \RuntimeException("Payload inválido: " . $e->getMessage());
         }
 
         $context->update([
@@ -711,5 +760,18 @@ class AgentTaskExecutionService
         }
 
         return $next->utc();
+    }
+
+    /**
+     * Validate and normalize the payload from Gemini by task type.
+     */
+    private function validateAndNormalizePayload(AgentTask $task, array $data): array
+    {
+        return match (true) {
+            $task->isBlogType()      => $this->payloadValidator->validateBlogPostPayload($data),
+            $task->isCarouselType()  => $this->payloadValidator->validateInstagramCarouselPayload($data),
+            $task->isInstagramType() => $this->payloadValidator->validateInstagramPostPayload($data),
+            default                  => $data,
+        };
     }
 }
