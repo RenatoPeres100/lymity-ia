@@ -218,7 +218,7 @@
         {{-- Edit link --}}
         @if($entity && $entityType === 'BlogPost')
         <div style="margin-bottom:16px;">
-            <a href="{{ route('admin.blog.edit', $entity->id) }}" style="background:#f8fafc;border:1px solid #e2e8f0;color:#4f46e5;font-size:.8rem;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;display:inline-block;">
+            <a href="{{ route('admin.blog.posts.edit', $entity->id) }}" style="background:#f8fafc;border:1px solid #e2e8f0;color:#4f46e5;font-size:.8rem;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;display:inline-block;">
                 ✏ Editar artigo antes de aprovar
             </a>
         </div>
@@ -294,7 +294,7 @@
 
         {{-- Edit link for social --}}
         @if($entity && $entityType === 'SocialPost')
-        <a href="{{ route('admin.social.edit', $entity->id) }}" style="background:#f8fafc;border:1px solid #e2e8f0;color:#4f46e5;font-size:.8rem;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;display:inline-block;margin-bottom:16px;">
+        <a href="{{ route('admin.social.posts.edit', $entity->id) }}" style="background:#f8fafc;border:1px solid #e2e8f0;color:#4f46e5;font-size:.8rem;font-weight:600;padding:8px 16px;border-radius:8px;text-decoration:none;display:inline-block;margin-bottom:16px;">
             ✏ Editar post antes de aprovar
         </a>
         @endif
