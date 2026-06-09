@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\AiImageGeneration;
+use App\Models\GeneratedContentAsset;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -45,11 +46,35 @@ class AiImagesDiagnose extends Command
         $this->line('  Último erro:             ' . ($lastError ? substr($lastError, 0, 100) : 'nenhum'));
 
         $this->newLine();
+        $this->line('  === Assets de Pacotes (GeneratedContentAsset) ===');
+        $assetTotal    = GeneratedContentAsset::count();
+        $assetOk       = GeneratedContentAsset::where('status', 'generated')->count();
+        $assetFailed   = GeneratedContentAsset::where('status', 'failed')->count();
+        $lastFailedAsset = GeneratedContentAsset::where('status', 'failed')->latest()->first();
+        $this->line('  Total assets:            ' . $assetTotal);
+        $this->line('  Gerados OK:              ' . $assetOk);
+        $this->line('  Falhados:                ' . $assetFailed);
+        if ($lastFailedAsset) {
+            $this->line('  Último asset falhado:    #' . $lastFailedAsset->id . ' — ' . substr($lastFailedAsset->error_message ?? 'sem msg', 0, 100));
+            $this->line('  Tipo / Prompt:           ' . $lastFailedAsset->asset_type . ' | ' . substr($lastFailedAsset->prompt ?? '', 0, 80));
+        }
+
+        $this->newLine();
         $storageLink  = file_exists(public_path('storage'));
         $storageReady = Storage::disk($disk)->exists($path);
         $this->line('  Storage link ativo:      ' . ($storageLink ? '<info>sim</info>' : '<error>não — rode php artisan storage:link</error>'));
         $this->line('  Pasta AI Images existe:  ' . ($storageReady ? '<info>sim</info>' : '<comment>não — será criada na primeira geração</comment>'));
         $this->line('  URL pública base:        ' . $baseUrl);
+
+        // Storage writability test
+        $testPath = 'ai-images/.write_test_' . time();
+        try {
+            Storage::disk($disk)->put($testPath, 'ok');
+            Storage::disk($disk)->delete($testPath);
+            $this->line('  Storage gravável:        <info>sim</info>');
+        } catch (\Throwable $e) {
+            $this->line('  Storage gravável:        <error>FALHA — ' . $e->getMessage() . '</error>');
+        }
 
         $this->newLine();
         if (!$apiKey) {

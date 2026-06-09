@@ -20,9 +20,9 @@ class ContentPackageImageGenerationService
             && config('ai-images.enabled', false);
     }
 
-    public function generateFeaturedImage(GeneratedContentPackage $package, string $prompt): ?GeneratedContentAsset
+    public function generateFeaturedImage(GeneratedContentPackage $package, string $prompt, ?string $imageAlt = null): ?GeneratedContentAsset
     {
-        return $this->generateAsset($package, 'featured_image', $prompt, null);
+        return $this->generateAsset($package, 'featured_image', $prompt, null, $imageAlt);
     }
 
     public function generateFeedImage(GeneratedContentPackage $package, string $prompt): ?GeneratedContentAsset
@@ -71,9 +71,10 @@ class ContentPackageImageGenerationService
         $visual = $package->visual_payload ?? [];
 
         if ($asset->asset_type === 'featured_image') {
-            $visual['featured_image_url']    = $asset->public_url;
-            $visual['featured_image_local']  = $asset->local_path;
-            $visual['visual_status']         = 'generated';
+            $visual['featured_image_url']      = $asset->public_url;
+            $visual['featured_image_local']    = $asset->local_path;
+            $visual['featured_image_asset_id'] = $asset->id;
+            $visual['visual_status']           = 'generated';
         } elseif ($asset->asset_type === 'feed_image') {
             $visual['feed_image_url']    = $asset->public_url;
             $visual['feed_image_local']  = $asset->local_path;
@@ -89,6 +90,35 @@ class ContentPackageImageGenerationService
         }
 
         $package->update(['visual_payload' => $visual]);
+
+        // Propagate image URL to the generated entity (BlogPost / SocialPost)
+        if ($asset->public_url && $asset->asset_type === 'featured_image') {
+            $this->propagateImageToEntity($package, $asset);
+        }
+    }
+
+    private function propagateImageToEntity(GeneratedContentPackage $package, GeneratedContentAsset $asset): void
+    {
+        try {
+            if (!$package->generated_entity_type || !$package->generated_entity_id) return;
+
+            $entity = $package->generatedEntity;
+            if (!$entity) return;
+
+            if ($entity instanceof \App\Models\BlogPost) {
+                $updates = ['featured_image' => $asset->public_url];
+                if ($asset->metadata['alt'] ?? null) {
+                    $updates['featured_image_alt'] = $asset->metadata['alt'];
+                }
+                $entity->update($updates);
+                Log::info("[ContentPackageImageGen] BlogPost #{$entity->id} updated with featured_image.");
+            } elseif ($entity instanceof \App\Models\SocialPost) {
+                $entity->update(['public_image_url' => $asset->public_url]);
+                Log::info("[ContentPackageImageGen] SocialPost #{$entity->id} updated with public_image_url.");
+            }
+        } catch (\Throwable $e) {
+            Log::warning("[ContentPackageImageGen] Failed to propagate image to entity: " . $e->getMessage());
+        }
     }
 
     // ── Private ───────────────────────────────────────────────────────────────
@@ -97,8 +127,11 @@ class ContentPackageImageGenerationService
         GeneratedContentPackage $package,
         string $assetType,
         string $prompt,
-        ?int $slideOrder
+        ?int $slideOrder,
+        ?string $imageAlt = null
     ): ?GeneratedContentAsset {
+        $metadata = $imageAlt ? ['alt' => $imageAlt] : null;
+
         $asset = GeneratedContentAsset::create([
             'generated_content_package_id' => $package->id,
             'asset_type'  => $assetType,
@@ -107,26 +140,34 @@ class ContentPackageImageGenerationService
             'provider'    => 'google',
             'model'       => config('ai.gemini_image_model', ''),
             'status'      => 'pending',
+            'metadata'    => $metadata,
         ]);
 
         try {
-            $storagePath = 'ai-images/packages/' . $package->id . '/' . $assetType . '_' . ($slideOrder ?? time()) . '.png';
+            $storagePath = 'ai-images/packages/' . $package->id . '/' . $assetType . '_' . ($slideOrder ?? time());
             $result      = $this->gemini->generateAndStore($prompt, $storagePath);
 
-            if (empty($result['local_path'])) {
+            // generateAndStore returns 'path' (with extension), 'public_url', 'bytes', 'mime', 'model'
+            $savedPath = $result['path'] ?? $result['local_path'] ?? null;
+            $publicUrl = $result['public_url'] ?? null;
+
+            if (empty($savedPath)) {
                 $asset->update([
                     'status'        => 'failed',
-                    'error_message' => 'Geração retornou sem arquivo',
+                    'error_message' => 'Geração retornou sem arquivo. Result keys: ' . implode(',', array_keys($result)),
                 ]);
                 return null;
             }
 
-            $disk      = config('ai-images.storage.disk', 'public');
-            $publicUrl = Storage::disk($disk)->url($storagePath);
+            if (empty($publicUrl)) {
+                $disk      = config('ai-images.storage.disk', 'public');
+                $publicUrl = Storage::disk($disk)->url($savedPath);
+            }
 
             $asset->update([
-                'local_path' => $storagePath,
+                'local_path' => $savedPath,
                 'public_url' => $publicUrl,
+                'model'      => $result['model'] ?? $asset->model,
                 'status'     => 'generated',
             ]);
 

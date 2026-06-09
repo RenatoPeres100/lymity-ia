@@ -73,10 +73,46 @@ class AIContentPayloadValidatorService
         $payload['excerpt']         = $payload['excerpt'] ?? Str::limit(strip_tags($payload['content_html']), 155);
         $payload['seo_title']       = $payload['seo_title'] ?? Str::limit($payload['title'], 60);
         $payload['seo_description'] = $payload['seo_description'] ?? ($payload['excerpt'] ?? '');
+        // meta_description mirrors seo_description
+        $payload['meta_description'] = $payload['meta_description']
+            ?? $payload['seo_description']
+            ?? ($payload['excerpt'] ?? '');
+        // sync back
+        if (empty($payload['seo_description']) && !empty($payload['meta_description'])) {
+            $payload['seo_description'] = $payload['meta_description'];
+        }
         $payload['focus_keyword']   = $payload['focus_keyword'] ?? '';
         $payload['cta_final']       = $payload['cta_final'] ?? '';
         $payload['image_prompt']    = $payload['image_prompt'] ?? "Professional image for article: {$payload['title']}";
+        $payload['image_alt']       = $payload['image_alt'] ?? $payload['title'];
+        $payload['image_caption']   = $payload['image_caption'] ?? null;
         $payload['sources_used']    = $payload['sources_used'] ?? [];
+
+        // Normalize tags
+        if (!isset($payload['tags'])) {
+            // derive from secondary_keywords or focus_keyword
+            $derived = array_filter(array_merge(
+                [$payload['focus_keyword'] ?? null],
+                (array)($payload['secondary_keywords'] ?? [])
+            ));
+            $payload['tags'] = array_values(array_unique(array_filter(array_map('trim', $derived))));
+        } elseif (is_string($payload['tags'])) {
+            $payload['tags'] = array_values(array_filter(array_map('trim', explode(',', $payload['tags']))));
+        }
+        $payload['tags'] = (array)($payload['tags'] ?? []);
+
+        // Normalize categories
+        if (!isset($payload['categories'])) {
+            $payload['categories'] = ['Marketing Digital', 'Estratégia'];
+        } elseif (is_string($payload['categories'])) {
+            $payload['categories'] = array_values(array_filter(array_map('trim', explode(',', $payload['categories']))));
+        }
+        $payload['categories'] = (array)($payload['categories'] ?? []);
+
+        // Normalize subtitle
+        if (empty($payload['subtitle'])) {
+            $payload['subtitle'] = Str::limit($payload['excerpt'] ?? $payload['title'], 120);
+        }
 
         return $payload;
     }

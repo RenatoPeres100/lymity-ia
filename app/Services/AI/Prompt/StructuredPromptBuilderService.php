@@ -196,6 +196,9 @@ Não use vírgulas finais.
 - O conteúdo deve ser original, profundo e verdadeiramente útil para o leitor
 - Conecte o assunto ao posicionamento e serviços da marca sempre que natural
 - O CTA final deve ser específico e alinhado ao Brand Context
+- Gere tags e categorias coerentes e relevantes para o tema do artigo
+- Gere image_prompt em inglês, detalhado, profissional e sem texto na imagem
+- Gere image_alt em português, descritivo e otimizado para SEO
 
 === FORMATO DE SAÍDA (retorne APENAS este JSON, sem markdown externo) ===
 {
@@ -206,11 +209,16 @@ Não use vírgulas finais.
   "excerpt": "resumo atrativo de até 160 caracteres para SEO",
   "seo_title": "título SEO com keyword no início max 60 chars",
   "seo_description": "meta descrição com benefício e CTA max 155 chars",
+  "meta_description": "idêntico a seo_description",
   "focus_keyword": "palavra-chave principal do artigo",
   "secondary_keywords": ["keyword 2", "keyword 3"],
+  "tags": ["tag1", "tag2", "tag3", "tag4"],
+  "categories": ["Categoria Principal", "Categoria Secundária"],
   "content_markdown": "## Introdução\n\nTexto da introdução...\n\n## Seção Principal\n\nTexto da seção...\n\n## Conclusão\n\nTexto final com CTA.",
   "cta_final": "chamada para ação alinhada ao Brand Context",
-  "image_prompt": "professional image for: describe scene in english",
+  "image_prompt": "professional photorealistic image for: describe scene in english without text",
+  "image_alt": "descrição acessível e SEO da imagem em português",
+  "image_caption": "legenda opcional da imagem em português",
   "sources_used": []
 }
 JSON;

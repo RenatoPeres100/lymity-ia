@@ -99,6 +99,17 @@ class AgentTaskExecutionService
     {
         $employee = $task->aiEmployee;
 
+        // Duplicate run guard: skip if a run is already in progress for this task
+        $inFlight = AgentTaskRun::where('agent_task_id', $task->id)
+            ->whereIn('status', ['queued', 'running', 'preparing_context', 'generating_text', 'generating_image'])
+            ->where('started_at', '>=', now()->subMinutes(10))
+            ->first();
+        if ($inFlight && $user === null) {
+            throw new \RuntimeException(
+                "Task #{$task->id} já está em execução (run #{$inFlight->id} status={$inFlight->status}). Pulando."
+            );
+        }
+
         // Guard: validates task, employee and brand context — throws with clear message if invalid
         $this->guard->assertCanGenerateFromTask($task, $employee, isManual: $user !== null);
 
@@ -395,7 +406,8 @@ class AgentTaskExecutionService
 
         try {
             if ($task->isBlogType()) {
-                $asset = $this->imageService->generateFeaturedImage($package, $imagePrompt);
+                $imageAlt = $textPayload['image_alt'] ?? null;
+                $asset = $this->imageService->generateFeaturedImage($package, $imagePrompt, $imageAlt);
             } elseif ($task->isCarouselType()) {
                 $slides = $textPayload['slides'] ?? [];
                 $this->imageService->generateCarouselSlides($package, $slides);
@@ -444,6 +456,8 @@ class AgentTaskExecutionService
         $visualPayload = [
             'visual_status'  => 'pending',
             'image_prompt'   => $payload['image_prompt'] ?? null,
+            'image_alt'      => $payload['image_alt'] ?? null,
+            'image_caption'  => $payload['image_caption'] ?? null,
             'image_type'     => $task->image_type,
         ];
 
@@ -472,6 +486,11 @@ class AgentTaskExecutionService
                 'output_tokens'           => $run->output_tokens,
             ],
         ]);
+
+        // Back-fill generated_content_package_id on the entity if it has that column
+        if ($entity instanceof BlogPost && \Schema::hasColumn('blog_posts', 'generated_content_package_id')) {
+            $entity->update(['generated_content_package_id' => $package->id]);
+        }
 
         $this->activityLog->info('content.package.created', "Pacote criado para '{$task->title}'", [
             'package_id' => $package->id, 'entity_type' => get_class($entity), 'entity_id' => $entity->id, 'module' => 'ai_tasks',
@@ -585,26 +604,42 @@ class AgentTaskExecutionService
         // type: enum('agency','client') — tasks created by AI are agency posts
         $postType = $task->client_id ? 'client' : 'agency';
 
+        // categories: json column
+        $categories = $payload['categories'] ?? [];
+        if (is_string($categories)) {
+            $categories = array_values(array_filter(array_map('trim', explode(',', $categories))));
+        }
+        $categories = empty($categories) ? null : $categories;
+
         $post = BlogPost::create([
-            'company_id'         => $task->company_id,
-            'client_id'          => $task->client_id,
-            'ai_employee_id'     => $run->ai_employee_id,
-            'agent_task_id'      => $task->id,
-            'agent_task_run_id'  => $run->id,
-            'title'              => $payload['title'] ?? $task->title,
-            'slug'               => $slug,
-            'subtitle'           => $payload['subtitle'] ?? null,
-            'excerpt'            => $payload['excerpt'] ?? null,
-            'content'            => $payload['content_html'] ?? '',
-            'seo_title'          => $payload['seo_title'] ?? null,
-            'seo_description'    => $payload['seo_description'] ?? null,
-            'focus_keyword'      => $payload['focus_keyword'] ?? null,
-            'secondary_keywords' => $secondaryKeywords,
-            'tags'               => $tags,
-            'status'             => 'pending_approval',
-            'type'               => $postType,
-            'ai_metadata'        => ['generated_by_task' => $task->id, 'run_id' => $run->id],
-            'scheduled_at'       => $task->auto_schedule_after_approval ? $this->calculateScheduledAt($task) : null,
+            'company_id'              => $task->company_id,
+            'client_id'               => $task->client_id,
+            'ai_employee_id'          => $run->ai_employee_id,
+            'agent_task_id'           => $task->id,
+            'agent_task_run_id'       => $run->id,
+            'generated_content_package_id' => null, // filled after package creation
+            'title'                   => $payload['title'] ?? $task->title,
+            'slug'                    => $slug,
+            'subtitle'                => $payload['subtitle'] ?? null,
+            'excerpt'                 => $payload['excerpt'] ?? null,
+            'content'                 => $payload['content_html'] ?? '',
+            'seo_title'               => $payload['seo_title'] ?? null,
+            'seo_description'         => $payload['seo_description'] ?? null,
+            'meta_description'        => $payload['meta_description'] ?? $payload['seo_description'] ?? null,
+            'focus_keyword'           => $payload['focus_keyword'] ?? null,
+            'secondary_keywords'      => $secondaryKeywords,
+            'tags'                    => $tags,
+            'categories'              => $categories,
+            'featured_image_alt'      => $payload['image_alt'] ?? null,
+            'featured_image_caption'  => $payload['image_caption'] ?? null,
+            'status'                  => 'pending_approval',
+            'type'                    => $postType,
+            'ai_metadata'             => [
+                'generated_by_task' => $task->id,
+                'run_id'            => $run->id,
+                'image_prompt'      => $payload['image_prompt'] ?? null,
+            ],
+            'scheduled_at' => $task->auto_schedule_after_approval ? $this->calculateScheduledAt($task) : null,
         ]);
 
         return $post;

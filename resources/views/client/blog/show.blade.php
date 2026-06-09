@@ -16,9 +16,18 @@
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
     <div class="lg:col-span-2 space-y-5">
-        @if($blogPost->featured_image)
-        <img src="{{ $blogPost->featured_image }}" alt="{{ $blogPost->title }}"
+        @php
+            $featuredImg = $blogPost->featured_image
+                ?? ($blogPost->ai_metadata['featured_image_url'] ?? null)
+                ?? ($blogPost->ai_metadata['visual_payload']['featured_image_url'] ?? null);
+            $featuredAlt = $blogPost->featured_image_alt ?? $blogPost->title;
+        @endphp
+        @if($featuredImg)
+        <img src="{{ $featuredImg }}" alt="{{ $featuredAlt }}"
             class="w-full h-56 object-cover rounded-2xl">
+        @if($blogPost->featured_image_caption)
+        <p class="text-xs text-slate-400 text-center mt-1">{{ $blogPost->featured_image_caption }}</p>
+        @endif
         @endif
 
         <div class="card p-6">

@@ -186,6 +186,47 @@
             </div>
         </div>
 
+        {{-- Tags and Categories --}}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            @if(!empty($content['tags']))
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;">
+                <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Tags</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+                    @foreach((array)$content['tags'] as $tag)
+                    <span style="background:#dcfce7;color:#166534;font-size:.72rem;padding:3px 8px;border-radius:8px;">{{ $tag }}</span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+            @if(!empty($content['categories']))
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;">
+                <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Categorias</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;">
+                    @foreach((array)$content['categories'] as $cat)
+                    <span style="background:#dbeafe;color:#1d4ed8;font-size:.72rem;padding:3px 8px;border-radius:8px;">{{ $cat }}</span>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        </div>
+
+        @if(!empty($content['image_alt']) || !empty($content['image_caption']))
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+            @if(!empty($content['image_alt']))
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;">
+                <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Alt Text da Imagem</div>
+                <div style="font-size:.875rem;color:#334155;">{{ $content['image_alt'] }}</div>
+            </div>
+            @endif
+            @if(!empty($content['image_caption']))
+            <div style="background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:18px;">
+                <div style="font-size:.7rem;color:#64748b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Legenda da Imagem</div>
+                <div style="font-size:.875rem;color:#334155;">{{ $content['image_caption'] }}</div>
+            </div>
+            @endif
+        </div>
+        @endif
+
         @if(!empty($content['cta_final']))
         <div style="background:#ede9fe;border:1px solid #c4b5fd;border-radius:12px;padding:18px;margin-bottom:16px;">
             <div style="font-size:.7rem;color:#5b21b6;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">CTA Final</div>
