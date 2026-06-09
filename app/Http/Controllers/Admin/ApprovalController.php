@@ -11,6 +11,7 @@ use App\Models\ApprovalComment;
 use App\Models\ApprovalRequest;
 use App\Models\Client;
 use App\Services\Approval\ApprovalService;
+use App\Services\Approvals\ApprovalDisplayService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -83,7 +84,9 @@ class ApprovalController extends Controller
     {
         $approvalRequest->load(['client', 'requester', 'aiEmployee', 'approvedBy', 'rejectedBy', 'actions.user', 'comments.user', 'approvable']);
 
-        return view('admin.approvals.show', compact('approvalRequest'));
+        $display = app(ApprovalDisplayService::class)->build($approvalRequest);
+
+        return view('admin.approvals.show', compact('approvalRequest', 'display'));
     }
 
     public function approve(ApprovalRequest $approvalRequest, Request $request): RedirectResponse
