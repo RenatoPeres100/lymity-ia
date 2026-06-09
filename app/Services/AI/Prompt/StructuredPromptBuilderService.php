@@ -5,6 +5,7 @@ namespace App\Services\AI\Prompt;
 use App\Models\AgentTask;
 use App\Models\AiEmployee;
 use App\Models\AiExecutionContext;
+use App\Models\AiMemory;
 use App\Services\AI\Memory\AIMemoryService;
 use Illuminate\Support\Collection;
 
