@@ -14,16 +14,38 @@ class AIContentPayloadValidatorService
     {
         $this->requireNonEmpty($payload, 'title', 'Blog Post');
 
-        // Accept either content_html or content_markdown
-        if (empty($payload['content_html']) && empty($payload['content_markdown'])) {
+        // Accept content under any known alias — ordered by preference
+        $contentFieldAliases = [
+            'content_markdown', 'content_html',
+            'content', 'body', 'article', 'article_content',
+            'text', 'html', 'markdown', 'post_content',
+        ];
+        $contentValue = null;
+        $contentField = null;
+        foreach ($contentFieldAliases as $alias) {
+            if (!empty($payload[$alias])) {
+                $contentValue = $payload[$alias];
+                $contentField = $alias;
+                break;
+            }
+        }
+
+        if (empty($contentValue)) {
+            \Illuminate\Support\Facades\Log::warning('[PayloadValidator] Blog post sem campo de conteúdo. Campos recebidos: ' . implode(', ', array_keys($payload)));
             throw new AIInvalidJsonResponseException(
-                "Payload do blog post inválido: campo 'content_html' ou 'content_markdown' é obrigatório."
+                "Payload do blog post inválido: nenhum campo de conteúdo encontrado. " .
+                "Esperado: content_markdown ou content_html. Campos recebidos: " . implode(', ', array_keys($payload))
             );
         }
 
-        // Convert markdown to HTML if only markdown provided
-        if (empty($payload['content_html']) && !empty($payload['content_markdown'])) {
-            $payload['content_html'] = $this->markdownToHtml($payload['content_markdown']);
+        // Always populate both content_html and content_markdown
+        if ($contentField === 'content_html' || $contentField === 'html') {
+            $payload['content_html']     = $contentValue;
+            $payload['content_markdown'] = $payload['content_markdown'] ?? strip_tags($contentValue);
+        } else {
+            // content_markdown, content, body, article, article_content, text, markdown, post_content
+            $payload['content_markdown'] = $contentValue;
+            $payload['content_html']     = $this->markdownToHtml($contentValue);
         }
 
         // Normalize slug

@@ -21,30 +21,14 @@ class BlogAiController extends Controller
 
     public function store(Request $request)
     {
-        $provider    = config('ai.provider', 'mock');
-        $realEnabled = config('ai.real_enabled', false);
-
-        if ($provider === 'mock' || !$realEnabled) {
-            return back()->withErrors(['ai' => 'Provider de IA não configurado. Configure um provedor real (AI_PROVIDER e AI_REAL_ENABLED=true) para gerar conteúdo.']);
-        }
-
-        $request->validate([
-            'tema'        => 'required|string|max:200',
-            'keyword'     => 'required|string|max:100',
-            'keywords_sec'=> 'nullable|string|max:300',
-            'objetivo'    => 'nullable|string|max:300',
-            'tom'         => 'nullable|string|max:100',
-            'publico'     => 'nullable|string|max:200',
-            'cta'         => 'nullable|string|max:200',
+        // Geração solta bloqueada — toda geração de IA exige uma AgentTask ativa
+        \Illuminate\Support\Facades\Log::warning('[BlogAiController] Tentativa de geração solta bloqueada.', [
+            'user_id' => $request->user()?->id,
+            'ip'      => $request->ip(),
         ]);
 
-        $result = $this->pipeline->createDraftFromAi($request->all(), $request->user());
-
-        if (is_array($result) && isset($result['error'])) {
-            return back()->withErrors(['ai' => $result['error']]);
-        }
-
-        return redirect()->route('admin.blog.pipeline.index')
-            ->with('success', 'Geração de artigo enfileirada. O rascunho aparecerá em breve.');
+        return redirect()->route('admin.agent-tasks.index')
+            ->with('warning', 'Crie uma Tarefa Operacional antes de gerar conteúdo com IA. '
+                . 'Use uma tarefa com task_type blog_post_recurring e status active.');
     }
 }

@@ -178,29 +178,38 @@ class StructuredPromptBuilderService
     private function buildBlogOutputRules(): string
     {
         return <<<'JSON'
+=== INSTRUÇÕES OBRIGATÓRIAS DE FORMATO ===
+RESPONDA APENAS JSON VÁLIDO.
+NÃO use markdown fora do JSON.
+NÃO use bloco ```json.
+NÃO escreva explicações antes ou depois do JSON.
+O campo content_markdown é obrigatório — não use content, body, article ou text.
+Escape corretamente quebras de linha dentro das strings como \n.
+Não use caracteres de controle literais.
+Não use vírgulas finais.
+
 === PADRÕES DE QUALIDADE OBRIGATÓRIOS ===
-- O artigo deve ter NO MÍNIMO 800 palavras no campo content_html
-- Use h2 para seções principais, h3 para subseções
+- O artigo deve ter NO MÍNIMO 800 palavras no campo content_markdown
+- Use ## para seções principais, ### para subseções (formato Markdown)
 - Inclua introdução envolvente, desenvolvimento com dados/exemplos e conclusão com CTA
 - O conteúdo deve ser original, profundo e verdadeiramente útil para o leitor
 - Conecte o assunto ao posicionamento e serviços da marca sempre que natural
 - O CTA final deve ser específico e alinhado ao Brand Context
-- O image_prompt deve descrever uma imagem profissional e relevante para o artigo
 
-=== FORMATO DE SAÍDA (retorne APENAS este JSON) ===
+=== FORMATO DE SAÍDA (retorne APENAS este JSON, sem markdown externo) ===
 {
   "content_type": "blog_post",
-  "title": "título atraente, direto e com a keyword principal",
+  "title": "título atraente direto e com a keyword principal",
   "slug": "slug-url-amigavel-sem-acentos",
-  "subtitle": "subtítulo que complementa e amplia o título",
+  "subtitle": "subtítulo que complementa o título",
   "excerpt": "resumo atrativo de até 160 caracteres para SEO",
-  "seo_title": "título SEO com keyword no início (max 60 chars)",
-  "seo_description": "meta descrição com benefício + CTA (max 155 chars)",
+  "seo_title": "título SEO com keyword no início max 60 chars",
+  "seo_description": "meta descrição com benefício e CTA max 155 chars",
   "focus_keyword": "palavra-chave principal do artigo",
-  "secondary_keywords": ["keyword secundária 1", "keyword secundária 2", "keyword 3"],
-  "content_html": "<article><h2>Introdução</h2><p>...</p><h2>Seção 1</h2><p>...</p><h2>Conclusão</h2><p>...</p></article>",
+  "secondary_keywords": ["keyword 2", "keyword 3"],
+  "content_markdown": "## Introdução\n\nTexto da introdução...\n\n## Seção Principal\n\nTexto da seção...\n\n## Conclusão\n\nTexto final com CTA.",
   "cta_final": "chamada para ação alinhada ao Brand Context",
-  "image_prompt": "descrição detalhada em inglês para geração de imagem destacada profissional",
+  "image_prompt": "professional image for: describe scene in english",
   "sources_used": []
 }
 JSON;

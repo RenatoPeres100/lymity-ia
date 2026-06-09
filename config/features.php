@@ -51,6 +51,7 @@ return [
     'agent_tasks_menu'          => true,
     'ai_memory_menu'            => true,
     'ai_usage_menu'             => true,
+    'ai_execution_logs_menu'    => true,   // Logs IA no menu Funcionários IA
     'legacy_ai_tasks_menu'      => false,  // AiTasks antigas — ocultas do menu principal
     'legacy_ai_schedules_menu'  => false,  // AiWorkSchedules — ocultas do menu principal
     'legacy_agent_routines_menu'=> false,  // Rotinas legadas — substituídas por AgentTasks

@@ -238,6 +238,7 @@
             </a>
             @endif
 
+            @if(config('features.ai_execution_logs_menu', true))
             <a href="{{ route('admin.ai-logs.index') }}" class="nav-item {{ request()->routeIs('admin.ai-logs*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -245,6 +246,7 @@
                 </svg>
                 Logs IA
             </a>
+            @endif
 
             <a href="{{ route('admin.ai-settings.index') }}" class="nav-item {{ request()->routeIs('admin.ai-settings*','admin.ai-usage*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

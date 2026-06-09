@@ -20,15 +20,15 @@ class SocialAiController extends Controller
 
     public function generate(GenerateSocialPostAiRequest $request)
     {
-        try {
-            $task = $this->aiService->requestPostGeneration($request->validated(), $request->user());
+        // Geração solta bloqueada — toda geração de IA exige uma AgentTask ativa
+        \Illuminate\Support\Facades\Log::warning('[SocialAiController] Tentativa de geração solta bloqueada.', [
+            'user_id' => $request->user()?->id,
+            'ip'      => $request->ip(),
+        ]);
 
-            return redirect()
-                ->route('admin.social.posts.index')
-                ->with('success', "Post IA gerado com sucesso! Tarefa #{$task->id} concluída.");
-        } catch (\Throwable $e) {
-            return back()->withInput()->with('error', 'Erro ao gerar post: ' . $e->getMessage());
-        }
+        return redirect()->route('admin.agent-tasks.index')
+            ->with('warning', 'Crie uma Tarefa Operacional antes de gerar conteúdo com IA. '
+                . 'Use uma tarefa com task_type instagram_post_recurring ou instagram_carousel_recurring e status active.');
     }
 
     public function generateVariantsForm(SocialPost $post)

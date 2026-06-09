@@ -10,11 +10,11 @@ AgentTask ativa
 → Brand Context ativo e completo
 → AIExecutionGuardService (valida tudo)
 → AiExecutionContext (snapshot)
-→ StructuredPromptBuilderService (prompt com Brand Context + instruções completas)
+→ StructuredPromptBuilderService (prompt com Brand Context + instruções JSON-only)
 → GoogleGeminiProvider (JSON mode, temperature=0.35)
-→ AIJsonResponseNormalizerService (limpa control chars, fences, BOM)
+→ AIJsonResponseNormalizerService (limpa control chars, fences, BOM, aspas curvas)
 → Retry se JSON inválido (1x com temperatura 0.1)
-→ AIContentPayloadValidatorService (valida campos obrigatórios)
+→ AIContentPayloadValidatorService (valida e normaliza aliases de conteúdo)
 → GeneratedContentPackage (pacote completo)
 → ApprovalRequest (aprovação obrigatória)
 → BlogPost/SocialPost com status=pending_approval
@@ -29,87 +29,160 @@ AgentTask ativa
 Resolve os problemas mais comuns da resposta do Gemini:
 
 | Problema | Solução |
-|----------|---------|
-| ` ```json ... ``` ` | `stripCodeFences()` |
+|---|---|
+| JSON dentro de ` ```json ` | `stripCodeFences()` |
 | Texto antes/depois do JSON | `extractJsonCandidate()` |
-| Newlines literais dentro de strings | `removeInvalidControlCharacters()` |
-| BOM UTF-8, aspas curvas | `fixCommonEncodingIssues()` |
+| BOM UTF-8 | `fixCommonEncodingIssues()` |
+| Caracteres de controle literais (0x00-0x1F) | `removeInvalidControlCharacters()` |
+| Aspas curvas " " ' ' | `fixCommonEncodingIssues()` |
+| Zero-width spaces | `fixCommonEncodingIssues()` |
 | JSON irrecuperável | Lança `AIInvalidJsonResponseException` |
 
-## Retry de JSON Inválido
+### Teste
 
-No `AgentTaskExecutionService::executeTextGeneration()`:
+```bash
+php artisan ai:test-json-normalizer
+```
 
-1. Gera texto → tenta normalizar
-2. Se falhar → 1 retry pedindo correção do JSON (temperature=0.1)
-3. Se retry falhar → marca AgentTaskRun como `failed` com mensagem clara
-4. Nunca entra em loop
+Casos 1-6: PASS (JSON normalizado). Caso 7 (irrecuperável): falha controlada.
+
+---
+
+## AIContentPayloadValidatorService
+
+**Arquivo:** `app/Services/AI/Response/AIContentPayloadValidatorService.php`
+
+### Aliases aceitos para conteúdo de blog post
+
+O Gemini pode retornar o conteúdo em qualquer campo abaixo (em ordem de preferência):
+
+1. `content_markdown` ← **preferido e exigido no prompt**
+2. `content_html`
+3. `content`
+4. `body`
+5. `article`
+6. `article_content`
+7. `text`
+8. `html`
+9. `markdown`
+10. `post_content`
+
+### Saída garantida
+
+Independente do alias recebido, o validator **sempre retorna** `content_html` e `content_markdown` preenchidos:
+
+- Se `content_markdown` → gera `content_html` via markdown-to-html
+- Se `content_html` / `html` → mantém `content_html`, gera `content_markdown` via `strip_tags`
+- Outros aliases → trata como markdown, gera ambos
+
+### Teste
+
+```bash
+php artisan ai:test-payload-validator
+```
+
+Todos os 10 aliases passam e retornam ambos os campos.
+
+---
+
+## StructuredPromptBuilderService
+
+**Arquivo:** `app/Services/AI/Prompt/StructuredPromptBuilderService.php`
+
+O prompt de blog inclui bloco de instrução explícito:
+
+```
+RESPONDA APENAS JSON VÁLIDO.
+NÃO use markdown fora do JSON.
+NÃO use bloco ```json.
+NÃO escreva explicações antes ou depois do JSON.
+O campo content_markdown é obrigatório.
+Escape corretamente quebras de linha dentro das strings como \n.
+Não use caracteres de controle.
+Não use vírgulas finais.
+```
+
+---
 
 ## AIExecutionGuardService
 
 **Arquivo:** `app/Services/AI/Execution/AIExecutionGuardService.php`
 
-Garante antes de qualquer geração:
-- Task existe e não está archived/disabled
-- Employee existe e `status='active'`
-- Brand Context existe, ativo e completo
-- Lança RuntimeException com mensagem clara se qualquer check falhar
+Valida antes de toda execução:
 
-## Feature Flags
+- `AgentTask` obrigatória e não arquivada/desativada
+- `AiEmployee` presente e com `status=active`
+- `BrandContext` presente, ativo e completo
 
-```php
-// config/features.php
-'agent_tasks_menu'           => true,   // Menu Tarefas Operacionais
-'ai_memory_menu'             => true,   // Menu Memória IA
-'ai_usage_menu'              => true,   // Menu Uso/Consumo
-'legacy_ai_tasks_menu'       => false,  // Oculta AiTasks antigas
-'legacy_ai_schedules_menu'   => false,  // Oculta AiWorkSchedules
-'legacy_agent_routines_menu' => false,  // Oculta Rotinas legadas
-'auto_publish_without_approval' => false,  // NUNCA publicar sem aprovação
-'mock_content_generation'    => false,  // NUNCA conteúdo fake
-```
+### Mensagens de bloqueio
 
-## Comandos
+| Situação | Mensagem |
+|---|---|
+| Sem AgentTask | "Toda geração de IA precisa estar vinculada a uma tarefa operacional." |
+| Sem Brand Context | "Brand Context ativo é obrigatório para gerar conteúdo com IA." |
+| Funcionário inativo | "Funcionário IA '{nome}' não está ativo (status: ...)." |
+
+---
+
+## Retry de JSON Inválido
+
+Implementado em `AgentTaskExecutionService::executeTextGeneration()`:
+
+1. Primeira chamada ao Gemini → `AIJsonResponseNormalizerService`
+2. Se falhar: loga `ai.generation.failed_json`, envia retry com mensagem de correção
+3. Se retry falhar: lança `RuntimeException` e marca `AgentTaskRun.status=failed`
+4. Não cria BlogPost/SocialPost com JSON quebrado
+
+---
+
+## Geração Solta — Bloqueada
+
+Os seguintes controllers foram atualizados para bloquear geração sem AgentTask:
+
+- `BlogAiController::store()` → redireciona para `/admin/agent-tasks` com aviso
+- `SocialAiController::generate()` → redireciona para `/admin/agent-tasks` com aviso
+
+---
+
+## Feature Flags — Menu
+
+| Flag | Padrão | Descrição |
+|---|---|---|
+| `agent_tasks_menu` | `true` | Tarefas Operacionais no menu |
+| `ai_memory_menu` | `true` | Memória IA no menu |
+| `ai_usage_menu` | `true` | Uso IA no menu |
+| `ai_execution_logs_menu` | `true` | Logs IA no menu Funcionários IA |
+| `legacy_ai_tasks_menu` | `false` | AiTasks antigas — ocultas |
+| `legacy_ai_schedules_menu` | `false` | Schedules legados — ocultos |
+| `legacy_agent_routines_menu` | `false` | Rotinas legadas — ocultas |
+
+---
+
+## Commands de Diagnóstico
 
 ```bash
-# Diagnosticar o motor completo
+# Diagnóstico completo do motor
 php artisan agents:diagnose-execution-engine
 
-# Diagnosticar uma tarefa específica
-php artisan agents:diagnose-task {id}
-
-# Verificar e corrigir consistência
-php artisan agents:repair-operational-consistency --dry-run
+# Reparo de consistência (dry-run por padrão)
+php artisan agents:repair-operational-consistency
 php artisan agents:repair-operational-consistency --fix
 
-# Reconstruir contextos compactos
-php artisan agents:rebuild-compact-contexts
-
-# Testar o normalizador de JSON
+# Testar normalizador JSON
 php artisan ai:test-json-normalizer
 
-# Executar tarefas vencidas
-php artisan agents:run-due-tasks
-php artisan agents:run-due-tasks --task=ID --force
+# Testar validator de payload
+php artisan ai:test-payload-validator
 ```
 
-## Erros Comuns
+---
 
-| Erro | Causa | Solução |
-|------|-------|---------|
-| "Control character error" | HTML com newlines literais no JSON | Corrigido pelo normalizer + retry |
-| "Brand Context ativo é obrigatório" | Brand Context não configurado | Criar em /admin/agency/brand-context |
-| "Toda geração precisa de tarefa" | Tentativa de geração sem AgentTask | Criar AgentTask antes |
-| "Funcionário IA não está ativo" | Employee com status != active | Ativar o funcionário IA |
-| "type ENUM truncated" | Valor errado no INSERT | Corrigido: usa 'agency'/'client' |
-| "approval_type ENUM truncated" | Valor errado no INSERT | Corrigido: usa 'ai_task' |
+## Como resolver erro JSON do Gemini
 
-## Validadores de Payload
+Se aparecer `content_html ou content_markdown obrigatório` nos logs:
 
-`AIContentPayloadValidatorService` garante campos obrigatórios:
-
-- **Blog Post**: title, content_html OU content_markdown, slug, excerpt, seo_title, seo_description, focus_keyword
-- **Instagram Post**: title, caption, hashtags, cta, image_prompt
-- **Carousel**: title, caption, slides[] com headline por slide
-
-Normaliza automaticamente: slugs, hashtags string→array, markdown→HTML.
+1. Verifique `storage/logs/laravel.log` — campo `[PayloadValidator]` mostra os campos recebidos
+2. Execute `php artisan ai:test-payload-validator` para confirmar que o validator está OK
+3. Verifique se o prompt contém o bloco de instruções JSON-only (`php artisan agents:diagnose-task <id>`)
+4. Se o Gemini retornar JSON inválido, o retry automático tenta corrigir — verifique se `AgentTaskRun.error_message` contém "retry"
+5. Ajuste `StructuredPromptBuilderService::buildBlogOutputRules()` se necessário
