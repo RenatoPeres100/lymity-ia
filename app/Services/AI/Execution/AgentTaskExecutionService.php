@@ -545,6 +545,9 @@ class AgentTaskExecutionService
         if ($task->isBlogType()) {
             return $this->createBlogPost($run, $task, $payload);
         }
+        if ($task->isThreadsType()) {
+            return $this->createThreadsPost($run, $task, $payload);
+        }
         return $this->createSocialPost($run, $task, $payload);
     }
 
@@ -778,12 +781,43 @@ class AgentTaskExecutionService
         return $post;
     }
 
+    private function createThreadsPost(AgentTaskRun $run, AgentTask $task, array $payload): SocialPost
+    {
+        $hashtags = $payload['hashtags'] ?? [];
+        if (is_array($hashtags)) {
+            $hashtags = implode(' ', array_map(fn($h) => str_starts_with($h, '#') ? $h : '#' . $h, $hashtags));
+        }
+
+        return SocialPost::create([
+            'company_id'        => $task->company_id,
+            'client_id'         => $task->client_id,
+            'ai_employee_id'    => $run->ai_employee_id,
+            'agent_task_id'     => $task->id,
+            'agent_task_run_id' => $run->id,
+            'platform'          => 'threads',
+            'content_type'      => 'threads_text',
+            'title'             => $payload['title'] ?? $task->title,
+            'main_caption'      => $payload['post_text'] ?? $payload['text'] ?? $payload['content'] ?? '',
+            'cta'               => $payload['cta'] ?? null,
+            'hashtags'          => $hashtags,
+            'creative_brief'    => $payload['strategic_angle'] ?? null,
+            'status'            => 'pending_approval',
+            'requires_approval' => true,
+            'metadata'          => [
+                'generated_by_task' => $task->id,
+                'strategic_angle'   => $payload['strategic_angle'] ?? null,
+                'approval_notes'    => $payload['approval_notes'] ?? null,
+            ],
+        ]);
+    }
+
     private function resolvePackageType(AgentTask $task): string
     {
         return match ($task->task_type) {
             'blog_post_recurring'          => 'blog_post',
             'instagram_post_recurring'     => 'instagram_post',
             'instagram_carousel_recurring' => 'instagram_carousel',
+            'threads_text_post_recurring'  => 'social_post',
             default                        => 'custom',
         };
     }
@@ -910,6 +944,7 @@ class AgentTaskExecutionService
             $task->isBlogType()      => $this->payloadValidator->validateBlogPostPayload($data),
             $task->isCarouselType()  => $this->payloadValidator->validateInstagramCarouselPayload($data),
             $task->isInstagramType() => $this->payloadValidator->validateInstagramPostPayload($data),
+            $task->isThreadsType()   => $this->payloadValidator->validateThreadsTextPayload($data),
             default                  => $data,
         };
     }

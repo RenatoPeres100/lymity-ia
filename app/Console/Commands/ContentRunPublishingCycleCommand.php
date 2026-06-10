@@ -71,10 +71,23 @@ class ContentRunPublishingCycleCommand extends Command
             Log::error('[content:run-publishing-cycle] social error: ' . $e->getMessage());
         }
 
+        // 5. Threads publishing
+        $threadsDispatched = 0;
+        try {
+            $this->info('[5/5] Publicando posts Threads agendados...');
+            Artisan::call('threads:publish-due', [], $this->output);
+            $output = Artisan::output();
+            if (preg_match('/DISPATCHED=(\d+)/', $output, $m)) $threadsDispatched = (int) $m[1];
+        } catch (\Throwable $e) {
+            $this->error('Erro em threads:publish-due: ' . $e->getMessage());
+            Log::error('[content:run-publishing-cycle] threads error: ' . $e->getMessage());
+        }
+
         $elapsed = $start->diffInSeconds(now());
         $this->info("=== CONTENT PUBLISHING CYCLE FINISHED ({$elapsed}s) ===");
         $this->line("BLOG: published={$blogPublished} failed={$blogFailed}");
         $this->line("SOCIAL: published={$socialPublished} failed={$socialFailed}");
+        $this->line("THREADS: dispatched={$threadsDispatched}");
 
         Log::info('[content:run-publishing-cycle] cycle finished', [
             'blog_published'   => $blogPublished,

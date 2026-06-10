@@ -232,6 +232,27 @@ Route::middleware(['auth', 'active'])->group(function () {
             Route::post('/check',     [App\Http\Controllers\Admin\InstagramConnectionController::class, 'check'])->name('admin.social.instagram.check');
         });
 
+        // Threads — Connection
+        Route::prefix('social/threads')->group(function () {
+            Route::get('/',           [\App\Http\Controllers\Admin\Social\ThreadsConnectionController::class, 'index'])->name('admin.social.threads.index');
+            Route::get('/connect',    [\App\Http\Controllers\Admin\Social\ThreadsConnectionController::class, 'connect'])->name('admin.social.threads.connect');
+            Route::get('/callback',   [\App\Http\Controllers\Admin\Social\ThreadsConnectionController::class, 'callback'])->name('admin.social.threads.callback');
+            Route::post('/disconnect',[\App\Http\Controllers\Admin\Social\ThreadsConnectionController::class, 'disconnect'])->name('admin.social.threads.disconnect');
+            Route::post('/check',     [\App\Http\Controllers\Admin\Social\ThreadsConnectionController::class, 'check'])->name('admin.social.threads.check');
+            // Threads posts
+            Route::get('/posts',                [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'index'])->name('admin.social.threads.posts.index');
+            Route::get('/posts/create',         [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'create'])->name('admin.social.threads.posts.create');
+            Route::post('/posts',               [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'store'])->name('admin.social.threads.posts.store');
+            Route::get('/posts/{post}',         [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'show'])->name('admin.social.threads.posts.show');
+            Route::get('/posts/{post}/edit',    [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'edit'])->name('admin.social.threads.posts.edit');
+            Route::put('/posts/{post}',         [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'update'])->name('admin.social.threads.posts.update');
+            Route::post('/posts/{post}/submit-approval', [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'submitApproval'])->name('admin.social.threads.posts.submit-approval');
+            Route::post('/posts/{post}/schedule',        [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'schedule'])->name('admin.social.threads.posts.schedule');
+            Route::post('/posts/{post}/publish-now',     [\App\Http\Controllers\Admin\Social\ThreadsPostController::class, 'publishNow'])->name('admin.social.threads.posts.publish-now');
+            // Threads logs
+            Route::get('/logs', [\App\Http\Controllers\Admin\Social\ThreadsLogController::class, 'index'])->name('admin.social.threads.logs');
+        });
+
         // Real Phase 1 — Operation & Publishing Queue
         Route::get('/operation',         [App\Http\Controllers\Admin\OperationController::class, 'index'])->name('admin.operation');
         Route::get('/publishing-queue',  [App\Http\Controllers\Admin\PublishingQueueController::class, 'index'])->name('admin.publishing-queue');

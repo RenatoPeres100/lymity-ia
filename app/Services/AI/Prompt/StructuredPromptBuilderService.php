@@ -24,6 +24,7 @@ class StructuredPromptBuilderService
             $task->isBlogType()     => $this->buildBlogPostPrompt($task, $employee, $context),
             $task->isCarouselType() => $this->buildCarouselPrompt($task, $employee, $context),
             $task->isInstagramType()=> $this->buildInstagramPostPrompt($task, $employee, $context),
+            $task->isThreadsType()  => $this->buildThreadsTextPostPrompt($task, $employee, $context),
             default                 => $this->buildGenericPrompt($task, $employee, $context),
         };
     }
@@ -329,6 +330,60 @@ Retorne exatamente este JSON e nada mais:
   ]
 }
 Gere exatamente {$slidesCount} slides no array slides.
+JSON;
+    }
+
+    public function buildThreadsTextPostPrompt(
+        AgentTask $task,
+        AiEmployee $employee,
+        AiExecutionContext $context
+    ): string {
+        $memories = $this->getMemoriesFromContext($context);
+
+        $prompt  = $this->buildHeader($employee);
+        $prompt .= "\n\n" . $this->buildBrandSection($context);
+        $prompt .= "\n\n" . $this->buildTaskSection($context);
+        if ($memories->isNotEmpty()) {
+            $prompt .= "\n\n" . $this->memoryService->formatMemoriesForPrompt($memories);
+        }
+        if (!empty($context->external_research_snapshot)) {
+            $prompt .= "\n\n" . $this->buildResearchSection($context->external_research_snapshot);
+        }
+        $prompt .= "\n\n" . $this->buildThreadsOutputRules();
+        $prompt .= "\n\n" . $this->buildSecurityRules();
+
+        return $prompt;
+    }
+
+    private function buildThreadsOutputRules(): string
+    {
+        return <<<'JSON'
+=== CANAL: THREADS ===
+Você está gerando um post de TEXTO para o Threads.
+
+Diretrizes obrigatórias:
+- Português do Brasil, tom natural e especialista.
+- Trazer insight, ponto de vista claro ou provocação inteligente.
+- NÃO parecer artigo de blog, post corporativo genérico ou copy de anúncio.
+- Máximo de 5 hashtags, preferencialmente menos.
+- CTA leve e opcional — não forçar.
+- Sem emojis em excesso (no máximo 1-2 por post, se ajudarem).
+- Sem "revolucione seu negócio", "potencialize resultados" ou frases de bingo corporativo.
+- Sem prometer resultados garantidos.
+- Não mencionar que foi gerado por IA.
+- post_text entre 250 e 1200 caracteres.
+
+=== FORMATO DE SAÍDA (JSON obrigatório) ===
+Retorne exatamente este JSON e nada mais:
+{
+  "content_type": "threads_text",
+  "title": "título interno para referência (não aparece no post)",
+  "post_text": "texto completo do post (250-1200 chars)",
+  "cta": "chamada para ação ou null",
+  "hashtags": ["hashtag1", "hashtag2"],
+  "strategic_angle": "qual é o ângulo estratégico deste post",
+  "approval_notes": "notas para quem vai aprovar"
+}
 JSON;
     }
 

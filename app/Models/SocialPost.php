@@ -12,6 +12,7 @@ class SocialPost extends Model
 {
     protected $fillable = [
         'client_id', 'company_id', 'created_by', 'ai_employee_id',
+        'social_channel_id', 'platform',
         'title', 'objective', 'content_type', 'creative_format', 'main_caption',
         'creative_brief', 'hashtags', 'cta', 'status',
         'image_url', 'public_image_url', 'external_post_id', 'publication_error',
@@ -61,6 +62,32 @@ class SocialPost extends Model
     public function aiEmployee(): BelongsTo
     {
         return $this->belongsTo(AiEmployee::class);
+    }
+
+    public function channel(): BelongsTo
+    {
+        return $this->belongsTo(SocialChannel::class, 'social_channel_id');
+    }
+
+    public function scopeThreads($query)
+    {
+        return $query->where('platform', 'threads');
+    }
+
+    public function scopeInstagram($query)
+    {
+        return $query->where('platform', 'instagram')
+            ->orWhereNull('platform');
+    }
+
+    public function isThreadsPost(): bool
+    {
+        return $this->platform === 'threads';
+    }
+
+    public function isInstagramPost(): bool
+    {
+        return $this->platform === 'instagram' || $this->platform === null;
     }
 
     public function approver(): BelongsTo

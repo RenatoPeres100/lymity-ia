@@ -189,6 +189,73 @@ class AIContentPayloadValidatorService
         return $payload;
     }
 
+    /**
+     * Validate and normalize a Threads text post payload.
+     */
+    public function validateThreadsTextPayload(array $payload): array
+    {
+        // Enforce content_type
+        $payload['content_type'] = 'threads_text';
+
+        // Resolve post text from multiple aliases
+        $textAliases = ['post_text', 'text', 'content', 'body', 'caption'];
+        $postText    = null;
+        foreach ($textAliases as $alias) {
+            if (!empty($payload[$alias])) {
+                $postText = is_array($payload[$alias])
+                    ? implode("\n\n", $payload[$alias])
+                    : $payload[$alias];
+                break;
+            }
+        }
+
+        if (empty($postText)) {
+            throw new \App\Exceptions\AIInvalidJsonResponseException(
+                "Payload Threads inválido: nenhum campo de texto encontrado. " .
+                "Esperado: post_text, text, content ou body. Campos recebidos: " . implode(', ', array_keys($payload))
+            );
+        }
+
+        $payload['post_text'] = trim($postText);
+        $minChars = 80;
+        $maxChars = 1800;
+
+        if (mb_strlen($payload['post_text']) < $minChars) {
+            throw new \App\Exceptions\AIInvalidJsonResponseException(
+                "Payload Threads inválido: post_text tem apenas " . mb_strlen($payload['post_text']) . " caracteres. Mínimo: {$minChars}."
+            );
+        }
+
+        if (mb_strlen($payload['post_text']) > $maxChars) {
+            $payload['post_text'] = mb_substr($payload['post_text'], 0, $maxChars);
+        }
+
+        // Title: required or derive from first line of post_text
+        if (empty($payload['title'])) {
+            $firstLine = explode("\n", $payload['post_text'])[0] ?? '';
+            $payload['title'] = mb_substr(strip_tags($firstLine), 0, 100) ?: 'Post Threads';
+        }
+
+        // Reject payload with only title
+        if (count(array_filter($payload)) <= 2 && isset($payload['title'])) {
+            throw new \App\Exceptions\AIInvalidJsonResponseException(
+                "Payload Threads inválido: recebido apenas título sem conteúdo de texto."
+            );
+        }
+
+        // Normalize hashtags
+        $payload['hashtags'] = $this->normalizeHashtags($payload['hashtags'] ?? []);
+        if (count($payload['hashtags']) > 5) {
+            $payload['hashtags'] = array_slice($payload['hashtags'], 0, 5);
+        }
+
+        $payload['cta']             = $payload['cta'] ?? null;
+        $payload['strategic_angle'] = $payload['strategic_angle'] ?? null;
+        $payload['approval_notes']  = $payload['approval_notes'] ?? null;
+
+        return $payload;
+    }
+
     // ── Private helpers ───────────────────────────────────────────────────────
 
     private function requireNonEmpty(array $payload, string $field, string $schema): void

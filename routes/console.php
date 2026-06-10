@@ -29,3 +29,6 @@ Schedule::command('approvals:send-pending-reminders')->hourly()->withoutOverlapp
 
 // Real AI Employee Engine — Agent tasks
 Schedule::command('agents:run-due-tasks')->everyMinute()->withoutOverlapping();
+
+// Real Phase Threads — Threads text publishing
+Schedule::command('threads:publish-due')->everyMinute()->withoutOverlapping();

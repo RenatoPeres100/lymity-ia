@@ -55,6 +55,16 @@ class PermissionSeeder extends Seeder
             ['key' => 'instagram.disconnect', 'name' => 'Desconectar Instagram', 'module' => 'instagram'],
             ['key' => 'instagram.check',      'name' => 'Verificar Instagram',   'module' => 'instagram'],
             ['key' => 'instagram.publish',    'name' => 'Publicar Instagram',    'module' => 'instagram'],
+            // threads
+            ['key' => 'social.threads.view',       'name' => 'Ver Threads',              'module' => 'threads'],
+            ['key' => 'social.threads.connect',    'name' => 'Conectar Threads',         'module' => 'threads'],
+            ['key' => 'social.threads.disconnect', 'name' => 'Desconectar Threads',      'module' => 'threads'],
+            ['key' => 'social.threads.create',     'name' => 'Criar posts Threads',      'module' => 'threads'],
+            ['key' => 'social.threads.update',     'name' => 'Editar posts Threads',     'module' => 'threads'],
+            ['key' => 'social.threads.approve',    'name' => 'Aprovar posts Threads',    'module' => 'threads'],
+            ['key' => 'social.threads.schedule',   'name' => 'Agendar posts Threads',    'module' => 'threads'],
+            ['key' => 'social.threads.publish',    'name' => 'Publicar posts Threads',   'module' => 'threads'],
+            ['key' => 'social.threads.logs.view',  'name' => 'Ver logs Threads',         'module' => 'threads'],
             // publishing queue
             ['key' => 'publishing_queue.view',   'name' => 'Ver fila de publicação',       'module' => 'publishing_queue'],
             ['key' => 'publishing_queue.manage', 'name' => 'Gerenciar fila de publicação', 'module' => 'publishing_queue'],

@@ -10,7 +10,7 @@ class SocialChannel extends Model
     protected $fillable = [
         'client_id', 'company_id', 'platform', 'account_name', 'account_url',
         'profile_picture_url',
-        'instagram_user_id', 'facebook_page_id', 'external_account_id',
+        'instagram_user_id', 'threads_user_id', 'facebook_page_id', 'external_account_id',
         'status', 'access_token', 'refresh_token', 'token_expires_at',
         'refresh_due_at', 'last_refreshed_at',
         'permissions', 'metadata', 'last_checked_at', 'last_error',
@@ -43,11 +43,53 @@ class SocialChannel extends Model
         return $this->belongsTo(Company::class);
     }
 
+    // ── Scopes ─────────────────────────────────────────────────────────────────
+
+    public function scopeInstagram($query)
+    {
+        return $query->where('platform', 'instagram');
+    }
+
+    public function scopeThreads($query)
+    {
+        return $query->where('platform', 'threads');
+    }
+
+    public function scopeVisibleTo($query, \App\Models\User $user)
+    {
+        if ($user->company_id) {
+            $query->where('company_id', $user->company_id);
+        }
+        if ($user->client_id) {
+            $query->where('client_id', $user->client_id);
+        }
+        return $query;
+    }
+
     // ── Status helpers ─────────────────────────────────────────────────────────
 
     public function isInstagram(): bool
     {
         return $this->platform === 'instagram';
+    }
+
+    public function isThreads(): bool
+    {
+        return $this->platform === 'threads';
+    }
+
+    public function canPublishThreads(): bool
+    {
+        return $this->isThreads()
+            && $this->isConnected()
+            && $this->hasValidToken()
+            && !empty($this->threads_user_id)
+            && config('threads.publishing_enabled', false);
+    }
+
+    public function getSafeAccountLabel(): string
+    {
+        return $this->account_name ?? $this->external_account_id ?? 'Canal ' . ucfirst($this->platform ?? 'desconhecido');
     }
 
     public function isConnected(): bool

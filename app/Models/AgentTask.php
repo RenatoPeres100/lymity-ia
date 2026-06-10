@@ -174,6 +174,7 @@ class AgentTask extends Model
             'blog_post_recurring'            => 'Blog Post Recorrente',
             'instagram_post_recurring'       => 'Post Instagram Recorrente',
             'instagram_carousel_recurring'   => 'Carrossel Instagram Recorrente',
+            'threads_text_post_recurring'    => 'Threads — Post de Texto Recorrente',
             'copy_review_recurring'          => 'Revisão de Copy Recorrente',
             'prospecting_assistant_recurring'=> 'Assistente de Prospecção',
             default                          => $this->task_type ?? 'Custom',
@@ -237,5 +238,10 @@ class AgentTask extends Model
     public function isCarouselType(): bool
     {
         return $this->task_type === 'instagram_carousel_recurring';
+    }
+
+    public function isThreadsType(): bool
+    {
+        return $this->task_type === 'threads_text_post_recurring';
     }
 }

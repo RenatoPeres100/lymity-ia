@@ -182,6 +182,39 @@
             </a>
             @endif
 
+            @if(config('features.threads_connection') && !auth()->user()?->client_id)
+            @php
+                $threadsChannel = \App\Models\SocialChannel::where('platform', 'threads')
+                    ->whereNotNull('company_id')
+                    ->whereNull('client_id')
+                    ->first();
+                $threadsConnected = $threadsChannel && $threadsChannel->status === 'connected';
+            @endphp
+            <a href="{{ route('admin.social.threads.index') }}" class="nav-item {{ request()->routeIs('admin.social.threads.index','admin.social.threads.connect','admin.social.threads.callback','admin.social.threads.disconnect','admin.social.threads.check') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                </svg>
+                Conexão Threads
+                @if($threadsConnected)
+                    <span title="Conectado" class="ml-auto w-2 h-2 rounded-full bg-green-400 shrink-0"></span>
+                @else
+                    <span title="Desconectado" class="ml-auto w-2 h-2 rounded-full bg-gray-300 shrink-0"></span>
+                @endif
+            </a>
+            <a href="{{ route('admin.social.threads.posts.index') }}" class="nav-item {{ request()->routeIs('admin.social.threads.posts*') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-dasharray="4 2"/>
+                </svg>
+                Posts Threads
+            </a>
+            <a href="{{ route('admin.social.threads.logs') }}" class="nav-item {{ request()->routeIs('admin.social.threads.logs') ? 'active' : '' }}">
+                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M9 17v-2m3 2v-4m3 4v-6M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+                </svg>
+                Logs Threads
+            </a>
+            @endif
+
             @if(config('features.publishing_queue'))
             <a href="{{ route('admin.publishing-queue') }}" class="nav-item {{ request()->routeIs('admin.publishing-queue*') ? 'active' : '' }}">
                 <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
