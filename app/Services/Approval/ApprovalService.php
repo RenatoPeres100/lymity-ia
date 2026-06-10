@@ -243,6 +243,25 @@ class ApprovalService
                             }
                         }
 
+                        // Propagate image to SocialPost if not yet set
+                        if ($entityClass === \App\Models\SocialPost::class && !$entity->public_image_url) {
+                            $visual = $package->visual_payload ?? [];
+                            $imageUrl = $visual['feed_image_url'] ?? $visual['featured_image_url'] ?? null;
+                            if (!$imageUrl) {
+                                $asset = $package->assets()
+                                    ->whereIn('asset_type', ['feed_image', 'featured_image'])
+                                    ->where('status', 'generated')
+                                    ->latest('id')
+                                    ->first();
+                                $imageUrl = $asset?->public_url;
+                            }
+                            if ($imageUrl) {
+                                $updateData['public_image_url'] = $imageUrl;
+                                $updateData['image_url']        = $imageUrl;
+                                $updateData['image_status']     = 'generated';
+                            }
+                        }
+
                         $entity->update($updateData);
                     }
                 }

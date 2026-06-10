@@ -7,6 +7,7 @@ use App\Models\SocialChannel;
 use App\Models\SocialPost;
 use App\Models\SocialPostAsset;
 use App\Models\User;
+use App\Services\Social\SocialPostImageResolver;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -14,11 +15,13 @@ use Throwable;
 class InstagramPublishingService
 {
     private string $graphBase;
+    private SocialPostImageResolver $imageResolver;
 
     public function __construct()
     {
-        $version         = config('meta.graph_version', 'v25.0');
-        $this->graphBase = "https://graph.facebook.com/{$version}";
+        $version              = config('meta.graph_version', 'v25.0');
+        $this->graphBase      = "https://graph.facebook.com/{$version}";
+        $this->imageResolver  = app(SocialPostImageResolver::class);
     }
 
     // ── Publish guards ─────────────────────────────────────────────────────────
@@ -33,7 +36,8 @@ class InstagramPublishingService
         if ($post !== null) {
             if (!in_array($post->status, ['approved', 'scheduled']))  return false;
             if (in_array($post->status, ['rejected', 'archived', 'failed'])) return false;
-            if (!$post->hasPublicImage())                              return false;
+            $resolvedUrl = $this->imageResolver->resolveUrl($post);
+            if (!$resolvedUrl || !$this->imageResolver->isValidPublicHttps($resolvedUrl)) return false;
             $caption = trim($post->main_caption ?? $post->content ?? '');
             if (empty($caption))                                       return false;
             if ($post->requires_approval && !$post->isApprovedForPublishing()) return false;
@@ -80,8 +84,12 @@ class InstagramPublishingService
         $caption = trim($post->main_caption ?? $post->content ?? '');
         abort_if(empty($caption), 422, 'Conteúdo do post está vazio.');
 
-        abort_unless($post->hasPublicImage(), 422,
-            'URL de imagem pública ausente ou inválida. Deve ser uma URL HTTPS acessível publicamente.');
+        $resolvedImageUrl = $this->imageResolver->resolveUrl($post);
+        abort_unless(
+            $resolvedImageUrl && $this->imageResolver->isValidPublicHttps($resolvedImageUrl),
+            422,
+            'URL de imagem pública HTTPS ausente ou inválida. Sincronize a imagem gerada antes de publicar.'
+        );
     }
 
     // ── Media containers ───────────────────────────────────────────────────────
@@ -214,7 +222,22 @@ class InstagramPublishingService
         $this->validateChannel($channel);
         $this->validatePost($post);
 
-        $imageUrl = $post->public_image_url;
+        // Resolve image URL from all sources (column, package, asset)
+        $imageUrl = $this->imageResolver->resolveUrl($post);
+        if (!$imageUrl || !$this->imageResolver->isValidPublicHttps($imageUrl)) {
+            $post->markFailed('instagram.publish.blocked_missing_image: Imagem pública HTTPS obrigatória para publicar no Instagram.');
+            throw new \RuntimeException('Imagem pública HTTPS obrigatória para publicar no Instagram.');
+        }
+
+        // Sync image to post column if resolved from package/asset
+        if ($imageUrl !== $post->public_image_url) {
+            $post->update([
+                'public_image_url' => $imageUrl,
+                'image_url'        => $imageUrl,
+                'image_status'     => 'generated',
+            ]);
+        }
+
         $caption  = $this->buildCaption($post);
 
         $this->logActivity('instagram_publish_started', null, [

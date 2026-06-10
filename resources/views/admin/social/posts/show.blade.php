@@ -274,19 +274,46 @@
                     </div>
                     @endif
 
+                    {{-- Resolve image via SocialPostImageResolver --}}
+                    @php
+                        $imgResolver    = app(\App\Services\Social\SocialPostImageResolver::class);
+                        $resolvedImgUrl = $imgResolver->resolveUrl($post);
+                        $isHttpsValid   = $imgResolver->isValidPublicHttps($resolvedImgUrl);
+                        $imgFromPackage = $resolvedImgUrl && !$post->public_image_url;
+                    @endphp
+
+                    {{-- Sync banner when image exists in package but not in post --}}
+                    @if($imgFromPackage)
+                    <div style="background:#f0fdf4;border:2px solid #22c55e;border-radius:.5rem;padding:1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;">
+                        <div>
+                            <span style="color:#166534;font-weight:700;font-size:.9rem;">✓ Imagem gerada disponível no pacote</span>
+                            <p style="color:#166534;font-size:.8rem;margin-top:.25rem;">Clique para sincronizar a imagem ao post.</p>
+                        </div>
+                        <form method="POST" action="{{ route('admin.social.posts.sync-generated-image', $post) }}">
+                            @csrf
+                            <button style="background:#16a34a;color:#fff;padding:.5rem 1rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.85rem;white-space:nowrap;">
+                                Sincronizar Imagem Gerada
+                            </button>
+                        </form>
+                    </div>
+                    @endif
+
                     {{-- Image preview --}}
-                    @if($post->public_image_url)
+                    @if($resolvedImgUrl)
                         <div style="margin-bottom:1rem;">
-                            <img src="{{ $post->public_image_url }}"
+                            <img src="{{ $resolvedImgUrl }}"
                                  alt="Preview do post"
                                  style="width:100%;max-width:400px;border-radius:.5rem;border:1px solid #e2e8f0;"
                                  onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
                             <div style="display:none;background:#fef2f2;border:1px solid #fca5a5;border-radius:.5rem;padding:1rem;color:#dc2626;font-size:.85rem;">
-                                Imagem não carregou. URL: <a href="{{ $post->public_image_url }}" target="_blank" style="color:#dc2626;">{{ Str::limit($post->public_image_url, 60) }}</a>
+                                Imagem não carregou. URL: <a href="{{ $resolvedImgUrl }}" target="_blank" style="color:#dc2626;">{{ Str::limit($resolvedImgUrl, 60) }}</a>
                             </div>
                         </div>
                         <div style="background:#f8fafc;border-radius:.375rem;padding:.75rem;margin-bottom:1rem;font-size:.8rem;color:#475569;word-break:break-all;">
-                            <strong>URL:</strong> <a href="{{ $post->public_image_url }}" target="_blank" style="color:#3b82f6;">{{ $post->public_image_url }}</a>
+                            <strong>URL:</strong> <a href="{{ $resolvedImgUrl }}" target="_blank" style="color:#3b82f6;">{{ $resolvedImgUrl }}</a>
+                            @if(!$isHttpsValid)
+                            <span style="color:#dc2626;font-weight:600;margin-left:.5rem;">⚠ Não é HTTPS público</span>
+                            @endif
                         </div>
                         @if($post->image_validation_status === 'invalid' && $post->image_validation_error)
                             <div style="background:#fef2f2;border:1px solid #fca5a5;border-radius:.375rem;padding:.75rem;margin-bottom:1rem;font-size:.85rem;color:#dc2626;">
@@ -305,7 +332,7 @@
                     <div style="display:flex;flex-direction:column;gap:.75rem;">
 
                         {{-- Validate --}}
-                        @if($post->public_image_url)
+                        @if($resolvedImgUrl)
                         <form method="POST" action="{{ route('admin.social.posts.validate-image', $post) }}" style="display:flex;gap:.5rem;align-items:center;">
                             @csrf
                             <button style="background:#0ea5e9;color:#fff;padding:.4rem .8rem;border-radius:.375rem;border:none;cursor:pointer;font-size:.8rem;">

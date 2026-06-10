@@ -95,26 +95,62 @@ class StructuredPromptBuilderService
     public function buildImagePrompt(AgentTask $task, array $textPayload, AiExecutionContext $context): string
     {
         $brandContext = $context->compact_brand_context ?? '';
-        $imagePrompt  = $textPayload['image_prompt'] ?? '';
+        $rawPrompt    = $textPayload['image_prompt'] ?? '';
         $title        = $textPayload['title'] ?? '';
+        $isSocial     = $task->isSocialType() ?? str_contains($task->task_type ?? '', 'instagram');
 
-        if ($imagePrompt) {
-            $base = $imagePrompt;
-        } else {
-            $base = "Imagem profissional para: {$title}";
-        }
+        // Build subject from raw prompt or title
+        $subject = $rawPrompt
+            ? $rawPrompt
+            : ($isSocial
+                ? "Concept for social post: {$title}"
+                : "Editorial concept for: {$title}");
 
+        // Extract brand visual context if present
         $visual = '';
         if (str_contains($brandContext, 'Visual:')) {
             preg_match('/Visual:\s*([^.]+)/', $brandContext, $m);
-            $visual = $m[1] ?? '';
+            $visual = trim($m[1] ?? '');
         }
 
-        if ($visual) {
-            $base .= ". Estilo visual: {$visual}";
+        // Professional B2B style directive
+        $styleDirective = 'Premium editorial B2B visual. Clean minimal composition, sophisticated lighting, ' .
+            'soft dark navy and white palette with subtle blue gradients. ' .
+            'Modern strategic business atmosphere. Elegant abstract forms or subtle data/automation references. ' .
+            'No text, no slogans, no bullet points, no cartoon, no childish illustration. ' .
+            'No rockets, no giant arrows, no neon overload, no mascots, no exaggerated dashboards. ' .
+            'No 3D caricatures. No clutter. Mature, premium, trustworthy, minimal.';
+
+        $prompt = "{$subject}. {$styleDirective}";
+
+        if ($visual && !str_contains(strtolower($prompt), strtolower($visual))) {
+            $prompt .= " Brand aesthetic: {$visual}.";
         }
 
-        return $base . '. Não incluir texto na imagem. Alta qualidade, profissional.';
+        return $prompt;
+    }
+
+    public function buildProfessionalSocialImagePrompt(string $postTitle, string $caption = '', string $brandVisual = ''): string
+    {
+        $subject = "Social media visual concept for: {$postTitle}";
+        if ($caption) {
+            $subject .= '. Theme: ' . \Str::limit(strip_tags($caption), 120);
+        }
+
+        $style = 'Premium editorial B2B Instagram image. Clean composition with generous whitespace, ' .
+            'sophisticated soft lighting. Dark navy, off-white and subtle blue palette. ' .
+            'Strategic business growth atmosphere. Minimal abstract geometric or conceptual elements. ' .
+            'No text inside image. No slogans. No bullet points. No cartoon or childish illustration. ' .
+            'No rockets, no giant arrows, no exaggerated dashboards, no mascots, no neon overload. ' .
+            'No clutter. Mature, elegant, premium. Professional brand photography aesthetic.';
+
+        $prompt = "{$subject}. {$style}";
+
+        if ($brandVisual) {
+            $prompt .= " Visual identity: {$brandVisual}.";
+        }
+
+        return $prompt;
     }
 
     public function buildResearchPromptIfNeeded(AgentTask $task, AiExecutionContext $context): ?string

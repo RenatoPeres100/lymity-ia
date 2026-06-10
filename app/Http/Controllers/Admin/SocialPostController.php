@@ -9,6 +9,7 @@ use App\Http\Requests\ScheduleSocialPostRequest;
 use App\Models\Client;
 use App\Models\SocialPost;
 use App\Services\Social\SocialImageService;
+use App\Services\Social\SocialPostImageResolver;
 use App\Services\Social\SocialPostService;
 use App\Services\Social\SocialPublishingService;
 use Illuminate\Http\Request;
@@ -168,5 +169,39 @@ class SocialPostController extends Controller
     {
         $this->postService->backToDraft($post, $request->user());
         return back()->with('success', 'Post voltou para rascunho.');
+    }
+
+    public function syncGeneratedImage(SocialPost $post, Request $request)
+    {
+        $resolver = app(SocialPostImageResolver::class);
+        $url      = $resolver->resolveUrl($post);
+
+        if (!$url) {
+            return back()->with('error', 'Nenhuma imagem gerada encontrada no pacote ou assets associados.');
+        }
+
+        if (!$resolver->isValidPublicHttps($url)) {
+            return back()->with('error', "Imagem encontrada ({$url}) não é uma URL HTTPS pública válida.");
+        }
+
+        $path    = $resolver->resolvePath($post);
+        $package = $resolver->findPackage($post);
+
+        $post->update([
+            'public_image_url'       => $url,
+            'image_url'              => $url,
+            'image_path'             => $path,
+            'image_status'           => 'generated',
+            'image_validation_status'=> 'valid',
+            'image_last_generated_at'=> now(),
+            'image_metadata'         => array_merge($post->image_metadata ?? [], [
+                'synced_from_package_id' => $package?->id,
+                'synced_at'              => now()->toISOString(),
+                'public_url'             => $url,
+                'image_status'           => 'generated',
+            ]),
+        ]);
+
+        return back()->with('success', 'Imagem sincronizada com sucesso: ' . $url);
     }
 }

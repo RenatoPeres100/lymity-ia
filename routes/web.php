@@ -468,6 +468,7 @@ Route::middleware(['auth', 'active'])->group(function () {
         Route::post('/social/posts/{post}/set-image-url',      [App\Http\Controllers\Admin\SocialPostAiController::class, 'replaceImageUrl'])->name('admin.social.posts.set-image-url');
         Route::post('/social/posts/{post}/submit-approval',    [AdminSocialPostController::class, 'sendToApproval'])->name('admin.social.posts.submit-approval');
         Route::post('/social/posts/{post}/publish-now',        [App\Http\Controllers\Admin\SocialInstagramPublishController::class, 'publishNow'])->name('admin.social.posts.publish-now');
+        Route::post('/social/posts/{post}/sync-generated-image', [AdminSocialPostController::class, 'syncGeneratedImage'])->name('admin.social.posts.sync-generated-image');
 
         // Calendar
         Route::get('/social/calendar',                         [AdminSocialCalendarController::class, 'index'])->name('admin.social.calendar.index');

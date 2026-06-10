@@ -92,7 +92,7 @@ class ContentPackageImageGenerationService
         $package->update(['visual_payload' => $visual]);
 
         // Propagate image URL to the generated entity (BlogPost / SocialPost)
-        if ($asset->public_url && $asset->asset_type === 'featured_image') {
+        if ($asset->public_url && in_array($asset->asset_type, ['featured_image', 'feed_image'])) {
             $this->propagateImageToEntity($package, $asset);
         }
     }
@@ -113,8 +113,24 @@ class ContentPackageImageGenerationService
                 $entity->update($updates);
                 Log::info("[ContentPackageImageGen] BlogPost #{$entity->id} updated with featured_image.");
             } elseif ($entity instanceof \App\Models\SocialPost) {
-                $entity->update(['public_image_url' => $asset->public_url]);
-                Log::info("[ContentPackageImageGen] SocialPost #{$entity->id} updated with public_image_url.");
+                $updates = [
+                    'public_image_url'  => $asset->public_url,
+                    'image_url'         => $asset->public_url,
+                    'image_path'        => $asset->local_path,
+                    'image_status'      => 'generated',
+                    'image_provider'    => $asset->provider ?? 'google',
+                    'image_last_generated_at' => now(),
+                    'image_metadata'    => array_merge($entity->image_metadata ?? [], [
+                        'generated_content_asset_id'     => $asset->id,
+                        'generated_content_package_id'   => $package->id,
+                        'public_url'                     => $asset->public_url,
+                        'local_path'                     => $asset->local_path,
+                        'provider'                       => $asset->provider ?? 'google',
+                        'image_status'                   => 'generated',
+                    ]),
+                ];
+                $entity->update($updates);
+                Log::info("[ContentPackageImageGen] SocialPost #{$entity->id} updated with public_image_url from {$asset->asset_type}.");
             }
         } catch (\Throwable $e) {
             Log::warning("[ContentPackageImageGen] Failed to propagate image to entity: " . $e->getMessage());

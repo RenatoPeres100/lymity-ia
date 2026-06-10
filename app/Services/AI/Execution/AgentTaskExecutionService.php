@@ -592,6 +592,8 @@ class AgentTaskExecutionService
         // Back-fill generated_content_package_id on the entity if it has that column
         if ($entity instanceof BlogPost && \Schema::hasColumn('blog_posts', 'generated_content_package_id')) {
             $entity->update(['generated_content_package_id' => $package->id]);
+        } elseif ($entity instanceof \App\Models\SocialPost && \Schema::hasColumn('social_posts', 'generated_content_package_id')) {
+            $entity->update(['generated_content_package_id' => $package->id]);
         }
 
         $this->activityLog->info('content.package.created', "Pacote criado para '{$task->title}'", [
