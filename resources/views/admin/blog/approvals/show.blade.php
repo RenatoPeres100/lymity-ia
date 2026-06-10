@@ -128,7 +128,29 @@
         </div>
 
         {{-- Right: Article preview --}}
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-2 space-y-4">
+            @if($post)
+            @php
+                $imgResolver    = app(\App\Services\Blog\BlogPostImageResolver::class);
+                $approvalImgUrl = $imgResolver->resolveUrl($post);
+                $approvalImgAlt = $imgResolver->resolveAlt($post);
+                $approvalImgCap = $imgResolver->resolveCaption($post);
+            @endphp
+            @if($approvalImgUrl)
+            <div class="card overflow-hidden">
+                <div class="card-header"><h3 class="font-semibold text-gray-900 text-sm">Imagem Gerada</h3></div>
+                <div class="card-body p-0">
+                    <img src="{{ $approvalImgUrl }}" alt="{{ $approvalImgAlt }}" style="width:100%;max-height:360px;object-fit:cover;display:block;">
+                    @if($approvalImgCap)
+                    <p class="px-4 py-2 text-xs text-gray-500 italic">{{ $approvalImgCap }}</p>
+                    @endif
+                    @if($approvalImgAlt)
+                    <p class="px-4 pb-3 text-xs text-gray-400">Alt: {{ $approvalImgAlt }}</p>
+                    @endif
+                </div>
+            </div>
+            @endif
+            @endif
             <div class="card">
                 <div class="card-header">
                     <h3 class="font-semibold text-gray-900">Preview do Artigo</h3>

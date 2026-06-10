@@ -34,21 +34,14 @@
                 <div style="width:60px;height:60px;border-radius:14px;background:linear-gradient(135deg,#1e3a5f,#1a1a40);display:flex;align-items:center;justify-content:center;font-size:1.8rem;">{{ $employee->avatar_emoji }}</div>
                 <div>
                     <div style="font-size:1.1rem;font-weight:700;color:#0f172a;">{{ $employee->name }}</div>
-                    <div style="font-size:.8rem;color:#6b8fff;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">{{ $employee->role }}</div>
+                    <div style="font-size:.8rem;color:#6b8fff;font-weight:600;text-transform:uppercase;letter-spacing:.06em;">{{ $employee->title ?? $employee->role_key }}</div>
                 </div>
             </div>
             <p style="font-size:.9rem;color:#94a3b8;line-height:1.8;margin-bottom:20px;">{{ $employee->description }}</p>
-            @if($employee->routines)
+            @if($employee->routine_description)
             <div>
                 <div style="font-size:.72rem;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Rotinas</div>
-                <div style="display:flex;flex-direction:column;gap:6px;">
-                    @foreach($employee->routines as $routine)
-                    <div style="display:flex;gap:10px;align-items:flex-start;font-size:.8rem;">
-                        <span style="color:#4a6cf7;flex-shrink:0;">›</span>
-                        <span style="color:#94a3b8;">{{ $routine }}</span>
-                    </div>
-                    @endforeach
-                </div>
+                <p style="font-size:.8rem;color:#94a3b8;line-height:1.7;white-space:pre-line;">{{ $employee->routine_description }}</p>
             </div>
             @endif
         </div>

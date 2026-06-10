@@ -53,14 +53,22 @@ class AiEmployeeService
     private function syncSkills(AiEmployee $employee, array $skills): void
     {
         $pivot = [];
-        foreach ($skills as $skillId => $level) {
-            if (is_int($skillId)) {
-                $pivot[$skillId] = ['level' => is_numeric($level) ? (int) $level : 1];
-            } else {
-                $skill = AiSkill::firstOrCreate(['name' => $skillId]);
+
+        // Sequential array [0 => 5, 1 => 8] means values are skill IDs (from form skills[])
+        // Associative array [5 => 2, 8 => 3] means keys are skill IDs and values are levels
+        $isSequential = array_keys($skills) === range(0, count($skills) - 1);
+
+        foreach ($skills as $key => $value) {
+            if (is_string($key) && !is_numeric($key)) {
+                $skill = AiSkill::firstOrCreate(['name' => $key]);
                 $pivot[$skill->id] = ['level' => 1];
+            } elseif ($isSequential) {
+                $pivot[(int) $value] = ['level' => 1];
+            } else {
+                $pivot[(int) $key] = ['level' => is_numeric($value) ? (int) $value : 1];
             }
         }
+
         $employee->skills()->sync($pivot);
     }
 }

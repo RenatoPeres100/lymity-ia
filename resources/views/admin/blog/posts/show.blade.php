@@ -34,9 +34,27 @@
             <div class="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm">{{ session('error') }}</div>
         @endif
 
+        @php
+            $imgResolver   = app(\App\Services\Blog\BlogPostImageResolver::class);
+            $adminImgUrl   = $imgResolver->resolveUrl($blogPost);
+            $adminImgAlt   = $imgResolver->resolveAlt($blogPost);
+            $adminImgCap   = $imgResolver->resolveCaption($blogPost);
+        @endphp
+
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {{-- Main content --}}
             <div class="lg:col-span-2 space-y-5">
+                @if($adminImgUrl)
+                <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <img src="{{ $adminImgUrl }}" alt="{{ $adminImgAlt }}" style="width:100%;max-height:360px;object-fit:cover;display:block;">
+                    @if($adminImgCap || $adminImgAlt)
+                    <div class="px-4 py-2 text-xs text-gray-400">
+                        @if($adminImgCap)<span class="italic">{{ $adminImgCap }}</span>@endif
+                        @if($adminImgAlt)<span class="block">Alt: {{ $adminImgAlt }}</span>@endif
+                    </div>
+                    @endif
+                </div>
+                @endif
                 <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
                     <h1 class="text-xl font-bold text-gray-900 dark:text-white mb-1">{{ $blogPost->title }}</h1>
                     @if($blogPost->subtitle)

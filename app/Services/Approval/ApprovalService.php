@@ -217,11 +217,33 @@ class ApprovalService
                     $entityClass = get_class($entity);
                     if (in_array($entityClass, [\App\Models\BlogPost::class, \App\Models\SocialPost::class])) {
                         $futureScheduled = $entity->scheduled_at && $entity->scheduled_at->isFuture();
-                        $entity->update([
+                        $updateData = [
                             'status'      => $futureScheduled ? 'scheduled' : 'approved',
                             'approved_by' => $user?->id,
                             'approved_at' => now(),
-                        ]);
+                        ];
+
+                        // Propagate image to BlogPost if not yet set
+                        if ($entityClass === \App\Models\BlogPost::class && !$entity->featured_image) {
+                            $visual = $package->visual_payload ?? [];
+                            $imageUrl = $visual['featured_image_url'] ?? null;
+                            if (!$imageUrl) {
+                                $asset = $package->assets()
+                                    ->where('asset_type', 'featured_image')
+                                    ->where('status', 'generated')
+                                    ->latest('id')
+                                    ->first();
+                                $imageUrl = $asset?->public_url;
+                            }
+                            if ($imageUrl) {
+                                $updateData['featured_image'] = $imageUrl;
+                                if (!$entity->featured_image_alt && isset($visual['image_alt'])) {
+                                    $updateData['featured_image_alt'] = $visual['image_alt'];
+                                }
+                            }
+                        }
+
+                        $entity->update($updateData);
                     }
                 }
             }

@@ -2,6 +2,13 @@
 
 <article>
 
+@php
+    $imageResolver    = app(\App\Services\Blog\BlogPostImageResolver::class);
+    $featuredImageUrl = $imageResolver->resolveUrl($post);
+    $featuredImageAlt = $imageResolver->resolveAlt($post);
+    $featuredImageCap = $imageResolver->resolveCaption($post);
+@endphp
+
 <section style="background:linear-gradient(160deg,#0f1117,#0d1c54,#0f1117);padding:80px 32px 64px;">
     <div class="container" style="max-width:760px;">
         @if($post->category)
@@ -33,7 +40,25 @@
     </div>
 </section>
 
-<section class="section">
+@if($featuredImageUrl)
+<div style="background:#0a0e1a;padding:0 32px;">
+    <div class="container" style="max-width:760px;padding-top:0;padding-bottom:0;">
+        <div style="margin:0 0 0;transform:translateY(-32px);">
+            <img
+                src="{{ $featuredImageUrl }}"
+                alt="{{ $featuredImageAlt }}"
+                loading="eager"
+                style="width:100%;max-height:520px;object-fit:cover;border-radius:16px;display:block;box-shadow:0 20px 60px rgba(0,0,0,.4);"
+            >
+            @if($featuredImageCap)
+            <p style="font-size:.75rem;color:#64748b;text-align:center;margin-top:8px;font-style:italic;">{{ $featuredImageCap }}</p>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
+<section class="section" style="{{ $featuredImageUrl ? 'padding-top:0;' : '' }}">
     <div class="container" style="max-width:760px;">
         <div style="font-size:1rem;color:#374151;line-height:1.85;" class="prose-content">
             {!! $post->content !!}

@@ -15,12 +15,25 @@
 <section class="section">
     <div class="container">
         @if($posts->isNotEmpty())
+        @php
+            $imgResolver = app(\App\Services\Blog\BlogPostImageResolver::class);
+        @endphp
 
         {{-- Featured post --}}
-        @php $featured = $posts->first(); @endphp
+        @php
+            $featured    = $posts->first();
+            $featuredImg = $imgResolver->resolveUrl($featured);
+            $featuredAlt = $imgResolver->resolveAlt($featured);
+        @endphp
         <div class="pub-card" style="display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center;padding:40px;margin-bottom:40px;">
-            <div style="background:linear-gradient(135deg,#eff6ff,#f0fdf4);border-radius:12px;height:240px;display:flex;align-items:center;justify-content:center;">
-                <span style="font-size:4rem;">{{ $featured->category?->icon ?? '📝' }}</span>
+            <div style="border-radius:12px;height:240px;overflow:hidden;flex-shrink:0;">
+                @if($featuredImg)
+                <img src="{{ $featuredImg }}" alt="{{ $featuredAlt }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;">
+                @else
+                <div style="width:100%;height:100%;background:linear-gradient(135deg,#eff6ff,#f0fdf4);display:flex;align-items:center;justify-content:center;">
+                    <span style="font-size:4rem;">{{ $featured->category?->icon ?? '📝' }}</span>
+                </div>
+                @endif
             </div>
             <div>
                 @if($featured->category)
@@ -40,10 +53,17 @@
         @if($posts->count() > 1)
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;">
             @foreach($posts->skip(1) as $post)
+            @php $cardImg = $imgResolver->resolveUrl($post); $cardAlt = $imgResolver->resolveAlt($post); @endphp
             <a href="{{ route('blog.show', $post->slug) }}" style="text-decoration:none;">
                 <div class="pub-card" style="padding:28px;cursor:pointer;transition:transform .2s;" onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='none'">
-                    <div style="background:linear-gradient(135deg,#f8fafc,#eff6ff);border-radius:10px;height:120px;display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
-                        <span style="font-size:2.4rem;">{{ $post->category?->icon ?? '📝' }}</span>
+                    <div style="border-radius:10px;height:160px;overflow:hidden;margin-bottom:20px;">
+                        @if($cardImg)
+                        <img src="{{ $cardImg }}" alt="{{ $cardAlt }}" loading="lazy" style="width:100%;height:100%;object-fit:cover;border-radius:10px;display:block;">
+                        @else
+                        <div style="width:100%;height:100%;background:linear-gradient(135deg,#f8fafc,#eff6ff);display:flex;align-items:center;justify-content:center;">
+                            <span style="font-size:2.4rem;">{{ $post->category?->icon ?? '📝' }}</span>
+                        </div>
+                        @endif
                     </div>
                     @if($post->category)
                     <div style="font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#4a6cf7;margin-bottom:6px;">{{ $post->category->name }}</div>

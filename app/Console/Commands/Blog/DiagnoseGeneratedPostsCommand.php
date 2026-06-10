@@ -3,12 +3,19 @@
 namespace App\Console\Commands\Blog;
 
 use App\Models\BlogPost;
+use App\Models\GeneratedContentPackage;
+use App\Services\Blog\BlogPostImageResolver;
 use Illuminate\Console\Command;
 
 class DiagnoseGeneratedPostsCommand extends Command
 {
     protected $signature   = 'blog:diagnose-generated-posts {--limit=10}';
-    protected $description = 'Show last AI-generated blog posts with field completeness check';
+    protected $description = 'Show last AI-generated blog posts with full image/package completeness check';
+
+    public function __construct(private BlogPostImageResolver $imageResolver)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -19,7 +26,7 @@ class DiagnoseGeneratedPostsCommand extends Command
 
         $posts = BlogPost::whereNotNull('ai_employee_id')
             ->orWhereNotNull('generated_by_agent_id')
-            ->latest()
+            ->latest('id')
             ->limit($limit)
             ->get();
 
@@ -28,38 +35,61 @@ class DiagnoseGeneratedPostsCommand extends Command
             return self::SUCCESS;
         }
 
-        $headers = ['ID', 'Título', 'Status', 'Imagem', 'Tags', 'Cats', 'MetaDesc', 'AltText', 'SEO', 'Conteúdo'];
-        $rows    = [];
+        $headers = [
+            'ID', 'Título', 'Status', 'Has_Img', 'Resolved_URL',
+            'PKG_ID', 'Asset_ID', 'Asset_Status', 'Asset_URL',
+        ];
+        $rows          = [];
+        $noImageNeedFix = 0;
 
         foreach ($posts as $post) {
+            $resolvedUrl = $this->imageResolver->resolveUrl($post);
+
+            $package = $this->imageResolver->findPackage($post);
+            $asset   = null;
+            if ($package) {
+                $asset = $package->assets()
+                    ->where('asset_type', 'featured_image')
+                    ->latest('id')
+                    ->first();
+            }
+
+            $hasImg  = $post->featured_image ? 'YES' : 'NO';
+            if (!$post->featured_image && $resolvedUrl) {
+                $hasImg = 'NO*'; // no column but resolver found it
+                $noImageNeedFix++;
+            } elseif (!$post->featured_image && !$resolvedUrl) {
+                $noImageNeedFix++;
+            }
+
             $rows[] = [
                 $post->id,
                 mb_substr($post->title ?? '—', 0, 35),
                 $post->status,
-                $post->featured_image ? '✓' : '✗',
-                !empty($post->tags) ? count((array)$post->tags) . ' tags' : '✗',
-                !empty($post->categories) ? count((array)$post->categories) . ' cats' : '✗',
-                $post->meta_description ? '✓' : '✗',
-                $post->featured_image_alt ? '✓' : '✗',
-                $post->seo_title ? '✓' : '✗',
-                $post->content ? mb_strlen($post->content) . ' chars' : '✗',
+                $hasImg,
+                $resolvedUrl ? mb_substr($resolvedUrl, 0, 45) : '—',
+                $package?->id ?? '—',
+                $asset?->id ?? '—',
+                $asset?->status ?? '—',
+                $asset?->public_url ? mb_substr($asset->public_url, 0, 45) : '—',
             ];
         }
 
         $this->table($headers, $rows);
-
         $this->newLine();
-        $withImage    = $posts->filter(fn($p) => $p->featured_image)->count();
-        $withTags     = $posts->filter(fn($p) => !empty($p->tags))->count();
-        $withCats     = $posts->filter(fn($p) => !empty($p->categories))->count();
-        $withMeta     = $posts->filter(fn($p) => $p->meta_description)->count();
-        $withContent  = $posts->filter(fn($p) => $p->content)->count();
 
-        $this->line("  Posts com imagem:        {$withImage}/{$posts->count()}");
-        $this->line("  Posts com tags:          {$withTags}/{$posts->count()}");
-        $this->line("  Posts com categorias:    {$withCats}/{$posts->count()}");
-        $this->line("  Posts com meta_desc:     {$withMeta}/{$posts->count()}");
-        $this->line("  Posts com conteúdo:      {$withContent}/{$posts->count()}");
+        $withCol      = $posts->filter(fn($p) => $p->featured_image)->count();
+        $withResolved = collect($rows)->filter(fn($r) => $r[4] !== '—')->count();
+
+        $this->line("  Posts com featured_image (coluna): {$withCol}/{$posts->count()}");
+        $this->line("  Posts com imagem resolvida:        {$withResolved}/{$posts->count()}");
+
+        if ($noImageNeedFix > 0) {
+            $this->newLine();
+            $this->warn("  {$noImageNeedFix} posts sem imagem. Rode:");
+            $this->line('    php artisan blog:repair-generated-images --dry-run');
+            $this->line('    php artisan blog:repair-generated-images --fix');
+        }
 
         return self::SUCCESS;
     }
