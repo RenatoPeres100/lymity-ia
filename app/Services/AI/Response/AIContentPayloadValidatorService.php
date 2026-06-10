@@ -12,6 +12,13 @@ class AIContentPayloadValidatorService
      */
     public function validateBlogPostPayload(array $payload): array
     {
+        // Detect and reject generation_incomplete sentinel
+        if (isset($payload['error']) && $payload['error'] === 'generation_incomplete') {
+            throw new AIInvalidJsonResponseException(
+                "A IA sinalizou que não conseguiu gerar o artigo completo. Motivo: " . ($payload['reason'] ?? 'desconhecido')
+            );
+        }
+
         $this->requireNonEmpty($payload, 'title', 'Blog Post');
 
         // Accept content under any known alias — ordered by preference
@@ -25,6 +32,11 @@ class AIContentPayloadValidatorService
         foreach ($contentFieldAliases as $alias) {
             if (!empty($payload[$alias])) {
                 $contentValue = $payload[$alias];
+                // Gemini sometimes returns content as array of paragraphs — flatten to string
+                if (is_array($contentValue)) {
+                    $contentValue = implode("\n\n", array_map(fn($v) => is_string($v) ? $v : json_encode($v), $contentValue));
+                    $payload[$alias] = $contentValue;
+                }
                 $contentField = $alias;
                 break;
             }
@@ -113,6 +125,21 @@ class AIContentPayloadValidatorService
         if (empty($payload['subtitle'])) {
             $payload['subtitle'] = Str::limit($payload['excerpt'] ?? $payload['title'], 120);
         }
+
+        // === Minimum word count validation ===
+        $minWords    = config('ai.blog_min_words', 500);
+        $contentText = $payload['content_markdown']
+            ?? strip_tags($payload['content_html'] ?? '');
+        $wordCount   = str_word_count(preg_replace('/#+\s*|\*\*?|__?/', '', $contentText));
+
+        if ($wordCount < $minWords) {
+            throw new AIInvalidJsonResponseException(
+                "Payload do blog post incompleto: artigo possui apenas {$wordCount} palavras. " .
+                "Mínimo esperado: {$minWords}. O campo content_markdown deve conter o artigo completo."
+            );
+        }
+
+        $payload['_word_count'] = $wordCount;
 
         return $payload;
     }

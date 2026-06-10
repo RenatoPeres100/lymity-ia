@@ -17,6 +17,7 @@ class AITextResponse
         public readonly ?int    $total_tokens = null,
         public readonly ?float  $estimated_cost_usd = null,
         public readonly ?string $error_message = null,
+        public readonly ?string $finish_reason = null,
     ) {}
 
     public static function success(
@@ -29,6 +30,7 @@ class AITextResponse
         ?int    $outputTokens = null,
         ?float  $cost = null,
         bool    $fallback = false,
+        ?string $finishReason = null,
     ): self {
         return new self(
             success: true,
@@ -42,6 +44,7 @@ class AITextResponse
             output_tokens: $outputTokens,
             total_tokens: ($inputTokens ?? 0) + ($outputTokens ?? 0),
             estimated_cost_usd: $cost,
+            finish_reason: $finishReason,
         );
     }
 

@@ -136,7 +136,34 @@
                                 </td>
                                 <td class="px-4 py-2 text-gray-600 text-xs">{{ $run->started_at?->format('d/m H:i') ?? '—' }}</td>
                                 <td class="px-4 py-2 text-gray-600 text-xs">{{ $run->duration ?? '—' }}</td>
-                                <td class="px-4 py-2 text-red-600 text-xs truncate max-w-xs">{{ $run->error_message ? \Str::limit($run->error_message, 60) : '—' }}</td>
+                                <td class="px-4 py-2 text-xs max-w-xs">
+                                    @if($run->error_message)
+                                        <span class="text-red-600">{{ \Str::limit($run->error_message, 80) }}</span>
+                                        @php
+                                            $meta = $run->metadata ?? [];
+                                            $isPartial = isset($meta['payload_received_keys']);
+                                        @endphp
+                                        @if($isPartial)
+                                        <div class="mt-1 p-2 bg-amber-50 border border-amber-200 rounded text-amber-800 text-xs space-y-0.5">
+                                            <div><strong>Payload incompleto</strong> — A IA retornou artigo incompleto. Verifique <code>AI_BLOG_MAX_OUTPUT_TOKENS</code>.</div>
+                                            @if(!empty($meta['payload_received_keys']))
+                                            <div>Campos recebidos: <span class="font-mono">{{ implode(', ', (array)$meta['payload_received_keys']) }}</span></div>
+                                            @endif
+                                            @if(!empty($meta['finish_reason']))
+                                            <div>finish_reason: <span class="font-mono font-bold {{ $meta['finish_reason'] === 'MAX_TOKENS' ? 'text-red-700' : '' }}">{{ $meta['finish_reason'] }}</span></div>
+                                            @endif
+                                            @if(!empty($meta['output_tokens']))
+                                            <div>output_tokens: {{ $meta['output_tokens'] }}</div>
+                                            @endif
+                                            @if(!empty($meta['retry_attempted']))
+                                            <div>Retry tentado: sim</div>
+                                            @endif
+                                        </div>
+                                        @endif
+                                    @else
+                                        <span class="text-gray-400">—</span>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

@@ -284,18 +284,29 @@ class AgentTaskExecutionService
 
         $provider   = $this->providerManager->provider();
         $schemaName = $task->task_type;
+        $isBlogType = $task->isBlogType();
 
         // ── Attempt 1 ─────────────────────────────────────────────────────────
         $response = $provider->generateText([
             'system_prompt' => "Você é um assistente especialista em conteúdo. RESPONDA APENAS COM JSON VÁLIDO. Sem markdown, sem texto fora do JSON, sem blocos ```json. Escape todas as quebras de linha dentro de strings como \\n.",
             'user_message'  => $prompt,
             'json_mode'     => true,
-            'max_tokens'    => config('ai.max_output_tokens', 4096),
+            'task_type'     => $task->task_type,
         ]);
 
         if (!$response->success) {
-            $context->update(['status' => 'failed', 'error_message' => $response->error_message]);
+            $this->recordFailedGeneration($run, $context, $response, 'text_generation_failed');
             throw new \RuntimeException("Geração de texto falhou: " . $response->error_message);
+        }
+
+        // Log finish_reason if not STOP
+        if ($response->finish_reason && $response->finish_reason !== 'STOP') {
+            $this->activityLog->warning('ai.generation.finish_reason', "finish_reason={$response->finish_reason}", [
+                'run_id'       => $run->id,
+                'finish_reason'=> $response->finish_reason,
+                'output_tokens'=> $response->output_tokens,
+                'module'       => 'ai_tasks',
+            ]);
         }
 
         // ── Parse with normalizer — retry once if JSON is invalid ─────────────
@@ -303,7 +314,7 @@ class AgentTaskExecutionService
         try {
             $data = $this->jsonNormalizer->normalizeToArray($response->text, [], $schemaName);
         } catch (AIInvalidJsonResponseException $e) {
-            $this->activityLog->warning('ai.generation.failed_json', "JSON inválido na tentativa 1 — iniciando retry", [
+            $this->activityLog->warning('ai.generation.failed_json', "JSON inválido na tentativa 1 — iniciando retry de correção", [
                 'run_id'  => $run->id,
                 'error'   => $e->getMessage(),
                 'preview' => $this->jsonNormalizer->sanitizeForLog($response->text, 300),
@@ -321,13 +332,12 @@ class AgentTaskExecutionService
                 'system_prompt' => "Você é um especialista em JSON. Retorne APENAS JSON válido, sem markdown, sem texto adicional.",
                 'user_message'  => $retryPrompt,
                 'json_mode'     => true,
-                'max_tokens'    => config('ai.max_output_tokens', 4096),
-                'temperature'   => 0.1, // muito baixo para retry de correção
+                'task_type'     => $task->task_type,
+                'temperature'   => 0.1,
             ]);
 
             if (!$retryResponse->success) {
-                $context->update(['status' => 'failed', 'error_message' => "Retry de JSON falhou: " . $retryResponse->error_message]);
-                $this->activityLog->error('ai.generation.failed_json', "Retry também falhou", ['run_id' => $run->id, 'module' => 'ai_tasks']);
+                $this->recordFailedGeneration($run, $context, $retryResponse, 'json_retry_failed');
                 throw new \RuntimeException("Geração falhou após retry: resposta JSON inválida do Gemini.");
             }
 
@@ -336,23 +346,94 @@ class AgentTaskExecutionService
                 $this->activityLog->info('ai.generation.completed', "JSON recuperado via retry para '{$task->title}'", [
                     'run_id' => $run->id, 'module' => 'ai_tasks',
                 ]);
-                // Use retry token counts
                 $response = $retryResponse;
             } catch (AIInvalidJsonResponseException $e2) {
-                $context->update(['status' => 'failed', 'error_message' => "JSON inválido após retry: " . $e2->getMessage()]);
-                $this->activityLog->error('ai.generation.failed_json', "JSON inválido mesmo após retry — abortando", [
-                    'run_id' => $run->id, 'error' => $e2->getMessage(), 'module' => 'ai_tasks',
-                ]);
+                $this->recordFailedGeneration($run, $context, $retryResponse, 'json_invalid_after_retry', $e2->getMessage());
                 throw new \RuntimeException("Geração falhou: resposta JSON inválida do Gemini após retry. Tente novamente mais tarde.");
             }
         }
 
         // ── Validate payload by task type ──────────────────────────────────────
+        // If blog type fails validation (missing content, too short, incomplete), do 1 content-completion retry
         try {
             $data = $this->validateAndNormalizePayload($task, $data);
         } catch (AIInvalidJsonResponseException $e) {
-            $context->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
-            throw new \RuntimeException("Payload inválido: " . $e->getMessage());
+            if ($isBlogType) {
+                // Record partial payload details
+                $receivedKeys   = array_keys(array_filter($data, fn($v) => $v !== null && $v !== ''));
+                $partialTitle   = $data['title'] ?? '';
+                $finishReason   = $response->finish_reason ?? 'UNKNOWN';
+
+                $this->activityLog->warning('ai.generation.payload_incomplete', "Payload de blog incompleto — tentando retry de conteúdo", [
+                    'run_id'               => $run->id,
+                    'validation_error'     => $e->getMessage(),
+                    'payload_keys'         => $receivedKeys,
+                    'finish_reason'        => $finishReason,
+                    'output_tokens'        => $response->output_tokens,
+                    'module'               => 'ai_tasks',
+                ]);
+
+                // Persist metadata before retry so it's visible if retry also fails
+                $this->updateRunMetadata($run, [
+                    'payload_received_keys' => $receivedKeys,
+                    'finish_reason'         => $finishReason,
+                    'output_tokens'         => $response->output_tokens,
+                    'retry_attempted'       => true,
+                    'validation_error'      => $e->getMessage(),
+                ]);
+
+                // Build content-completion retry prompt
+                $compactBrand   = $context->compact_brand_context ?? '';
+                $compactTask    = $context->compact_task_context ?? '';
+                $receivedKeysStr = implode(', ', $receivedKeys);
+                $schema         = $this->promptBuilder->getBlogOutputSchema();
+                $retryPrompt2   = "Você gerou um JSON de blog_post INCOMPLETO. Campos recebidos: [{$receivedKeysStr}].\n" .
+                                  "O campo content_markdown está ausente ou o artigo está muito curto. Erro: {$e->getMessage()}\n\n" .
+                                  ($partialTitle ? "Título já gerado (mantenha): {$partialTitle}\n\n" : '') .
+                                  "Brand Context: {$compactBrand}\n\n" .
+                                  "Task: {$compactTask}\n\n" .
+                                  "Gere novamente o JSON COMPLETO seguindo o schema abaixo.\n" .
+                                  "O campo content_markdown DEVE conter o artigo completo com no mínimo 900 palavras.\n" .
+                                  "NÃO use markdown fora do JSON. NÃO retorne resposta parcial.\n\n" .
+                                  $schema;
+
+                $retryResponse2 = $provider->generateText([
+                    'system_prompt' => "Você é um especialista em criação de blog posts. Retorne APENAS JSON válido e completo.",
+                    'user_message'  => $retryPrompt2,
+                    'json_mode'     => true,
+                    'task_type'     => $task->task_type,
+                    'temperature'   => 0.4,
+                ]);
+
+                if (!$retryResponse2->success) {
+                    $this->recordFailedGeneration($run, $context, $retryResponse2, 'content_retry_failed');
+                    throw new \RuntimeException(
+                        "A IA retornou conteúdo parcial/incompleto mesmo após retry. A execução foi interrompida para evitar aprovação de conteúdo quebrado. " .
+                        "Verifique AI_BLOG_MAX_OUTPUT_TOKENS no .env (recomendado: 6000). " .
+                        "finish_reason original: {$finishReason}."
+                    );
+                }
+
+                try {
+                    $data2 = $this->jsonNormalizer->normalizeToArray($retryResponse2->text, [], $schemaName);
+                    $data2 = $this->validateAndNormalizePayload($task, $data2);
+                    $this->activityLog->info('ai.generation.payload_recovered', "Payload completo recuperado via content-retry para '{$task->title}'", [
+                        'run_id' => $run->id, 'module' => 'ai_tasks',
+                    ]);
+                    $data     = $data2;
+                    $response = $retryResponse2;
+                } catch (\Throwable $e3) {
+                    $this->recordFailedGeneration($run, $context, $retryResponse2, 'content_retry_invalid', $e3->getMessage());
+                    throw new \RuntimeException(
+                        "A IA retornou conteúdo parcial/incompleto mesmo após retry. A execução foi interrompida para evitar aprovação de conteúdo quebrado. " .
+                        "Erro: {$e3->getMessage()}. finish_reason: {$finishReason}. " .
+                        "Adicione AI_BLOG_MAX_OUTPUT_TOKENS=6000 no .env e rode php artisan optimize:clear."
+                    );
+                }
+            } else {
+                $context->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+                throw new \RuntimeException("Payload inválido: " . $e->getMessage());
+            }
         }
 
         $context->update([
@@ -367,9 +448,30 @@ class AgentTaskExecutionService
             'output_tokens' => $response->output_tokens ?? null,
             'cost'          => $response->estimated_cost ?? null,
             'model'         => $response->model ?? null,
+            'finish_reason' => $response->finish_reason ?? null,
         ];
 
         return $data;
+    }
+
+    private function recordFailedGeneration(
+        AgentTaskRun    $run,
+        AiExecutionContext $context,
+        mixed           $response,
+        string          $reason,
+        ?string         $extra = null
+    ): void {
+        $msg = $extra ?? ($response->error_message ?? $reason);
+        $context->update(['status' => 'failed', 'error_message' => $msg]);
+        $this->activityLog->error("ai.generation.{$reason}", $msg, ['run_id' => $run->id, 'module' => 'ai_tasks']);
+    }
+
+    private function updateRunMetadata(AgentTaskRun $run, array $extra): void
+    {
+        try {
+            $existing = $run->metadata ?? [];
+            $run->update(['metadata' => array_merge($existing, $extra)]);
+        } catch (\Throwable) {}
     }
 
     public function executeImageGenerationIfNeeded(

@@ -42,7 +42,8 @@ class GoogleGeminiProvider implements AIProviderInterface
         $systemPrompt = $payload['system_prompt'] ?? '';
         $userMessage  = $payload['user_message'] ?? '';
         $jsonMode     = $payload['json_mode'] ?? false;
-        $maxTokens    = $payload['max_tokens'] ?? config('ai.max_output_tokens', 4096);
+        $taskType     = $payload['task_type'] ?? null;
+        $maxTokens    = $payload['max_tokens'] ?? $this->resolveMaxTokens($taskType);
         // Lower temperature for JSON mode = more deterministic, less likely to produce invalid chars
         $defaultTemp  = $jsonMode ? 0.35 : config('ai.temperature', 0.7);
         $temperature  = $payload['temperature'] ?? $defaultTemp;
@@ -55,6 +56,17 @@ class GoogleGeminiProvider implements AIProviderInterface
         }
 
         return $result;
+    }
+
+    private function resolveMaxTokens(?string $taskType): int
+    {
+        return match (true) {
+            str_contains((string) $taskType, 'blog')     => config('ai.blog_max_output_tokens', 6000),
+            str_contains((string) $taskType, 'carousel') => config('ai.carousel_max_output_tokens', 3000),
+            str_contains((string) $taskType, 'social')   => config('ai.social_max_output_tokens', 1800),
+            str_contains((string) $taskType, 'instagram')=> config('ai.social_max_output_tokens', 1800),
+            default                                       => config('ai.max_output_tokens', 3500),
+        };
     }
 
     private function callGemini(
@@ -99,17 +111,24 @@ class GoogleGeminiProvider implements AIProviderInterface
                 return AITextResponse::error('google', $model, $errorMsg);
             }
 
-            $data     = $response->json();
-            $rawText  = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-            if ($rawText === null) {
-                $reason = $data['candidates'][0]['finishReason'] ?? 'unknown';
-                return AITextResponse::error('google', $model, "Empty response from Gemini. Finish reason: {$reason}");
-            }
+            $data         = $response->json();
+            $candidate    = $data['candidates'][0] ?? [];
+            $rawText      = $candidate['content']['parts'][0]['text'] ?? null;
+            $finishReason = $candidate['finishReason'] ?? 'UNKNOWN';
 
             $inputTokens  = $data['usageMetadata']['promptTokenCount'] ?? null;
             $outputTokens = $data['usageMetadata']['candidatesTokenCount'] ?? null;
             $cost         = $this->estimateCost($model, $inputTokens, $outputTokens);
+
+            // Always log finish reason for non-STOP responses
+            if ($finishReason !== 'STOP') {
+                Log::warning("[Gemini] Non-STOP finish_reason={$finishReason} model={$model} output_tokens={$outputTokens}");
+            }
+
+            if ($rawText === null) {
+                return AITextResponse::error('google', $model,
+                    "Empty response from Gemini. finish_reason={$finishReason} output_tokens={$outputTokens}");
+            }
 
             // For JSON mode, pre-clean with normalizer so AITextResponse carries clean text
             // Final JSON parsing happens in the execution service with full retry logic
@@ -131,6 +150,7 @@ class GoogleGeminiProvider implements AIProviderInterface
                 outputTokens: $outputTokens,
                 cost: $cost,
                 fallback: $isFallback,
+                finishReason: $finishReason,
             );
         } catch (\Throwable $e) {
             Log::error("[Gemini] Exception on model {$model}: {$e->getMessage()}");

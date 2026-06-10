@@ -176,49 +176,79 @@ class StructuredPromptBuilderService
         return implode("\n", $lines);
     }
 
+    public function getBlogOutputSchema(): string
+    {
+        return <<<'JSON'
+{
+  "content_type": "blog_post",
+  "title": "título atraente com a keyword principal",
+  "slug": "slug-url-amigavel-sem-acentos",
+  "subtitle": "subtítulo que complementa o título",
+  "excerpt": "resumo atrativo de até 160 caracteres",
+  "seo_title": "título SEO — máx 60 chars",
+  "seo_description": "meta descrição — máx 155 chars",
+  "meta_description": "idêntico a seo_description",
+  "focus_keyword": "palavra-chave principal",
+  "secondary_keywords": ["keyword 2", "keyword 3"],
+  "tags": ["tag1", "tag2", "tag3"],
+  "categories": ["Categoria Principal"],
+  "content_markdown": "## Introdução\n\nTexto da introdução...\n\n## Desenvolvimento\n\nConteúdo completo com mínimo 900 palavras...\n\n## Conclusão\n\nCTA final.",
+  "cta_final": "chamada para ação",
+  "image_prompt": "professional image: scene in english, no text",
+  "image_alt": "descrição da imagem em português",
+  "image_caption": null,
+  "sources_used": []
+}
+JSON;
+    }
+
     private function buildBlogOutputRules(): string
     {
         return <<<'JSON'
-=== INSTRUÇÕES OBRIGATÓRIAS DE FORMATO ===
-RESPONDA APENAS JSON VÁLIDO.
-NÃO use markdown fora do JSON.
-NÃO use bloco ```json.
-NÃO escreva explicações antes ou depois do JSON.
-O campo content_markdown é obrigatório — não use content, body, article ou text.
-Escape corretamente quebras de linha dentro das strings como \n.
-Não use caracteres de controle literais.
-Não use vírgulas finais.
+=== INSTRUÇÕES CRÍTICAS DE FORMATO — LEIA COM ATENÇÃO ===
+RESPONDA APENAS JSON VÁLIDO. NADA MAIS.
+NÃO use bloco ```json ou qualquer markdown fora do JSON.
+NÃO escreva explicações, comentários ou texto antes ou após o JSON.
+NÃO retorne JSON parcial — preencha TODOS os campos abaixo.
+NÃO encerre a resposta antes de completar o campo content_markdown.
+O campo content_markdown é OBRIGATÓRIO e deve conter o artigo completo.
+Escape quebras de linha dentro das strings como \n (barra-n).
+Não use caracteres de controle literais (tab, newline fora de strings JSON).
+Não use vírgulas finais (trailing commas).
+
+SE não conseguir gerar o artigo completo, retorne SOMENTE:
+{"error":"generation_incomplete","reason":"descreva o motivo brevemente"}
 
 === PADRÕES DE QUALIDADE OBRIGATÓRIOS ===
-- O artigo deve ter NO MÍNIMO 800 palavras no campo content_markdown
-- Use ## para seções principais, ### para subseções (formato Markdown)
-- Inclua introdução envolvente, desenvolvimento com dados/exemplos e conclusão com CTA
+- O artigo deve ter NO MÍNIMO 900 palavras no campo content_markdown
+- Use ## para seções principais, ### para subseções
+- Inclua: introdução envolvente (1-2 parágrafos), 4-6 seções de desenvolvimento com exemplos/dados, conclusão com CTA
 - O conteúdo deve ser original, profundo e verdadeiramente útil para o leitor
 - Conecte o assunto ao posicionamento e serviços da marca sempre que natural
-- O CTA final deve ser específico e alinhado ao Brand Context
-- Gere tags e categorias coerentes e relevantes para o tema do artigo
+- Gere tags e categorias coerentes e relevantes para o tema
 - Gere image_prompt em inglês, detalhado, profissional e sem texto na imagem
 - Gere image_alt em português, descritivo e otimizado para SEO
+- ANTES DE FINALIZAR: verifique se content_markdown está presente e completo
 
-=== FORMATO DE SAÍDA (retorne APENAS este JSON, sem markdown externo) ===
+=== SCHEMA OBRIGATÓRIO (retorne APENAS este JSON preenchido) ===
 {
   "content_type": "blog_post",
-  "title": "título atraente direto e com a keyword principal",
+  "title": "título atraente com a keyword principal",
   "slug": "slug-url-amigavel-sem-acentos",
   "subtitle": "subtítulo que complementa o título",
   "excerpt": "resumo atrativo de até 160 caracteres para SEO",
-  "seo_title": "título SEO com keyword no início max 60 chars",
-  "seo_description": "meta descrição com benefício e CTA max 155 chars",
+  "seo_title": "título SEO com keyword no início — máx 60 chars",
+  "seo_description": "meta descrição com benefício e CTA — máx 155 chars",
   "meta_description": "idêntico a seo_description",
   "focus_keyword": "palavra-chave principal do artigo",
-  "secondary_keywords": ["keyword 2", "keyword 3"],
-  "tags": ["tag1", "tag2", "tag3", "tag4"],
+  "secondary_keywords": ["keyword 2", "keyword 3", "keyword 4"],
+  "tags": ["tag1", "tag2", "tag3", "tag4", "tag5"],
   "categories": ["Categoria Principal", "Categoria Secundária"],
-  "content_markdown": "## Introdução\n\nTexto da introdução...\n\n## Seção Principal\n\nTexto da seção...\n\n## Conclusão\n\nTexto final com CTA.",
+  "content_markdown": "## Introdução\n\nParágrafo de introdução...\n\n## Seção 1\n\nConteúdo...\n\n## Conclusão\n\nCTA final.",
   "cta_final": "chamada para ação alinhada ao Brand Context",
-  "image_prompt": "professional photorealistic image for: describe scene in english without text",
+  "image_prompt": "professional photorealistic image: describe the scene in english, no text in image",
   "image_alt": "descrição acessível e SEO da imagem em português",
-  "image_caption": "legenda opcional da imagem em português",
+  "image_caption": "legenda opcional da imagem em português ou null",
   "sources_used": []
 }
 JSON;
