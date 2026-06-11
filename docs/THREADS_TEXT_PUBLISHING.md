@@ -2,13 +2,32 @@
 
 ## Variáveis .env
 
+Duas opções disponíveis (ver `docs/THREADS_CONNECTION_SETUP.md` para detalhes):
+
+**Opção A — Reaproveitar app Meta/Instagram:**
 ```dotenv
+THREADS_USE_META_APP=true
+THREADS_REDIRECT_URI=https://ia.lymity.com.br/admin/social/threads/callback
+THREADS_GRAPH_VERSION=v1.0
+THREADS_BASE_URL=https://graph.threads.net
+THREADS_OAUTH_BASE_URL=https://threads.net/oauth/authorize
+THREADS_TOKEN_URL=https://graph.threads.net/oauth/access_token
+THREADS_PUBLISHING_ENABLED=false
+THREADS_SCOPES=threads_basic,threads_content_publish
+# Usa META_APP_ID / META_APP_SECRET já configurados
+```
+
+**Opção B — App dedicado Threads:**
+```dotenv
+THREADS_USE_META_APP=false
 THREADS_APP_ID=               # ID do app Threads no Meta Developers
 THREADS_APP_SECRET=           # Secret do app Threads
 THREADS_REDIRECT_URI=https://ia.lymity.com.br/admin/social/threads/callback
 THREADS_GRAPH_VERSION=v1.0
 THREADS_BASE_URL=https://graph.threads.net
-THREADS_PUBLISHING_ENABLED=false   # Mude para true após validar a conexão
+THREADS_OAUTH_BASE_URL=https://threads.net/oauth/authorize
+THREADS_TOKEN_URL=https://graph.threads.net/oauth/access_token
+THREADS_PUBLISHING_ENABLED=false
 THREADS_SCOPES=threads_basic,threads_content_publish
 ```
 
