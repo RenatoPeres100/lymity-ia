@@ -30,9 +30,20 @@ class DiagnoseThreadsCommand extends Command
         $this->info('── Configuração .env ──');
         $this->check('THREADS_APP_ID',             $status['app_id_set']);
         $this->check('THREADS_APP_SECRET',         $status['app_secret_set']);
-        $this->check('THREADS_REDIRECT_URI',       $status['redirect_uri_set']);
+        $this->check('THREADS_REDIRECT_URI',       $status['redirect_uri_set'], $status['redirect_uri'] ?? '');
         $this->line('  THREADS_SCOPES: ' . implode(', ', $status['scopes']));
         $this->check('THREADS_PUBLISHING_ENABLED', $status['publishing_enabled']);
+
+        if (!$status['configured']) {
+            $this->newLine();
+            $this->warn('  ⚠ Threads não configurado. Para ativar, defina no .env:');
+            $this->line('      THREADS_APP_ID=<seu_app_id>');
+            $this->line('      THREADS_APP_SECRET=<seu_app_secret>');
+            $this->line('      THREADS_REDIRECT_URI=https://ia.lymity.com.br/admin/social/threads/callback');
+            $this->line('      THREADS_PUBLISHING_ENABLED=false');
+            $this->line('  Em seguida rode: php artisan config:clear');
+            $this->line('  Acesse: /admin/social/threads para conectar o canal.');
+        }
         $this->newLine();
 
         $this->info('── Canal Threads ──');

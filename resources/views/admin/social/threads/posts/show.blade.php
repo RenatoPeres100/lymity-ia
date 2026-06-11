@@ -1,8 +1,4 @@
-@extends('components.layouts.app')
-
-@section('title', 'Post Threads — ' . ($post->title ?? 'Ver'))
-
-@section('content')
+<x-layouts.app title="Post Threads — {{ $post->title ?? 'Ver' }}">
 @php
     $statusColors = [
         'draft'            => ['bg'=>'#f8fafc','text'=>'#475569','border'=>'#e2e8f0'],
@@ -199,4 +195,4 @@
 
     </div>
 </div>
-@endsection
+</x-layouts.app>

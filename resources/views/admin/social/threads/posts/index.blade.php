@@ -1,8 +1,4 @@
-@extends('components.layouts.app')
-
-@section('title', 'Posts Threads')
-
-@section('content')
+<x-layouts.app title="Posts Threads">
 <div style="max-width:1000px;margin:0 auto;padding:2rem 1rem;">
 
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2rem;">
@@ -105,4 +101,4 @@
         <div style="margin-top:1rem;">{{ $posts->appends(request()->query())->links() }}</div>
     @endif
 </div>
-@endsection
+</x-layouts.app>

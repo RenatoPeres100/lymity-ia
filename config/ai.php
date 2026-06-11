@@ -21,7 +21,7 @@ return [
     'daily_request_limit' => (int)   env('AI_DAILY_REQUEST_LIMIT', 20),
     'monthly_budget_usd'  => (float) env('AI_MONTHLY_BUDGET_USD', 20.0),
     'max_output_tokens'          => (int) env('AI_MAX_OUTPUT_TOKENS',          3500),
-    'blog_max_output_tokens'     => (int) env('AI_BLOG_MAX_OUTPUT_TOKENS',     6000),
+    'blog_max_output_tokens'     => (int) (env('AI_BLOG_MAX_OUTPUT_TOKENS') ?? env('GEMINI_BLOG_MAX_OUTPUT_TOKENS', 6000)),
     'social_max_output_tokens'   => (int) env('AI_SOCIAL_MAX_OUTPUT_TOKENS',   1800),
     'carousel_max_output_tokens' => (int) env('AI_CAROUSEL_MAX_OUTPUT_TOKENS', 3000),
     'blog_min_words'             => (int) env('AI_BLOG_MIN_WORDS',              500),

@@ -26,17 +26,14 @@ class AIContentPayloadValidatorService
             'content_markdown', 'content_html',
             'content', 'body', 'article', 'article_content',
             'text', 'html', 'markdown', 'post_content',
+            'sections', 'paragraphs',
         ];
         $contentValue = null;
         $contentField = null;
         foreach ($contentFieldAliases as $alias) {
             if (!empty($payload[$alias])) {
-                $contentValue = $payload[$alias];
-                // Gemini sometimes returns content as array of paragraphs — flatten to string
-                if (is_array($contentValue)) {
-                    $contentValue = implode("\n\n", array_map(fn($v) => is_string($v) ? $v : json_encode($v), $contentValue));
-                    $payload[$alias] = $contentValue;
-                }
+                $contentValue = $this->stringifyContentValue($payload[$alias], $alias);
+                $payload[$alias] = $contentValue;
                 $contentField = $alias;
                 break;
             }
@@ -257,6 +254,63 @@ class AIContentPayloadValidatorService
     }
 
     // ── Private helpers ───────────────────────────────────────────────────────
+
+    /**
+     * Safely coerce any content value to a string.
+     * Handles arrays of paragraphs, sections objects, etc.
+     */
+    private function stringifyContentValue(mixed $value, string $fieldName = ''): string
+    {
+        if (is_string($value)) {
+            return trim($value);
+        }
+
+        if ($value === null) {
+            return '';
+        }
+
+        if (!is_array($value)) {
+            return trim((string) $value);
+        }
+
+        // Sections: [['heading'=>..., 'body'=>...], ...]
+        if ($fieldName === 'sections' || (isset($value[0]) && is_array($value[0]) && isset($value[0]['body']))) {
+            $parts = [];
+            foreach ($value as $section) {
+                if (is_array($section)) {
+                    if (!empty($section['heading'])) {
+                        $parts[] = '## ' . trim($section['heading']);
+                    }
+                    if (!empty($section['body'])) {
+                        $parts[] = trim($section['body']);
+                    } elseif (!empty($section['content'])) {
+                        $parts[] = trim($section['content']);
+                    }
+                } elseif (is_string($section)) {
+                    $parts[] = $section;
+                }
+            }
+            return implode("\n\n", array_filter($parts));
+        }
+
+        // Paragraphs: ['string', 'string', ...]
+        if ($fieldName === 'paragraphs' || (isset($value[0]) && is_string($value[0]))) {
+            return implode("\n\n", array_map(
+                fn($v) => is_string($v) ? trim($v) : json_encode($v, JSON_UNESCAPED_UNICODE),
+                $value
+            ));
+        }
+
+        // Try known string sub-keys
+        foreach (['content_markdown', 'content', 'body', 'text', 'markdown'] as $sub) {
+            if (!empty($value[$sub]) && is_string($value[$sub])) {
+                return trim($value[$sub]);
+            }
+        }
+
+        // Last resort: JSON representation
+        return json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+    }
 
     private function requireNonEmpty(array $payload, string $field, string $schema): void
     {

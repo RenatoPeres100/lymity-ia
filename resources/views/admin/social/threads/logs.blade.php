@@ -1,8 +1,4 @@
-@extends('components.layouts.app')
-
-@section('title', 'Logs Threads')
-
-@section('content')
+<x-layouts.app title="Logs Threads">
 <div style="max-width:1000px;margin:0 auto;padding:2rem 1rem;">
 
     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;">
@@ -43,4 +39,4 @@
         <div style="margin-top:1rem;">{{ $logs->links() }}</div>
     @endif
 </div>
-@endsection
+</x-layouts.app>

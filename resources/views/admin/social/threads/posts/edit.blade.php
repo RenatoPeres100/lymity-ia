@@ -1,8 +1,4 @@
-@extends('components.layouts.app')
-
-@section('title', 'Editar Post Threads')
-
-@section('content')
+<x-layouts.app title="Editar Post Threads">
 <div style="max-width:720px;margin:0 auto;padding:2rem 1rem;">
 
     <div style="margin-bottom:1.5rem;">
@@ -70,4 +66,4 @@
         </div>
     </form>
 </div>
-@endsection
+</x-layouts.app>

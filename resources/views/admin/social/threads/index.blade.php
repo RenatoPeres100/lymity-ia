@@ -1,8 +1,4 @@
-@extends('components.layouts.app')
-
-@section('title', 'Threads — Conexão')
-
-@section('content')
+<x-layouts.app title="Threads — Conexão">
 <div style="max-width:900px;margin:0 auto;padding:2rem 1rem;">
 
     <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;">
@@ -169,4 +165,4 @@
 
     @endif {{-- end features.threads_connection --}}
 </div>
-@endsection
+</x-layouts.app>
