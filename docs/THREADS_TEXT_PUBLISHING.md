@@ -153,6 +153,37 @@ php artisan threads:diagnose --post=ID     # Diagnóstico por post
 php artisan threads:publish-due            # Publicar posts devidos
 ```
 
+## Isolamento — Threads não quebra outros módulos
+
+Threads usa dupla proteção para não impactar Blog, Social, Instagram, AgentTasks ou o Scheduler:
+
+| Proteção | Padrão seguro |
+|----------|--------------|
+| `features.threads_publishing_scheduler` em `config/features.php` | `false` — command não entra no scheduler |
+| `THREADS_PUBLISHING_ENABLED` em `.env` | `false` — command retorna SUCCESS sem publicar |
+| `features.threads_text_publishing` | `true` — mas só permite criação, não publica |
+
+Se `threads_publishing_scheduler=false`:
+- `threads:publish-due` não aparece em `schedule:list`
+- `content:run-publishing-cycle` pula a etapa Threads
+
+Se `THREADS_PUBLISHING_ENABLED=false`:
+- `threads:publish-due` retorna `SUCCESS` com aviso, sem publicar nada
+- Não lança exception
+- Não afeta agendamentos de Blog ou Social
+
+**Para habilitar o scheduler do Threads** (após canal conectado e testado):
+```php
+// config/features.php
+'threads_publishing_scheduler' => true,
+```
+```dotenv
+# .env
+THREADS_PUBLISHING_ENABLED=true
+```
+
+---
+
 ## O que está FORA desta fase
 
 - Imagens no Threads

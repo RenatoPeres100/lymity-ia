@@ -95,13 +95,14 @@ return [
     'instagram_publishing'  => true,
 
     // === THREADS ===
-    'threads_connection'          => true,
-    'threads_text_publishing'     => true,
-    'threads_image_publishing'    => false,
-    'threads_carousel_publishing' => false,
-    'threads_video_publishing'    => false,
-    'threads_auto_reply'          => false,
-    'threads_insights'            => false,
+    'threads_connection'           => true,
+    'threads_text_publishing'      => true,
+    'threads_publishing_scheduler' => false, // Habilitar apenas após canal conectado e THREADS_PUBLISHING_ENABLED=true
+    'threads_image_publishing'     => false,
+    'threads_carousel_publishing'  => false,
+    'threads_video_publishing'     => false,
+    'threads_auto_reply'           => false,
+    'threads_insights'             => false,
 
     // === PUBLISHING / COMMAND CENTER ===
     'content_command_center' => true,

@@ -71,16 +71,20 @@ class ContentRunPublishingCycleCommand extends Command
             Log::error('[content:run-publishing-cycle] social error: ' . $e->getMessage());
         }
 
-        // 5. Threads publishing
+        // 5. Threads publishing (only if scheduler feature enabled)
         $threadsDispatched = 0;
-        try {
-            $this->info('[5/5] Publicando posts Threads agendados...');
-            Artisan::call('threads:publish-due', [], $this->output);
-            $output = Artisan::output();
-            if (preg_match('/DISPATCHED=(\d+)/', $output, $m)) $threadsDispatched = (int) $m[1];
-        } catch (\Throwable $e) {
-            $this->error('Erro em threads:publish-due: ' . $e->getMessage());
-            Log::error('[content:run-publishing-cycle] threads error: ' . $e->getMessage());
+        if (config('features.threads_publishing_scheduler', false)) {
+            try {
+                $this->info('[5/5] Publicando posts Threads agendados...');
+                Artisan::call('threads:publish-due', [], $this->output);
+                $output = Artisan::output();
+                if (preg_match('/DISPATCHED=(\d+)/', $output, $m)) $threadsDispatched = (int) $m[1];
+            } catch (\Throwable $e) {
+                $this->error('Erro em threads:publish-due: ' . $e->getMessage());
+                Log::error('[content:run-publishing-cycle] threads error: ' . $e->getMessage());
+            }
+        } else {
+            $this->line('[5/5] Threads scheduler desabilitado (threads_publishing_scheduler=false). Skipping.');
         }
 
         $elapsed = $start->diffInSeconds(now());

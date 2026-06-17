@@ -15,6 +15,13 @@ class PublishDueThreadsPostsCommand extends Command
     {
         $this->line('THREADS_PUBLISH_STARTED');
 
+        if (!config('features.threads_text_publishing', false)) {
+            $this->info('threads_text_publishing=false — feature desabilitada. Skipping.');
+            $this->line('DUE_POSTS=0 PUBLISHED=0 FAILED=0');
+            $this->line('THREADS_PUBLISH_FINISHED');
+            return self::SUCCESS;
+        }
+
         if (!config('threads.publishing_enabled', false)) {
             $this->warn('THREADS_PUBLISHING_ENABLED=false — publicação bloqueada. Nenhum post será publicado.');
             $this->line('DUE_POSTS=0 PUBLISHED=0 FAILED=0');

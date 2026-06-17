@@ -30,5 +30,8 @@ Schedule::command('approvals:send-pending-reminders')->hourly()->withoutOverlapp
 // Real AI Employee Engine — Agent tasks
 Schedule::command('agents:run-due-tasks')->everyMinute()->withoutOverlapping();
 
-// Real Phase Threads — Threads text publishing
-Schedule::command('threads:publish-due')->everyMinute()->withoutOverlapping();
+// Real Phase Threads — only schedule if threads_publishing_scheduler feature is enabled
+// (threads:publish-due itself also guards against THREADS_PUBLISHING_ENABLED=false)
+if (config('features.threads_publishing_scheduler', false)) {
+    Schedule::command('threads:publish-due')->everyMinute()->withoutOverlapping()->runInBackground();
+}
